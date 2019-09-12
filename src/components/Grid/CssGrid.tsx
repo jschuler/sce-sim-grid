@@ -20,7 +20,6 @@ const CssGrid: React.FC<{ data: any }> = ({ data }) => {
   }, [data]);
 
   const setNumGivenColumns = (num: number) => {
-    debugger;
     document
       .getElementById("kie-grid")!
       .style.setProperty("--num-given-columns", num.toString());
