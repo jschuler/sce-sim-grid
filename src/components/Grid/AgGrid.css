@@ -1,0 +1,19 @@
+.description-header-cell,
+.ag-header-group-cell-no-group {
+  background-color: white;
+  border: none !important;
+}
+
+.given-header-cell {
+  background-color: lightblue;
+}
+
+.expect-header-cell {
+  background-color: blue;
+}
+
+.ag-theme-balham .ag-header-cell::after, .ag-theme-balham .ag-header-group-cell::after {
+  height: unset !important;
+  margin-top: unset !important;
+  bottom: 0;
+}

@@ -1,22 +1,22 @@
 {
-  "name": "kogito-dev-ts",
+  "name": "sce-sim-grid",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@types/jest": "24.0.18",
-    "@types/node": "12.7.5",
-    "@types/react": "16.9.2",
-    "@types/react-dom": "16.9.0",
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0",
-    "react-scripts": "3.1.1",
-    "typescript": "3.6.3"
-  },
+  "description": "Scenario simulator grid",
+  "source": "src/components/index.ts",
+  "main": "dist/index.ts.js",
+  "umd:main": "dist/index.ts.umd.js",
+  "module": "dist/index.ts.mjs",
+  "repository": "https://github.com/jschuler/sce-sim-grid",
+  "author": "Joachim Schuler",
+  "license": "MIT",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev-micro": "microbundle watch",
+    "build-micro": "microbundle build --external ag-grid-react ag-grid-community"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -32,5 +32,23 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "dependencies": {
+    "@patternfly/patternfly": "^2.31.6",
+    "@types/jest": "24.0.18",
+    "@types/node": "12.7.5",
+    "@types/react": "16.9.2",
+    "@types/react-dom": "16.9.0",
+    "ag-grid-community": "^21.2.1",
+    "ag-grid-react": "^21.2.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-scripts": "3.1.1",
+    "styled-components": "^4.3.2",
+    "typescript": "3.6.3"
+  },
+  "devDependencies": {
+    "@types/styled-components": "^4.1.19",
+    "microbundle": "^0.11.0"
   }
 }
