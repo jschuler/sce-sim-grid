@@ -1,6 +1,7 @@
 import * as React from "react";
 import { getColumns, getRows, getDefinitions } from "./utils";
 import { Input } from './Input';
+import { useKeyPress } from './useKeyPress';
 import "@patternfly/patternfly/patternfly.min.css";
 import "./Editor.css";
 
@@ -9,6 +10,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   const [rowData, setRowData] = React.useState<any[]>([]);
   const [types, setTypes] = React.useState<any>({});
   const [loading, setLoading] = React.useState(true);
+  const [activeInput, setActiveInput] = React.useState<string>('');
+
+  // const inputRefs = React.useRef(null);
 
   React.useEffect(() => {
     const allDefinitions = getDefinitions(model);
@@ -41,6 +45,25 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
       .getElementById("kie-grid")!
       .style.setProperty("--num-expect-columns", num.toString());
   };
+
+  const onCellClick = (event: any, id: string) => {
+    console.log(`clicked: ${id}`)
+    // setTimeout(() => {
+    //   document.getElementById(id)!.focus();
+    // }, 1000)
+  };
+
+  const onActivateInput = (id: string) => {
+    setActiveInput(id);
+  }
+
+  // up: 38
+  // down: 40
+  // left: 37
+  // right: 39
+  useKeyPress('Escape', () => {
+    console.log('exit modal');
+  });
 
   return loading ? <div>Loading</div> : (
     <div id="kie-grid" className="kie-grid">
@@ -123,10 +146,12 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
               const cellIndex = index;
               const value = cell && cell.value ? cell.value : '';
               const path = cell && cell.path ? cell.path : '';
+              // const cellId = `cell ${cellIndex}`;
+              const inputId = `row ${rowIndex} cell ${cellIndex}`;
               return (
-                <div className="kie-grid__item" key={`cell ${cellIndex}`}>
+                <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)}>
                   {cellIndex === 0 ? <>{value}</> : 
-                    <Input originalValue={value} path={path} type={type} id={`row ${rowIndex} cell ${cellIndex}`} />}
+                    <Input isReadOnly={inputId !== activeInput} onActivateInput={onActivateInput} originalValue={value} path={path} type={type} id={inputId} />}
                 </div>
               )
             })}
