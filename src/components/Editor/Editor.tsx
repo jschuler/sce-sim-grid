@@ -1,5 +1,6 @@
 import * as React from "react";
 import { getColumns, getRows, getDefinitions } from "./utils";
+import { Input } from './Input';
 import "@patternfly/patternfly/patternfly.min.css";
 import "./Editor.css";
 
@@ -10,14 +11,17 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const allColumns = getColumns(data, true);
     const allDefinitions = getDefinitions(model);
+    const allColumns = getColumns(data, true, allDefinitions);
+    const allRows = getRows(data);
     console.log(`allColumns:`);
     console.log(allColumns);
+    console.log(`allRows:`);
+    console.log(allRows);
     console.log(`allDefinitions:`);
     console.log(allDefinitions);
     setColumnDefs(allColumns);
-    setRowData(getRows(data));
+    setRowData(allRows);
     setTypes(allDefinitions);
     setLoading(false);
     setTimeout(() => {
@@ -102,16 +106,27 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
         return (
           <div className="kie-grid__rule" key={`row ${rowIndex}`}>
             {row.map((cell: any, index: number) => {
+              // get the type of the column to pass on to the input for validation
+              let type = 'any';
+              const allColumns = getColumns(data, false, types);
+              // index 0 is not an input
+              // index 1 is the description and always string
+              if (index === 1) {
+                type = 'string';
+              } else if (index > 1) {
+                if (index < allColumns.numGiven + 2) {
+                  type = allColumns.given[index - 2].type;
+                } else {
+                  type = allColumns.expect[index - 2 - allColumns.numGiven].type;
+                }
+              }
               const cellIndex = index;
+              const value = cell && cell.value ? cell.value : '';
+              const path = cell && cell.path ? cell.path : '';
               return (
                 <div className="kie-grid__item" key={`cell ${cellIndex}`}>
-                  {cellIndex === 0 ? <>{cell}</> : <input
-                    className="pf-c-form-control"
-                    type="text"
-                    defaultValue={cell}
-                    id={`row ${rowIndex} cell ${cellIndex}`}
-                    aria-label={cell}
-                  />}
+                  {cellIndex === 0 ? <>{value}</> : 
+                    <Input originalValue={value} path={path} type={type} id={`row ${rowIndex} cell ${cellIndex}`} />}
                 </div>
               )
             })}
