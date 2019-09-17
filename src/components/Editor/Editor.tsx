@@ -1,6 +1,7 @@
 import * as React from "react";
-import "./Editor.css";
 import { getColumns, getRows } from "./utils";
+import "@patternfly/patternfly/patternfly.min.css";
+import "./Editor.css";
 
 const Editor: React.FC<{ data: any }> = ({ data }) => {
   const [columnDefs, setColumnDefs] = React.useState<any>({});
