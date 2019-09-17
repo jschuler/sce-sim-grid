@@ -1,12 +1,13 @@
 {
   "name": "sce-sim-grid",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.2.0",
+  "private": false,
   "description": "Scenario simulator grid",
   "source": "src/components/index.ts",
   "main": "dist/index.ts.js",
   "umd:main": "dist/index.ts.umd.js",
   "module": "dist/index.ts.mjs",
+  "files": ["dist"],
   "repository": "https://github.com/jschuler/sce-sim-grid",
   "author": "Joachim Schuler",
   "license": "MIT",
@@ -16,7 +17,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev-micro": "microbundle watch",
-    "build-micro": "microbundle build --external ag-grid-react ag-grid-community"
+    "build-micro": "microbundle build --external none"
   },
   "eslintConfig": {
     "extends": "react-app"

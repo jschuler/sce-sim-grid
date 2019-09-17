@@ -5,7 +5,7 @@ import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import "./AgGrid.css";
 import NumericEditor from "./numericEditor";
-import { getColumns, getRows, getColumnNames } from "./utils";
+import { getColumns, getRows, getColumnNames } from "../Editor/utils";
 
 const AgGrid: React.FC<{ data: any }> = ({ data }) => {
   const [frameworkComponents, setFrameworkComponents] = useState({

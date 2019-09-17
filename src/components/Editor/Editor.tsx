@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
-import "@patternfly/patternfly/patternfly.min.css";
-import "./CssGrid.css";
+import * as React from "react";
+import "./Editor.css";
 import { getColumns, getRows } from "./utils";
 
-const CssGrid: React.FC<{ data: any }> = ({ data }) => {
-  const [columnDefs, setColumnDefs] = useState<any>({});
-  const [rowData, setRowData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+const Editor: React.FC<{ data: any }> = ({ data }) => {
+  const [columnDefs, setColumnDefs] = React.useState<any>({});
+  const [rowData, setRowData] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const allColumns = getColumns(data, true);
+    console.log(`allColumns: ${allColumns}`);
     setColumnDefs(allColumns);
     setRowData(getRows(data));
     setLoading(false);
@@ -30,8 +30,6 @@ const CssGrid: React.FC<{ data: any }> = ({ data }) => {
       .getElementById("kie-grid")!
       .style.setProperty("--num-expect-columns", num.toString());
   };
-
-  console.log('state update');
 
   return loading ? <div>Loading</div> : (
     <div id="kie-grid" className="kie-grid">
@@ -117,4 +115,4 @@ const CssGrid: React.FC<{ data: any }> = ({ data }) => {
   );
 };
 
-export { CssGrid };
+export { Editor };

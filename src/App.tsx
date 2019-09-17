@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-// import "./App.css";
-import { CssGrid } from './components/Grid';
+import { Editor } from './components';
 
 const App: React.FC = () => {
   const [data, setData] = useState(null);
@@ -24,8 +23,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      {/* {data ? <AgGrid data={data} /> : "Loading"} */}
-      {data ? <CssGrid data={data} /> : "Loading"}
+      {data ? <Editor data={data} /> : "Loading"}
     </div>
   );
 };
