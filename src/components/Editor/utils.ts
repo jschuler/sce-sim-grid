@@ -129,3 +129,23 @@ export const getRows = (data: {
   );
   return rows;
 };
+
+export const getDefinitions = (data: { value: { itemDefinition: any; }; }) => {
+  let definitions: any[] = [];
+  const { itemDefinition } = data.value;
+  itemDefinition.forEach((def: any) => {
+    let definition = {
+      name: def.name,
+      types: [] as any[]
+    };
+    const { itemComponent } = def;
+    itemComponent.forEach((type: { name: any; typeRef: any; }) => {
+      definition.types.push({
+        name: type.name,
+        type: type.typeRef
+      });
+    });
+    definitions.push(definition);
+  });
+  return definitions;
+}

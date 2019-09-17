@@ -1,24 +1,30 @@
 import * as React from "react";
-import { getColumns, getRows } from "./utils";
+import { getColumns, getRows, getDefinitions } from "./utils";
 import "@patternfly/patternfly/patternfly.min.css";
 import "./Editor.css";
 
-const Editor: React.FC<{ data: any }> = ({ data }) => {
+const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   const [columnDefs, setColumnDefs] = React.useState<any>({});
   const [rowData, setRowData] = React.useState<any[]>([]);
+  const [types, setTypes] = React.useState<any>({});
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const allColumns = getColumns(data, true);
-    console.log(`allColumns: ${allColumns}`);
+    const allDefinitions = getDefinitions(model);
+    console.log(`allColumns:`);
+    console.log(allColumns);
+    console.log(`allDefinitions:`);
+    console.log(allDefinitions);
     setColumnDefs(allColumns);
     setRowData(getRows(data));
+    setTypes(allDefinitions);
     setLoading(false);
     setTimeout(() => {
       setNumGivenColumns(allColumns.numGiven);
       setNumExpectColumns(allColumns.numExpect);
     }, 1)
-  }, [data]);
+  }, [data, model]);
 
   const setNumGivenColumns = (num: number) => {
     document

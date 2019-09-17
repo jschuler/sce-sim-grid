@@ -7,17 +7,21 @@
   "main": "dist/index.ts.js",
   "umd:main": "dist/index.ts.umd.js",
   "module": "dist/index.ts.mjs",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "repository": "https://github.com/jschuler/sce-sim-grid",
   "author": "Joachim Schuler",
   "license": "MIT",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "EXTEND_ESLINT=true react-scripts start",
+    "build": "EXTEND_ESLINT=true react-scripts build",
+    "test": "EXTEND_ESLINT=true react-scripts test",
     "eject": "react-scripts eject",
     "dev-micro": "microbundle watch",
-    "build-micro": "microbundle build --external none"
+    "build-micro": "microbundle build --external none",
+    "schema:scesim": "java -jar node_modules/jsonix-schema-compiler/lib/jsonix-schema-compiler-full.jar -generateJsonSchema -p scesim -d public/generated public/data/scesim.xsd",
+    "schema:dmn": "java -jar node_modules/jsonix-schema-compiler/lib/jsonix-schema-compiler-full.jar -generateJsonSchema -nv -p dmn -d public/generated public/data/DMN12.xsd"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -42,6 +46,7 @@
     "@types/react-dom": "16.9.0",
     "ag-grid-community": "^21.2.1",
     "ag-grid-react": "^21.2.1",
+    "jsonix": "^3.0.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-scripts": "3.1.1",
@@ -50,6 +55,7 @@
   },
   "devDependencies": {
     "@types/styled-components": "^4.1.19",
+    "jsonix-schema-compiler": "^2.3.9",
     "microbundle": "^0.11.0"
   }
 }
