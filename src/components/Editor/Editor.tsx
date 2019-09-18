@@ -73,6 +73,14 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
     setActiveInput('');
   });
 
+  useKeyPress('Tab', () => {
+    console.log('tabbed');
+    setTimeout(() => {
+      const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
+      onCellClick(null, activeElement);
+    }, 1);
+  });
+
   // up
   useKeyPress(38, () => {
     if (activeInput) {
