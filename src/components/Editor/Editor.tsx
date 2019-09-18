@@ -75,6 +75,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // up
   useKeyPress(38, () => {
+    if (activeInput) {
+      return;
+    }
     const currentId = selectedCell;
     const minRow = 0;
     let targetId;
@@ -96,6 +99,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // down
   useKeyPress(40, () => {
+    if (activeInput) {
+      return;
+    }
     const currentId = selectedCell;
     const maxRow = rowData.length - 1;
     let targetId;
@@ -117,6 +123,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // left
   useKeyPress(37, () => {
+    if (activeInput) {
+      return;
+    }
     const currentId = selectedCell;
     const minCol = 1;
     let targetId;
@@ -138,6 +147,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // right
   useKeyPress(39, () => {
+    if (activeInput) {
+      return;
+    }
     const currentId = selectedCell;
     const maxCol = columnDefs.numGiven + columnDefs.numExpect + 1;
     let targetId;
