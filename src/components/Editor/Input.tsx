@@ -20,7 +20,7 @@ const Input: React.FC<{
     onActivateInput(id);
   }, id);
 
-  return <TextInput isReadOnly={isReadOnly} style={{ border: 'none' }} value={value} type="text" onChange={(value: any) => handleTextInputChange(value)} aria-label={value} id={id} />;
+  return <TextInput className="editor-input" isReadOnly={isReadOnly} style={{ border: 'none', cursor:  isReadOnly ? 'default' : 'text'}} value={value} type="text" onChange={(value: any) => handleTextInputChange(value)} aria-label={value} id={id} />;
 };
 
 export { Input };

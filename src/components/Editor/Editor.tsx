@@ -11,6 +11,7 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   const [types, setTypes] = React.useState<any>({});
   const [loading, setLoading] = React.useState(true);
   const [activeInput, setActiveInput] = React.useState<string>('');
+  const [selectedCell, setSelectedCell] = React.useState<string>('');
 
   // const inputRefs = React.useRef(null);
 
@@ -47,22 +48,113 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   };
 
   const onCellClick = (event: any, id: string) => {
-    console.log(`clicked: ${id}`)
-    // setTimeout(() => {
-    //   document.getElementById(id)!.focus();
-    // }, 1000)
+    console.log(`selected: ${id}`)
+    setSelectedCell(id);
+    focusElement(id);
   };
+
+  const onCellDoubleClick = (event: any, id: string) => {
+    onActivateInput(id);
+  }
 
   const onActivateInput = (id: string) => {
     setActiveInput(id);
+    focusElement(id);
   }
 
-  // up: 38
-  // down: 40
-  // left: 37
-  // right: 39
+  const focusElement = (id: string) => {
+    setTimeout(() => {
+      document.getElementById(id)!.focus();
+    }, 1)
+  }
+
   useKeyPress('Escape', () => {
-    console.log('exit modal');
+    console.log('exit edit');
+    setActiveInput('');
+  });
+
+  // up
+  useKeyPress(38, () => {
+    const currentId = selectedCell;
+    const minRow = 0;
+    let targetId;
+    if (currentId) {
+      // ['row', '1', 'column', '2']
+      const currentIdArr: string[] = currentId.split(' ');
+      const currentRow = Number.parseInt(currentIdArr[1]);
+      // going up means decrementing the row
+      const newRow = currentRow - 1;
+      if (newRow < minRow) {
+        return;
+      } else {
+        targetId = `row ${newRow} column ${currentIdArr[3]}`;
+        console.log('up');
+        onCellClick(null, targetId);
+      }
+    }
+  });
+
+  // down
+  useKeyPress(40, () => {
+    const currentId = selectedCell;
+    const maxRow = rowData.length - 1;
+    let targetId;
+    if (currentId) {
+      // ['row', '1', 'column', '2']
+      const currentIdArr: string[] = currentId.split(' ');
+      const currentRow = Number.parseInt(currentIdArr[1]);
+      // going down means incrementing the row
+      const newRow = currentRow + 1;
+      if (newRow > maxRow) {
+        return;
+      } else {
+        targetId = `row ${newRow} column ${currentIdArr[3]}`;
+        console.log('down');
+        onCellClick(null, targetId);
+      }
+    }
+  });
+
+  // left
+  useKeyPress(37, () => {
+    const currentId = selectedCell;
+    const minCol = 1;
+    let targetId;
+    if (currentId) {
+      // ['row', '1', 'column', '2']
+      const currentIdArr: string[] = currentId.split(' ');
+      const currentCol = Number.parseInt(currentIdArr[3]);
+      // going left means decrementing the column
+      const newCol = currentCol - 1;
+      if (newCol < minCol) {
+        return;
+      } else {
+        targetId = `row ${currentIdArr[1]} column ${newCol}`;
+        console.log('left');
+        onCellClick(null, targetId);
+      }
+    }
+  });
+
+  // right
+  useKeyPress(39, () => {
+    const currentId = selectedCell;
+    const maxCol = columnDefs.numGiven + columnDefs.numExpect + 1;
+    let targetId;
+    if (currentId) {
+      // ['row', '1', 'column', '2']
+      const currentIdArr: string[] = currentId.split(' ');
+      const currentCol = Number.parseInt(currentIdArr[3]);
+      // going right means incrementing the column
+      const newCol = currentCol + 1;
+      if (newCol > maxCol) {
+        return;
+      } else {
+        targetId = `row ${currentIdArr[1]} column ${newCol}`;
+        console.log('right');
+        onCellClick(null, targetId);
+      }
+    }
   });
 
   return loading ? <div>Loading</div> : (
@@ -147,9 +239,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
               const value = cell && cell.value ? cell.value : '';
               const path = cell && cell.path ? cell.path : '';
               // const cellId = `cell ${cellIndex}`;
-              const inputId = `row ${rowIndex} cell ${cellIndex}`;
+              const inputId = `row ${rowIndex} column ${cellIndex}`;
               return (
-                <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)}>
+                <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
                   {cellIndex === 0 ? <>{value}</> : 
                     <Input isReadOnly={inputId !== activeInput} onActivateInput={onActivateInput} originalValue={value} path={path} type={type} id={inputId} />}
                 </div>
