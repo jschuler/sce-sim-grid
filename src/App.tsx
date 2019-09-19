@@ -1,11 +1,11 @@
+import '@patternfly/react-core/dist/styles/base.css';
+import "@patternfly/patternfly/patternfly-addons.css";
 import React, { useState, useEffect } from "react";
 import { EditorContainer } from './components';
 import { getJsonFromSceSim, getJsonFromDmn } from './components/utils';
 import { Bullseye, Stack, StackItem, Title } from '@patternfly/react-core';
 import { Spinner } from '@patternfly/react-core/dist/js/experimental';
 import classNames from 'classnames';
-import '@patternfly/react-core/dist/styles/base.css';
-import "@patternfly/patternfly/patternfly-addons.css";
 import './App.css';
 
 const App: React.FC = () => {

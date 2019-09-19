@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TextInput } from '@patternfly/react-core';
+import { TextInput, Tooltip } from '@patternfly/react-core';
 import { useKeyPress } from './useKeyPress'; 
 import './input.css';
 
@@ -15,9 +15,43 @@ const Input: React.FC<{
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
   const [isActive, setActive] = React.useState<boolean>(false);
+  const [overflown, setOverflown] = React.useState<boolean>(false);
 
   const getActiveElement = () => {
     return (document && document.activeElement && document.activeElement.getAttribute('id')) || id;
+  };
+
+  const setCaretPosition = (el: any, caretPos: number) => {
+    // (el.selectionStart === 0 added for Firefox bug)
+    if (el.selectionStart || el.selectionStart === 0) {
+      el.focus();
+      el.setSelectionRange(caretPos, caretPos);
+      return true;
+    }
+  }
+
+  const setCaretPositionAtEnd = () => {
+    const el = document.getElementById(id) as HTMLInputElement;
+    const end = el.value.length;
+    setCaretPosition(el, end);
+  };
+
+  /**
+   * Copy contents of cell that is not in editing mode
+   */
+  const copyToClipboard = () => {
+    /* Get the text field */
+    const copyText = document.getElementById(id) as HTMLInputElement;
+    if (copyText) {
+      /* Select the text field */
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+      /* Copy the text inside the text field */
+      document.execCommand('copy');
+      // do not mark the whole text as selected
+      setCaretPositionAtEnd();
+      console.log(`Copied the text: ${copyText.value}`);
+    }
   };
 
   const handleTextInputChange = (value: any) => {
@@ -25,6 +59,17 @@ const Input: React.FC<{
     setValue(value);
   }
 
+  // copy cell
+  useKeyPress(/c/i, (event: any) => {
+    if (isReadOnly) {
+      // if not in editing mode, copy the whole cell
+      copyToClipboard();
+    }
+  }, id, true);
+
+  /**
+   * Enters editing mode for the currently focused cell and overwrites the content
+   */
   useKeyPress(/^[a-z0-9]$/i, (event: any) => {
     if (!isActive) {
       onActivateInput(id);
@@ -32,7 +77,7 @@ const Input: React.FC<{
       setValue(event.key);
       setTimeout(() => setActive(true), 1);
     }
-  }, id, true);
+  }, id);
 
   // either save current input, or enter editing mode
   useKeyPress('Enter', () => {
@@ -47,6 +92,7 @@ const Input: React.FC<{
       console.log('currently not active, will make active')
       setActive(true);
       onActivateInput(id);
+      setCaretPositionAtEnd();
     }
   }, id);
 
@@ -62,8 +108,20 @@ const Input: React.FC<{
     setActive(false);
   };
 
-  return (
+  const onGainFocus = (event: any) => {
+    setCaretPositionAtEnd();
+  }
+
+  const onMouseOver = (event: any) => {
+    const element = event.target;
+    const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+    console.log(`isOverflown: ${isOverflown}`);
+    setOverflown(isOverflown);
+  }
+
+  const input = (
     <TextInput 
+      onMouseOver={(event) => onMouseOver(event)}
       className="editor-input" 
       isReadOnly={isReadOnly} 
       style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
@@ -71,10 +129,17 @@ const Input: React.FC<{
       type="text" 
       onChange={(value: any) => isActive && handleTextInputChange(value)}
       onBlur={onLoseFocus}
+      onFocus={onGainFocus}
       aria-label={value} 
       id={id} 
     />
   );
+
+  return <Tooltip content={value} distance={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
+
+  // return overflown ? (
+  //   <Tooltip content={value} distance={0}>{input}</Tooltip>
+  // ) : input;
 };
 
 export { Input };

@@ -3,6 +3,7 @@ import { getColumns, getRows, getColumnNames } from "./utils";
 import { Input } from './Input';
 import { useKeyPress } from './useKeyPress';
 import classNames from 'classnames';
+import { Tooltip } from '@patternfly/react-core';
 import "./Editor.css";
 
 const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
@@ -264,8 +265,21 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
               const inputId = `row ${rowIndex} column ${cellIndex}`;
               return (
                 <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
-                  {cellIndex === 0 ? <>{value}</> : 
-                    <Input isReadOnly={inputId !== activeInput} onActivateInput={onActivateInput} setActiveInput={setActiveInput} originalValue={value} path={path} type={type} id={inputId} />}
+                  {cellIndex === 0 ? (
+                    <Tooltip content={value}>
+                      <span>{value}</span>
+                    </Tooltip>
+                  ) : (
+                    <Input
+                      isReadOnly={inputId !== activeInput} 
+                      onActivateInput={onActivateInput} 
+                      setActiveInput={setActiveInput} 
+                      originalValue={value} 
+                      path={path} 
+                      type={type} 
+                      id={inputId} 
+                    />
+                  )}
                 </div>
               )
             })}
