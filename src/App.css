@@ -10,4 +10,10 @@ html, body, #root, .App {
 
 .editor-container.show {
   opacity: 1;
-} 
+}
+
+.editor-container,
+.editor-container > div,
+.editor-container > div > div {
+  height: 100%;
+}

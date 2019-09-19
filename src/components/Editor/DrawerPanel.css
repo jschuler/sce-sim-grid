@@ -6,3 +6,7 @@
 .pf-c-expandable__toggle {
   text-align: left;
 }
+
+.pf-c-drawer.pf-m-expanded .pf-c-drawer__panel {
+  background-color: white;
+}

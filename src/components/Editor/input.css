@@ -11,6 +11,10 @@
   padding: 10px;
 }
 
+.editor-input.pf-c-form-control[readonly] {
+  background-color: white;
+}
+
 .editor-input.pf-c-form-control[readonly]:focus {
   text-align: center;
 }

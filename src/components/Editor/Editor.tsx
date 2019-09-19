@@ -45,7 +45,11 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
   };
 
   const onCellClick = (event: any, id: string) => {
-    console.log(`selected: ${id}`)
+    console.log(`selected: ${id}`);
+    if (id !== activeInput) {
+      // get out of previous cell editing mode
+      setActiveInput('');
+    }
     setSelectedCell(id);
     focusElement(id);
   };
@@ -261,7 +265,7 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
               return (
                 <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
                   {cellIndex === 0 ? <>{value}</> : 
-                    <Input isReadOnly={inputId !== activeInput} onActivateInput={onActivateInput} originalValue={value} path={path} type={type} id={inputId} />}
+                    <Input isReadOnly={inputId !== activeInput} onActivateInput={onActivateInput} setActiveInput={setActiveInput} originalValue={value} path={path} type={type} id={inputId} />}
                 </div>
               )
             })}
