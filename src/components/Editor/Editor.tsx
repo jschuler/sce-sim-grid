@@ -1,14 +1,14 @@
 import * as React from "react";
-import { getColumns, getRows, getDefinitions } from "./utils";
+import { getColumns, getRows, getColumnNames } from "./utils";
 import { Input } from './Input';
 import { useKeyPress } from './useKeyPress';
-import "@patternfly/patternfly/patternfly.min.css";
+import classNames from 'classnames';
 import "./Editor.css";
 
-const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
+const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
   const [columnDefs, setColumnDefs] = React.useState<any>({});
+  const [columnNames, setColumnNames] = React.useState<any[]>([]);
   const [rowData, setRowData] = React.useState<any[]>([]);
-  const [types, setTypes] = React.useState<any>({});
   const [loading, setLoading] = React.useState(true);
   const [activeInput, setActiveInput] = React.useState<string>('');
   const [selectedCell, setSelectedCell] = React.useState<string>('');
@@ -16,24 +16,21 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   // const inputRefs = React.useRef(null);
 
   React.useEffect(() => {
-    const allDefinitions = getDefinitions(model);
-    const allColumns = getColumns(data, true, allDefinitions);
+    const allColumns = getColumns(data, true, definitions);
     const allRows = getRows(data);
-    console.log(`allColumns:`);
+    const allColumnNames = getColumnNames(data);
+    console.log(allColumnNames);
     console.log(allColumns);
-    console.log(`allRows:`);
     console.log(allRows);
-    console.log(`allDefinitions:`);
-    console.log(allDefinitions);
+    setColumnNames(allColumnNames);
     setColumnDefs(allColumns);
     setRowData(allRows);
-    setTypes(allDefinitions);
     setLoading(false);
     setTimeout(() => {
       setNumGivenColumns(allColumns.numGiven);
       setNumExpectColumns(allColumns.numExpect);
     }, 1)
-  }, [data, model]);
+  }, [data, definitions]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -178,7 +175,7 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   });
 
   return loading ? <div>Loading</div> : (
-    <div id="kie-grid" className="kie-grid">
+    <div id="kie-grid" className={classNames('kie-grid', className)}>
       {columnDefs.other.map((other: { name: string }, index: number) => {
         if (index === 0) {
           return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
@@ -241,19 +238,20 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
         return (
           <div className="kie-grid__rule" key={`row ${rowIndex}`}>
             {row.map((cell: any, index: number) => {
-              // get the type of the column to pass on to the input for validation
-              let type = 'any';
-              const allColumns = getColumns(data, false, types);
-              // index 0 is not an input
-              // index 1 is the description and always string
-              if (index === 1) {
+              // get the type of the column to pass on to the input for formatting / validation
+              let type = 'string';
+              let columnGroup = '';
+              let columnName = '';
+              if (index === 0) {
+                // row index
+                type = 'number';
+              } else if (index === 1) {
+                // description
                 type = 'string';
               } else if (index > 1) {
-                if (index < allColumns.numGiven + 2) {
-                  type = allColumns.given[index - 2].type;
-                } else {
-                  type = allColumns.expect[index - 2 - allColumns.numGiven].type;
-                }
+                columnGroup = columnNames[index].group;
+                columnName = columnNames[index].name;
+                type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
               }
               const cellIndex = index;
               const value = cell && cell.value ? cell.value : '';

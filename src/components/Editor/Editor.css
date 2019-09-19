@@ -54,27 +54,3 @@
 .kie-grid__header--expect {
   display: contents;
 }
-
-/* input[type="text"] {
-  height: 100%;
-  margin: -8px;
-  text-align: center;
-}
-
-input[type="text"]:focus {
-  text-align: left;
-} */
-
-.editor-input.pf-c-form-control {
-  height: 100%;
-  margin: -8px;
-  text-align: center;
-}
-
-.editor-input.pf-c-form-control[readonly]:focus {
-  text-align: center;
-}
-
-.editor-input.pf-c-form-control:focus {
-  text-align: left;
-}
