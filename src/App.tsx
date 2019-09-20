@@ -1,10 +1,18 @@
+import '@patternfly/react-core/dist/styles/base.css';
+import "@patternfly/patternfly/patternfly-addons.css";
 import React, { useState, useEffect } from "react";
-import { Editor } from './components';
+import { EditorContainer } from './components';
 import { getJsonFromSceSim, getJsonFromDmn } from './components/utils';
+import { Bullseye, Stack, StackItem, Title } from '@patternfly/react-core';
+import { Spinner } from '@patternfly/react-core/dist/js/experimental';
+import classNames from 'classnames';
+import './App.css';
 
 const App: React.FC = () => {
   const [data, setData] = useState(null);
   const [model, setModel] = useState(null);
+  const [isLoading, setLoading] = useState(true);
+  const [isTransitionDone, setTransitionDone] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -19,15 +27,38 @@ const App: React.FC = () => {
       // console.log(dmnJson);
       setData(sceSimJson);
       setModel(dmnJson);
+      setTimeout(() => {
+        setLoading(false);
+        setTimeout(() => {
+          setTransitionDone(true);
+        }, 1);
+      }, 1000);
     })
     .catch(err => {
       console.log(err);
     });
   }, []);
 
+  const LoadingComponent = (
+    <Bullseye>
+      <div className="pf-l-flex pf-m-column">
+        <div className="pf-l-flex__item" style={{ textAlign: 'center' }}>
+          <Spinner />
+        </div>
+        <div>
+          <Title headingLevel="h1" size="xl" className="pf-u-mt-md">Loading tests</Title>
+        </div>
+      </div>
+    </Bullseye>
+  );
+
   return (
     <div className="App">
-      {(data && model) ? <Editor data={data} model={model} /> : "Loading"}
+      {isLoading ? LoadingComponent : (
+        <div className={classNames('editor-container', isTransitionDone && 'show')}>
+          <EditorContainer data={data} model={model} />
+        </div>
+      )}
     </div>
   );
 };
