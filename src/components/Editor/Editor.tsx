@@ -1,39 +1,41 @@
 import * as React from "react";
-import { getColumns, getRows, getDefinitions } from "./utils";
+import { getColumns, getRows, getColumnNames } from "./utils";
 import { Input } from './Input';
+import { Select } from './Select';
 import { useKeyPress } from './useKeyPress';
-import "@patternfly/patternfly/patternfly.min.css";
+import classNames from 'classnames';
 import "./Editor.css";
 
-const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
+const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
   const [columnDefs, setColumnDefs] = React.useState<any>({});
+  const [columnNames, setColumnNames] = React.useState<any[]>([]);
   const [rowData, setRowData] = React.useState<any[]>([]);
-  const [types, setTypes] = React.useState<any>({});
   const [loading, setLoading] = React.useState(true);
   const [activeInput, setActiveInput] = React.useState<string>('');
   const [selectedCell, setSelectedCell] = React.useState<string>('');
+  const [expandedSelect, setExpandedSelect] = React.useState(false);
 
   // const inputRefs = React.useRef(null);
 
   React.useEffect(() => {
-    const allDefinitions = getDefinitions(model);
-    const allColumns = getColumns(data, true, allDefinitions);
+    const allColumns = getColumns(data, true, definitions);
     const allRows = getRows(data);
-    console.log(`allColumns:`);
+    const allColumnNames = getColumnNames(data);
+    console.log(allColumnNames);
     console.log(allColumns);
-    console.log(`allRows:`);
     console.log(allRows);
-    console.log(`allDefinitions:`);
-    console.log(allDefinitions);
+    setColumnNames(allColumnNames);
     setColumnDefs(allColumns);
+    // for (let i = 0; i < 100; i++) {
+    //   allRows.push(allRows[0]);
+    // }
     setRowData(allRows);
-    setTypes(allDefinitions);
     setLoading(false);
     setTimeout(() => {
       setNumGivenColumns(allColumns.numGiven);
       setNumExpectColumns(allColumns.numExpect);
     }, 1)
-  }, [data, model]);
+  }, [data, definitions]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -48,7 +50,11 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   };
 
   const onCellClick = (event: any, id: string) => {
-    console.log(`selected: ${id}`)
+    console.log(`selected: ${id}`);
+    if (id !== activeInput) {
+      // get out of previous cell editing mode
+      setActiveInput('');
+    }
     setSelectedCell(id);
     focusElement(id);
   };
@@ -69,6 +75,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
   }
 
   useKeyPress('Escape', () => {
+    if (expandedSelect) {
+      return;
+    }
     console.log('exit edit');
     setActiveInput('');
   });
@@ -83,6 +92,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // up
   useKeyPress(38, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -107,6 +119,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // down
   useKeyPress(40, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -131,6 +146,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // left
   useKeyPress(37, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -155,6 +173,9 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 
   // right
   useKeyPress(39, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -177,8 +198,12 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
     }
   });
 
+  const onSelectToggleCallback = (id: any, isExpanded: boolean) => {
+    setExpandedSelect(isExpanded);
+  };
+
   return loading ? <div>Loading</div> : (
-    <div id="kie-grid" className="kie-grid">
+    <div id="kie-grid" className={classNames('kie-grid', className)}>
       {columnDefs.other.map((other: { name: string }, index: number) => {
         if (index === 0) {
           return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
@@ -241,29 +266,49 @@ const Editor: React.FC<{ data: any, model: any }> = ({ data, model }) => {
         return (
           <div className="kie-grid__rule" key={`row ${rowIndex}`}>
             {row.map((cell: any, index: number) => {
-              // get the type of the column to pass on to the input for validation
-              let type = 'any';
-              const allColumns = getColumns(data, false, types);
-              // index 0 is not an input
-              // index 1 is the description and always string
-              if (index === 1) {
+              // get the type of the column to pass on to the input for formatting / validation
+              let type = 'string';
+              let columnGroup = '';
+              let columnName = '';
+              if (index === 0) {
+                // row index
+                type = 'number';
+              } else if (index === 1) {
+                // description
                 type = 'string';
               } else if (index > 1) {
-                if (index < allColumns.numGiven + 2) {
-                  type = allColumns.given[index - 2].type;
-                } else {
-                  type = allColumns.expect[index - 2 - allColumns.numGiven].type;
-                }
+                columnGroup = columnNames[index].group;
+                columnName = columnNames[index].name;
+                type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
               }
               const cellIndex = index;
               const value = cell && cell.value ? cell.value : '';
               const path = cell && cell.path ? cell.path : '';
               // const cellId = `cell ${cellIndex}`;
               const inputId = `row ${rowIndex} column ${cellIndex}`;
+              let component;
+              const typeArr = type.split(', ');
+              if (typeArr.length > 1) {
+                // Multiple options, render Select
+                component = (
+                  <Select id={inputId} onSelectToggleCallback={onSelectToggleCallback} options={typeArr} originalValue={value} />
+                );
+              } else {
+                component = (
+                  <Input
+                    isReadOnly={inputId !== activeInput} 
+                    onActivateInput={onActivateInput} 
+                    setActiveInput={setActiveInput} 
+                    originalValue={value} 
+                    path={path} 
+                    type={type} 
+                    id={inputId} 
+                  />
+                );
+              }
               return (
                 <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
-                  {cellIndex === 0 ? <>{value}</> : 
-                    <Input isReadOnly={inputId !== activeInput} onActivateInput={onActivateInput} originalValue={value} path={path} type={type} id={inputId} />}
+                  {cellIndex === 0 ? value : component}
                 </div>
               )
             })}

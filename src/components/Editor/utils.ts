@@ -17,19 +17,18 @@ export const getColumnNames = (data: {
     }) => {
       const type = col.expressionIdentifier.type; // OTHER | GIVEN | EXPECT
       // const field = col.expressionIdentifier.name;
-      let name;
-      if (type === "OTHER") {
-        name = col.factAlias;
-      } else {
-        name = col.expressionAlias;
-      }
-      columns.push(name);
+      let name = col.expressionAlias || '';
+      let group = col.factAlias || '';
+      columns.push({
+        name,
+        group
+      });
     }
   );
   return columns;
 };
 
-type Column = Array<({ name: any; group: any; type: any; children?: undefined; } | { group: any; children: { name: any; type: any }[]; name?: undefined; type?: undefined; })>;
+type Column = Array<({ name: any; group: any; children?: undefined; } | { group: any; children: { name: any; }[]; name?: undefined; })>;
 
 export const getColumns = (data: {
   value: {
@@ -60,15 +59,14 @@ export const getColumns = (data: {
       } else {
         const name = col.expressionAlias;
         const group = col.factAlias;
-        const dataType = typeDefinitions && typeDefinitions[group] && typeDefinitions[group][name] ? typeDefinitions[group][name] : 'any';
         if (!byGroup) {
           if (type === "GIVEN") {
             numGiven = numGiven + 1;
-            columnDefsGiven.push({ name, group, type: dataType });
+            columnDefsGiven.push({ name, group });
           } else {
             // EXPECT
             numExpect = numExpect + 1;
-            columnDefsExpect.push({ name, group, type: dataType });
+            columnDefsExpect.push({ name, group });
           }
         } else {
           if (type === "GIVEN") {
@@ -76,10 +74,10 @@ export const getColumns = (data: {
             // check if the group already exists, if so push to it, otherwise create a new group
             if (columnDefsGiven.length === 0 || columnDefsGiven[columnDefsGiven.length - 1].group !== group) {
               // new group
-              columnDefsGiven.push({ group, children: [{ name, type: dataType }] });
+              columnDefsGiven.push({ group, children: [{ name }] });
             } else {
               // push to last group
-              columnDefsGiven[columnDefsGiven.length - 1].children!.push({ name, type: dataType })
+              columnDefsGiven[columnDefsGiven.length - 1].children!.push({ name })
             }
           } else {
             // EXPECT
@@ -87,10 +85,10 @@ export const getColumns = (data: {
             // check if the group already exists, if so push to it, otherwise create a new group
             if (columnDefsExpect.length === 0 || columnDefsExpect[columnDefsExpect.length - 1].group !== group) {
               // new group
-              columnDefsExpect.push({ group, children: [{ name, type: dataType }] });
+              columnDefsExpect.push({ group, children: [{ name }] });
             } else {
               // push to last group
-              columnDefsExpect[columnDefsExpect.length - 1].children!.push({ name, type: dataType })
+              columnDefsExpect[columnDefsExpect.length - 1].children!.push({ name })
             }
           }
         }
@@ -140,11 +138,13 @@ export const getRows = (data: {
   return rows;
 };
 
-export const getDefinitions = (data: { value: { itemDefinition: any; }; }) => {
+export const getDefinitions = (data: { value: { itemDefinition?: any; drgElement?: any; name?: any; }; }) => {
   let definitions: any = {};
+  const title = data.value.name;
   const { itemDefinition } = data.value;
+  const elementsMap: any = {};
   itemDefinition.forEach((def: any) => {
-    let definitionName = def.name.substring(1);
+    // let definitionName = def.name.substring(1);
     let definitionTypes = {} as any;
     // let definition = {
     //   name: def.name.substring(1),
@@ -159,7 +159,37 @@ export const getDefinitions = (data: { value: { itemDefinition: any; }; }) => {
       // });
     });
     // definitions.push(definition);
-    definitions[definitionName] = definitionTypes;
+    definitions[def.name] = definitionTypes;
   });
-  return definitions;
+
+  const { drgElement } = data.value;
+  const typeDefinitions: any = {
+    '_title': title,
+    simple: [],
+    complex: [],
+    map: {}
+  };
+  drgElement.forEach((element: any) => {
+    const type = element.name.localPart; // inputData | decision
+    const text = element.value.name;
+    const question = element.value.question;
+    const choices = element.value.allowedAnswers || null;
+    const typeRef = element.value.variable.typeRef; // e.g. tViolation, tFine, tDriver, string
+    typeDefinitions[typeRef.charAt(0) === 't' ? 'complex' : 'simple'].push(
+      {
+        typeRef,
+        type,
+        text,
+        choices,
+        question,
+        elements: definitions[typeRef] || {
+          value: choices
+        }
+      }
+    );
+    typeDefinitions.map[text] = definitions[typeRef] || {
+      value: choices
+    };
+  });
+  return typeDefinitions;
 }
