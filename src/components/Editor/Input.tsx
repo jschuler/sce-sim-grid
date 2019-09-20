@@ -1,7 +1,7 @@
 import * as React from "react";
 import { TextInput, Tooltip } from '@patternfly/react-core';
 import { useKeyPress } from './useKeyPress'; 
-import './input.css';
+import './Input.css';
 
 const Input: React.FC<{ 
   originalValue: any, 
@@ -21,6 +21,10 @@ const Input: React.FC<{
     return (document && document.activeElement && document.activeElement.getAttribute('id')) || id;
   };
 
+  const thisElement = () => {
+    return document.getElementById(id) as HTMLInputElement;
+  }
+
   const setCaretPosition = (el: any, caretPos: number) => {
     // (el.selectionStart === 0 added for Firefox bug)
     if (el.selectionStart || el.selectionStart === 0) {
@@ -31,7 +35,7 @@ const Input: React.FC<{
   }
 
   const setCaretPositionAtEnd = () => {
-    const el = document.getElementById(id) as HTMLInputElement;
+    const el = thisElement();
     const end = el.value.length;
     setCaretPosition(el, end);
   };
@@ -41,7 +45,7 @@ const Input: React.FC<{
    */
   const copyToClipboard = () => {
     /* Get the text field */
-    const copyText = document.getElementById(id) as HTMLInputElement;
+    const copyText = thisElement();
     if (copyText) {
       /* Select the text field */
       copyText.select();
@@ -59,28 +63,34 @@ const Input: React.FC<{
     setValue(value);
   }
 
-  // copy cell
-  useKeyPress(/c/i, (event: any) => {
+  /**
+   * Copy cell listener
+   */
+  const onCopy = (event?: any) => {
     if (isReadOnly) {
       // if not in editing mode, copy the whole cell
       copyToClipboard();
     }
-  }, id, true);
+  };
+  useKeyPress(/c/i, (event: any) => onCopy(event), id, true);
 
   /**
    * Enters editing mode for the currently focused cell and overwrites the content
    */
-  useKeyPress(/^[a-z0-9]$/i, (event: any) => {
+  const onOtherKeysPress = (event: any) => {
     if (!isActive) {
       onActivateInput(id);
       console.log(`setting value: ${event.key}`)
       setValue(event.key);
       setTimeout(() => setActive(true), 1);
     }
-  }, id);
+  };
+  useKeyPress(/^[a-z0-9]$/i, (event: any) => onOtherKeysPress(event), id);
 
-  // either save current input, or enter editing mode
-  useKeyPress('Enter', () => {
+  /**
+   * either save current input, or enter editing mode
+   */
+  const onEnter = () => {
     if (isActive) {
       console.log('currently active, will save')
       // save operation
@@ -94,13 +104,15 @@ const Input: React.FC<{
       onActivateInput(id);
       setCaretPositionAtEnd();
     }
-  }, id);
+  };
+  useKeyPress('Enter', () => onEnter(), id);
 
-  useKeyPress('Escape', () => {
+  const onEscape = () => {
     console.log('revert cell changes');
     setValue(savedValue);
     setActive(false);
-  }, id);
+  };
+  useKeyPress('Escape', () => onEscape(), id);
 
   const onLoseFocus = (event: any) => {
     console.log(`lost focus for id ${id}, save value: ${value}`);
@@ -109,11 +121,12 @@ const Input: React.FC<{
   };
 
   const onGainFocus = (event: any) => {
+    onMouseOver();
     setCaretPositionAtEnd();
   }
 
-  const onMouseOver = (event: any) => {
-    const element = event.target;
+  const onMouseOver = (event?: any) => {
+    const element = event ? event.target : thisElement();
     const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
     console.log(`isOverflown: ${isOverflown}`);
     setOverflown(isOverflown);
@@ -135,11 +148,7 @@ const Input: React.FC<{
     />
   );
 
-  return <Tooltip content={value} distance={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
-
-  // return overflown ? (
-  //   <Tooltip content={value} distance={0}>{input}</Tooltip>
-  // ) : input;
+  return <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
 };
 
 export { Input };

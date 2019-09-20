@@ -13,7 +13,6 @@ html, body, #root, .App {
 }
 
 .editor-container,
-.editor-container > div,
-.editor-container > div > div {
+.editor-container > div {
   height: 100%;
 }

@@ -46,7 +46,7 @@ const App: React.FC = () => {
           <Spinner />
         </div>
         <div>
-          <Title headingLevel="h1" size="xl" className="pf-u-mt-md">Loading scenario</Title>
+          <Title headingLevel="h1" size="xl" className="pf-u-mt-md">Loading tests</Title>
         </div>
       </div>
     </Bullseye>

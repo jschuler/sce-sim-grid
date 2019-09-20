@@ -1,9 +1,9 @@
 import * as React from "react";
 import { getColumns, getRows, getColumnNames } from "./utils";
 import { Input } from './Input';
+import { Select } from './Select';
 import { useKeyPress } from './useKeyPress';
 import classNames from 'classnames';
-import { Tooltip } from '@patternfly/react-core';
 import "./Editor.css";
 
 const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
@@ -13,6 +13,7 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
   const [loading, setLoading] = React.useState(true);
   const [activeInput, setActiveInput] = React.useState<string>('');
   const [selectedCell, setSelectedCell] = React.useState<string>('');
+  const [expandedSelect, setExpandedSelect] = React.useState(false);
 
   // const inputRefs = React.useRef(null);
 
@@ -25,6 +26,9 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
     console.log(allRows);
     setColumnNames(allColumnNames);
     setColumnDefs(allColumns);
+    // for (let i = 0; i < 100; i++) {
+    //   allRows.push(allRows[0]);
+    // }
     setRowData(allRows);
     setLoading(false);
     setTimeout(() => {
@@ -71,6 +75,9 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
   }
 
   useKeyPress('Escape', () => {
+    if (expandedSelect) {
+      return;
+    }
     console.log('exit edit');
     setActiveInput('');
   });
@@ -85,6 +92,9 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   // up
   useKeyPress(38, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -109,6 +119,9 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   // down
   useKeyPress(40, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -133,6 +146,9 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   // left
   useKeyPress(37, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -157,6 +173,9 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   // right
   useKeyPress(39, () => {
+    if (expandedSelect) {
+      return;
+    }
     if (activeInput) {
       return;
     }
@@ -178,6 +197,10 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       }
     }
   });
+
+  const onSelectToggleCallback = (id: any, isExpanded: boolean) => {
+    setExpandedSelect(isExpanded);
+  };
 
   return loading ? <div>Loading</div> : (
     <div id="kie-grid" className={classNames('kie-grid', className)}>
@@ -263,23 +286,29 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
               const path = cell && cell.path ? cell.path : '';
               // const cellId = `cell ${cellIndex}`;
               const inputId = `row ${rowIndex} column ${cellIndex}`;
+              let component;
+              const typeArr = type.split(', ');
+              if (typeArr.length > 1) {
+                // Multiple options, render Select
+                component = (
+                  <Select id={inputId} onSelectToggleCallback={onSelectToggleCallback} options={typeArr} originalValue={value} />
+                );
+              } else {
+                component = (
+                  <Input
+                    isReadOnly={inputId !== activeInput} 
+                    onActivateInput={onActivateInput} 
+                    setActiveInput={setActiveInput} 
+                    originalValue={value} 
+                    path={path} 
+                    type={type} 
+                    id={inputId} 
+                  />
+                );
+              }
               return (
                 <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
-                  {cellIndex === 0 ? (
-                    <Tooltip content={value}>
-                      <span>{value}</span>
-                    </Tooltip>
-                  ) : (
-                    <Input
-                      isReadOnly={inputId !== activeInput} 
-                      onActivateInput={onActivateInput} 
-                      setActiveInput={setActiveInput} 
-                      originalValue={value} 
-                      path={path} 
-                      type={type} 
-                      id={inputId} 
-                    />
-                  )}
+                  {cellIndex === 0 ? value : component}
                 </div>
               )
             })}
