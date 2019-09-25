@@ -39,13 +39,13 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   const setNumGivenColumns = (num: number) => {
     document
-      .getElementById("kie-grid")!
+      .getElementById("kogito-scesim-grid")!
       .style.setProperty("--num-given-columns", num.toString());
   };
 
   const setNumExpectColumns = (num: number) => {
     document
-      .getElementById("kie-grid")!
+      .getElementById("kogito-scesim-grid")!
       .style.setProperty("--num-expect-columns", num.toString());
   };
 
@@ -203,30 +203,30 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
   };
 
   return loading ? <div>Loading</div> : (
-    <div id="kie-grid" className={classNames('kie-grid', className)}>
+    <div id="kogito-scesim-grid" className={classNames('kogito-scesim-grid', className)}>
       {columnDefs.other.map((other: { name: string }, index: number) => {
         if (index === 0) {
-          return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
+          return <div className="kogito-scesim-grid__item kogito-scesim-grid__number" key="other-number">{other.name}</div>
         } else {
           return (
-            <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
+            <div className="kogito-scesim-grid__item kogito-scesim-grid__description" key="other-description">{other.name}</div>
           )
         }
       })}
       {/* The GIVEN and EXPECT groups are always there so this can be hardcoded */}
-      <div className="kie-grid__header--given">
-        <div className="kie-grid__item kie-grid__given">GIVEN</div>
+      <div className="kogito-scesim-grid__header--given">
+        <div className="kogito-scesim-grid__item kogito-scesim-grid__given">GIVEN</div>
       </div>
-      <div className="kie-grid__header--expect">
-        <div className="kie-grid__item kie-grid__expect">EXPECT</div>
+      <div className="kogito-scesim-grid__header--expect">
+        <div className="kogito-scesim-grid__item kogito-scesim-grid__expect">EXPECT</div>
       </div>
 
       {/* <!-- grid instance headers need to have a grid-column span set --> */}
-      <div className="kie-grid__header--given">
+      <div className="kogito-scesim-grid__header--given">
         {columnDefs.given.map((given: any, index: number) => (
           <div
             key={`given instance ${index}`}
-            className="kie-grid__item kie-grid__instance"
+            className="kogito-scesim-grid__item kogito-scesim-grid__instance"
             style={{ gridColumn: `span ${given.children.length}` }}
           >
             {given.group}
@@ -234,11 +234,11 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         ))}
       </div>
 
-      <div className="kie-grid__header--expect">
+      <div className="kogito-scesim-grid__header--expect">
         {columnDefs.expect.map((expect: any, index: number) => (
           <div
             key={`expect instance ${index}`}
-            className="kie-grid__item kie-grid__instance"
+            className="kogito-scesim-grid__item kogito-scesim-grid__instance"
             style={{ gridColumn: `span ${expect.children.length}` }}
           >
             {expect.group}
@@ -246,17 +246,17 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         ))}
       </div>
 
-      <div className="kie-grid__header--given">
+      <div className="kogito-scesim-grid__header--given">
         {columnDefs.given.map((given: any, index: number) => {
           return given.children.map((givenChild: any, index: number) => (
-            <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
+            <div key={`given property ${index}`} className="kogito-scesim-grid__item kogito-scesim-grid__property">{givenChild.name}</div>
           ));
         })}
       </div>
-      <div className="kie-grid__header--expect">
+      <div className="kogito-scesim-grid__header--expect">
         {columnDefs.expect.map((expect: any, index: number) => {
           return expect.children.map((expectChild: any, index: number) => (
-            <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
+            <div key={`expect property ${index}`} className="kogito-scesim-grid__item kogito-scesim-grid__property">{expectChild.name}</div>
           ));
         })}
       </div>
@@ -264,7 +264,7 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       {rowData.map((row, index) => {
         const rowIndex = index;
         return (
-          <div className="kie-grid__rule" key={`row ${rowIndex}`}>
+          <div className="kogito-scesim-grid__rule" key={`row ${rowIndex}`}>
             {row.map((cell: any, index: number) => {
               // get the type of the column to pass on to the input for formatting / validation
               let type = 'string';
@@ -307,7 +307,7 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
                 );
               }
               return (
-                <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
+                <div className="kogito-scesim-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
                   {cellIndex === 0 ? value : component}
                 </div>
               )
