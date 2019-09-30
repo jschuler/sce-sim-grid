@@ -1,18 +1,20 @@
-import * as React from "react";
+import * as React from 'react';
+import { EditorRow } from './EditorRow';
 import { getColumns, getRows, getColumnNames } from "./utils";
-import { Input } from './Input';
-import { Select } from './Select';
 import { useKeyPress } from './useKeyPress';
 import classNames from 'classnames';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import "./Editor.css";
 
 const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
   const [columnDefs, setColumnDefs] = React.useState<any>({});
   const [columnNames, setColumnNames] = React.useState<any[]>([]);
   const [rowData, setRowData] = React.useState<any[]>([]);
+  const [rowDataLength, setRowDataLength] = React.useState<number>(-1);
   const [loading, setLoading] = React.useState(true);
   const [activeInput, setActiveInput] = React.useState<string>('');
-  const [selectedCell, setSelectedCell] = React.useState<string>('');
+  // const [selectedCell, setSelectedCell] = React.useState<string>('');
   const [expandedSelect, setExpandedSelect] = React.useState(false);
 
   // const inputRefs = React.useRef(null);
@@ -25,11 +27,13 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
     console.log(allColumns);
     console.log(allRows);
     setColumnNames(allColumnNames);
+    debugger;
     setColumnDefs(allColumns);
-    // for (let i = 0; i < 100; i++) {
-    //   allRows.push(allRows[0]);
-    // }
+    for (let i = 0; i < 400; i++) {
+      allRows.push(allRows[0]);
+    }
     setRowData(allRows);
+    setRowDataLength(allRows.length);
     setLoading(false);
     setTimeout(() => {
       setNumGivenColumns(allColumns.numGiven);
@@ -55,11 +59,12 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       // get out of previous cell editing mode
       setActiveInput('');
     }
-    setSelectedCell(id);
+    // setSelectedCell(id);
     focusElement(id);
   };
 
   const onCellDoubleClick = (event: any, id: string) => {
+    console.log(`double click ${id}`);
     onActivateInput(id);
   }
 
@@ -70,35 +75,46 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   const focusElement = (id: string) => {
     setTimeout(() => {
+      console.log(`focusing ${id}`);
       document.getElementById(id)!.focus();
     }, 1)
   }
 
-  useKeyPress('Escape', () => {
+  /**
+   * Enter editing mode
+   */
+  const onEnter = (event: any) => {
+    const { id } = event.target;
+    console.log(`${id} currently not active, will make active`);
+    onActivateInput(id);
+  };
+
+  const onEscapeKeyPress = React.useCallback(() => {
     if (expandedSelect) {
       return;
     }
     console.log('exit edit');
     setActiveInput('');
-  });
+  }, [expandedSelect]);
 
-  useKeyPress('Tab', () => {
+  const onTabKeyPress = React.useCallback(() => {
     console.log('tabbed');
     setTimeout(() => {
       const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
       onCellClick(null, activeElement);
     }, 1);
-  });
+  }, []);
 
   // up
-  useKeyPress(38, () => {
+  const onUpKeyPress = React.useCallback(() => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
     if (activeInput) {
       return;
     }
-    const currentId = selectedCell;
+    const currentId = activeElement;
     const minRow = 0;
     let targetId;
     if (currentId) {
@@ -115,18 +131,19 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         onCellClick(null, targetId);
       }
     }
-  });
+  }, [expandedSelect]);
 
   // down
-  useKeyPress(40, () => {
+  const onDownKeyPress = React.useCallback(() => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    if (activeInput) {
-      return;
-    }
-    const currentId = selectedCell;
-    const maxRow = rowData.length - 1;
+    // if (activeInput) {
+    //   return;
+    // }
+    const currentId = activeElement;
+    const maxRow = rowDataLength - 1;
     let targetId;
     if (currentId) {
       // ['row', '1', 'column', '2']
@@ -142,17 +159,18 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         onCellClick(null, targetId);
       }
     }
-  });
+  }, [expandedSelect, rowDataLength]);
 
   // left
-  useKeyPress(37, () => {
+  const onLeftKeyPress = React.useCallback(() => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    if (activeInput) {
-      return;
-    }
-    const currentId = selectedCell;
+    // if (activeInput) {
+    //   return;
+    // }
+    const currentId = activeElement;
     const minCol = 1;
     let targetId;
     if (currentId) {
@@ -169,17 +187,18 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         onCellClick(null, targetId);
       }
     }
-  });
+  }, [expandedSelect]);
 
   // right
-  useKeyPress(39, () => {
+  const onRightKeyPress = React.useCallback(() => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    if (activeInput) {
-      return;
-    }
-    const currentId = selectedCell;
+    // if (activeInput) {
+    //   return;
+    // }
+    const currentId = activeElement;
     const maxCol = columnDefs.numGiven + columnDefs.numExpect + 1;
     let targetId;
     if (currentId) {
@@ -196,11 +215,37 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         onCellClick(null, targetId);
       }
     }
-  });
+  }, [expandedSelect, columnDefs]);
+
+  useKeyPress('Enter', onEnter, { log: 'editor' });
+  useKeyPress('Escape', onEscapeKeyPress, { log: 'editor' });
+  useKeyPress('Tab', onTabKeyPress, { log: 'editor' });
+  useKeyPress(38, onUpKeyPress, { log: 'editor', deps: [expandedSelect] });
+  useKeyPress(40, onDownKeyPress, { log: 'editor', deps: [expandedSelect, rowDataLength] });
+  useKeyPress(37, onLeftKeyPress, { log: 'editor', deps: [expandedSelect] });
+  useKeyPress(39, onRightKeyPress, { log: 'editor', deps: [expandedSelect, columnDefs] });
 
   const onSelectToggleCallback = (id: any, isExpanded: boolean) => {
     setExpandedSelect(isExpanded);
   };
+
+  // @ts-ignore
+  const Row = ({ index, style }) => (
+    <EditorRow
+      key={`row ${index}`}
+      rowData={rowData} 
+      rowIndex={index}
+      columnNames={columnNames}
+      definitions={definitions}
+      onSelectToggleCallback={onSelectToggleCallback}
+      activeInput={activeInput}
+      onActivateInput={onActivateInput}
+      setActiveInput={setActiveInput}
+      onCellClick={onCellClick}
+      onCellDoubleClick={onCellDoubleClick}
+      style={style}
+    />
+  );
 
   return loading ? <div>Loading</div> : (
     <div id="kie-grid" className={classNames('kie-grid', className)}>
@@ -261,60 +306,46 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
         })}
       </div>
 
-      {rowData.map((row, index) => {
-        const rowIndex = index;
-        return (
-          <div className="kie-grid__rule" key={`row ${rowIndex}`}>
-            {row.map((cell: any, index: number) => {
-              // get the type of the column to pass on to the input for formatting / validation
-              let type = 'string';
-              let columnGroup = '';
-              let columnName = '';
-              if (index === 0) {
-                // row index
-                type = 'number';
-              } else if (index === 1) {
-                // description
-                type = 'string';
-              } else if (index > 1) {
-                columnGroup = columnNames[index].group;
-                columnName = columnNames[index].name;
-                type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
-              }
-              const cellIndex = index;
-              const value = cell && cell.value ? cell.value : '';
-              const path = cell && cell.path ? cell.path : '';
-              // const cellId = `cell ${cellIndex}`;
-              const inputId = `row ${rowIndex} column ${cellIndex}`;
-              let component;
-              const typeArr = type.split(', ');
-              if (typeArr.length > 1) {
-                // Multiple options, render Select
-                component = (
-                  <Select id={inputId} onSelectToggleCallback={onSelectToggleCallback} options={typeArr} originalValue={value} />
-                );
-              } else {
-                component = (
-                  <Input
-                    isReadOnly={inputId !== activeInput} 
-                    onActivateInput={onActivateInput} 
-                    setActiveInput={setActiveInput} 
-                    originalValue={value} 
-                    path={path} 
-                    type={type} 
-                    id={inputId} 
-                  />
-                );
-              }
-              return (
-                <div className="kie-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
-                  {cellIndex === 0 ? value : component}
-                </div>
-              )
-            })}
-          </div>
-        )
-      })}
+      {rowData.map((row, index) => (
+        <EditorRow
+          key={`row ${index}`}
+          rowData={rowData} 
+          rowIndex={index}
+          columnNames={columnNames}
+          definitions={definitions}
+          onSelectToggleCallback={onSelectToggleCallback}
+          activeInput={activeInput}
+          onActivateInput={onActivateInput}
+          setActiveInput={setActiveInput}
+          onCellClick={onCellClick}
+          onCellDoubleClick={onCellDoubleClick}
+          style={{}}
+        />
+      ))}
+
+          {/* <List
+            className="List"
+            height={500}
+            itemCount={rowData.length}
+            itemSize={82}
+            width={'100%'}
+          >
+            {Row}
+          </List> */}
+
+      {/* <AutoSizer>
+        {({ height, width }) => (
+          <List
+            className="List"
+            height={height}
+            itemCount={rowData.length}
+            itemSize={26}
+            width={width}
+          >
+            {Row}
+          </List>
+        )}
+      </AutoSizer> */}
     </div>
   );
 };

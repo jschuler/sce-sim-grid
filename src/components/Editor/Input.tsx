@@ -72,7 +72,6 @@ const Input: React.FC<{
       copyToClipboard();
     }
   };
-  useKeyPress(/c/i, (event: any) => onCopy(event), id, true);
 
   /**
    * Enters editing mode for the currently focused cell and overwrites the content
@@ -85,7 +84,6 @@ const Input: React.FC<{
       setTimeout(() => setActive(true), 1);
     }
   };
-  useKeyPress(/^[a-z0-9]$/i, (event: any) => onOtherKeysPress(event), id);
 
   /**
    * either save current input, or enter editing mode
@@ -105,14 +103,30 @@ const Input: React.FC<{
       setCaretPositionAtEnd();
     }
   };
-  useKeyPress('Enter', () => onEnter(), id);
 
   const onEscape = () => {
     console.log('revert cell changes');
     setValue(savedValue);
     setActive(false);
   };
-  useKeyPress('Escape', () => onEscape(), id);
+
+  useKeyPress(/c/i, (event: any) => onCopy(event), {
+    id, 
+    withModifier: true,
+    isActive: !isReadOnly
+  });
+  useKeyPress('Escape', () => onEscape(), { 
+    id,
+    isActive: !isReadOnly
+  });
+  useKeyPress(/^[a-z0-9]$/i, (event: any) => onOtherKeysPress(event), { 
+    id,
+    isActive: !isReadOnly
+  });
+  useKeyPress('Enter', () => onEnter(), { 
+    id,
+    isActive: !isReadOnly
+  });
 
   const onLoseFocus = (event: any) => {
     console.log(`lost focus for id ${id}, save value: ${value}`);
@@ -132,23 +146,64 @@ const Input: React.FC<{
     setOverflown(isOverflown);
   }
 
-  const input = (
-    <TextInput 
-      onMouseOver={(event) => onMouseOver(event)}
-      className="editor-input" 
-      isReadOnly={isReadOnly} 
-      style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
-      value={value} 
-      type="text" 
-      onChange={(value: any) => isActive && handleTextInputChange(value)}
-      onBlur={onLoseFocus}
-      onFocus={onGainFocus}
-      aria-label={value} 
-      id={id} 
-    />
-  );
+  return (
+    <>
+      {isReadOnly ? (
+        <input 
+          className="pf-c-form-control editor-input" 
+          style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
+          type="text" 
+          defaultValue={`read-only ${value}`}
+          id={id}
+          aria-label={value}
+          readOnly
+        />
+      ) : (
+        <TextInput 
+          onMouseOver={(event) => onMouseOver(event)}
+          className="editor-input" 
+          isReadOnly={isReadOnly} 
+          style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
+          value={value} 
+          type="text" 
+          onChange={(value: any) => isActive && handleTextInputChange(value)}
+          onBlur={onLoseFocus}
+          onFocus={onGainFocus}
+          aria-label={value} 
+          id={id} 
+        />
+      )}
+    </>);
 
-  return <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
+  // return (
+  //   // @ts-ignore
+  //   <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'} tippyProps={{ isEnabled: false }}>
+  //     {isReadOnly ? (
+  //       <input 
+  //         className="pf-c-form-control editor-input" 
+  //         style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
+  //         type="text" 
+  //         defaultValue={`read-only ${value}`}
+  //         id={id}
+  //         aria-label={value}
+  //         readOnly        
+  //       />
+  //     ) : (
+  //       <TextInput 
+  //         onMouseOver={(event) => onMouseOver(event)}
+  //         className="editor-input" 
+  //         isReadOnly={isReadOnly} 
+  //         style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
+  //         value={value} 
+  //         type="text" 
+  //         onChange={(value: any) => isActive && handleTextInputChange(value)}
+  //         onBlur={onLoseFocus}
+  //         onFocus={onGainFocus}
+  //         aria-label={value} 
+  //         id={id} 
+  //       />
+  //     )}
+  //   </Tooltip>);
 };
 
 export { Input };

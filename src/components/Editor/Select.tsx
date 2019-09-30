@@ -127,7 +127,7 @@ const Select: React.FC<{
       // if not in editing mode, copy the whole cell
       copyToClipboard();
     }
-  }, id, true);
+  }, { id, withModifier: true, isActive: !isReadOnly });
 
   /**
    * Enters editing mode for the currently focused cell and overwrites the content
@@ -162,7 +162,7 @@ const Select: React.FC<{
     console.log('revert cell changes');
     setValue(savedValue);
     setActive(false);
-  }, id);
+  }, { id, isActive: !isReadOnly });
 
   const onLoseFocus = (event: any) => {
     console.log(`lost focus for id ${id}, save value: ${value}`);
@@ -216,19 +216,32 @@ const Select: React.FC<{
   // );
 
   return (
-    <PfSelect
-      toggleId={id}
-      variant={SelectVariant.single}
-      aria-label="Select Input"
-      onToggle={onToggle}
-      onSelect={onSelect}
-      selections={selected}
-      isExpanded={isExpanded}
-      ariaLabelledBy="typeahead-select-id"
-    >
-      {selectOptions}
-    </PfSelect>
-  );
+    <>
+      {isReadOnly ? (
+        <input 
+          className="pf-c-form-control editor-input" 
+          style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
+          type="text" 
+          defaultValue={`read-only ${value}`}
+          id={id}
+          aria-label={value}
+          readOnly
+        />
+      ) : (
+        <PfSelect
+          toggleId={id}
+          variant={SelectVariant.single}
+          aria-label="Select Input"
+          onToggle={onToggle}
+          onSelect={onSelect}
+          selections={selected}
+          isExpanded={isExpanded}
+          ariaLabelledBy="typeahead-select-id"
+        >
+          {selectOptions}
+        </PfSelect>
+      )}
+    </>);
 };
 
 export { Select };
