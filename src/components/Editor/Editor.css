@@ -49,8 +49,16 @@
   padding: var(--pf-global--spacer--xs) var(--pf-global--spacer--sm);
   text-align: center;
 }
+.kie-grid__body,
+.kie-grid__body > div,
+.kie-grid__body > div > .infinite-scroll-component,
 .kie-grid__rule,
 .kie-grid__header--given,
 .kie-grid__header--expect {
+  display: contents;
+}
+
+.vList,
+.vList > div {
   display: contents;
 }

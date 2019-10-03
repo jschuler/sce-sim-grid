@@ -5,13 +5,15 @@ import { Editor } from './Editor';
 import { DefinitionsDrawerPanel } from './DrawerPanel';
 import { getDefinitions } from "./utils";
 
-const EditorContainer: React.FC<{ data: any, model: any }> = ({ data, model }) => {
-  const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
+const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
+// const EditorContainer: React.FC<{ data: any, model: any }> = ({ data, model }) => {
+  const [isDrawerExpanded, setDrawerExpanded] = React.useState(false);
 
   const definitions = getDefinitions(model);
   console.log(`definitions:`);
   console.log(definitions);
 
+  console.log('render EditorContainer');
   return (
     <div className="pf-m-redhat-font">
       <Drawer isExpanded={isDrawerExpanded} isInline>
@@ -25,6 +27,11 @@ const EditorContainer: React.FC<{ data: any, model: any }> = ({ data, model }) =
       </Drawer>
     </div>
   )
+});
+
+// @ts-ignore
+EditorContainer.whyDidYouRender = {
+  customName: 'EditorContainer'
 };
 
 export { EditorContainer };

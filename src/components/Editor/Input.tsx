@@ -1,21 +1,24 @@
 import * as React from "react";
-import { TextInput, Tooltip } from '@patternfly/react-core';
+import { Tooltip } from '@patternfly/react-core';
 import { useKeyPress } from './useKeyPress'; 
+import { setCaretPositionAtEnd } from './utils';
 import './Input.css';
 
-const Input: React.FC<{ 
+const Input = React.memo<{ 
   originalValue: any, 
   path: string, 
   id?: any, 
   type?: string, 
   onActivateInput?: any, 
   isReadOnly?: boolean,
-  setActiveInput: any
-}> = ({ originalValue, path, id, type, onActivateInput, isReadOnly, setActiveInput }) => {
+  deactivateAndFocusCell: any,
+  setEditable: any
+}>(({ originalValue, path, id, type, onActivateInput, isReadOnly, deactivateAndFocusCell, setEditable }) => {
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
-  const [isActive, setActive] = React.useState<boolean>(false);
   const [overflown, setOverflown] = React.useState<boolean>(false);
+
+  const inputRef = React.useRef(null);
 
   const getActiveElement = () => {
     return (document && document.activeElement && document.activeElement.getAttribute('id')) || id;
@@ -25,185 +28,110 @@ const Input: React.FC<{
     return document.getElementById(id) as HTMLInputElement;
   }
 
-  const setCaretPosition = (el: any, caretPos: number) => {
-    // (el.selectionStart === 0 added for Firefox bug)
-    if (el.selectionStart || el.selectionStart === 0) {
-      el.focus();
-      el.setSelectionRange(caretPos, caretPos);
-      return true;
-    }
-  }
+  React.useEffect(() => {
+    setTimeout(() => {
+      if (!isReadOnly) {
+        console.log('set caret position at end');
+        setCaretPositionAtEnd(thisElement());
+      }
+    }, 1)
+  });
 
-  const setCaretPositionAtEnd = () => {
-    const el = thisElement();
-    const end = el.value.length;
-    setCaretPosition(el, end);
-  };
-
-  /**
-   * Copy contents of cell that is not in editing mode
-   */
-  const copyToClipboard = () => {
-    /* Get the text field */
-    const copyText = thisElement();
-    if (copyText) {
-      /* Select the text field */
-      copyText.select();
-      copyText.setSelectionRange(0, 99999); /*For mobile devices*/
-      /* Copy the text inside the text field */
-      document.execCommand('copy');
-      // do not mark the whole text as selected
-      setCaretPositionAtEnd();
-      console.log(`Copied the text: ${copyText.value}`);
-    }
-  };
-
-  const handleTextInputChange = (value: any) => {
-    console.log('handleTextInputChange');
-    setValue(value);
+  const handleTextInputChange = (event: any) => {
+    setValue(event.currentTarget.value);
   }
 
   /**
-   * Copy cell listener
+   * save current input
    */
-  const onCopy = (event?: any) => {
-    if (isReadOnly) {
-      // if not in editing mode, copy the whole cell
-      copyToClipboard();
-    }
+  const onEnter = (event: any) => {
+    console.log('currently editable, will save');
+    // save operation
+    setSavedValue(value);
+    // mark itself as not editable but maintain focus
+    deactivateAndFocusCell(event.target.id);
   };
 
-  /**
-   * Enters editing mode for the currently focused cell and overwrites the content
-   */
-  const onOtherKeysPress = (event: any) => {
-    if (!isActive) {
-      onActivateInput(id);
-      console.log(`setting value: ${event.key}`)
-      setValue(event.key);
-      setTimeout(() => setActive(true), 1);
-    }
-  };
-
-  /**
-   * either save current input, or enter editing mode
-   */
-  const onEnter = () => {
-    if (isActive) {
-      console.log('currently active, will save')
-      // save operation
-      setSavedValue(value);
-      // mark itself as not active
-      setActiveInput('');
-      setActive(false);
-    } else {
-      console.log('currently not active, will make active')
-      setActive(true);
-      onActivateInput(id);
-      setCaretPositionAtEnd();
-    }
-  };
-
-  const onEscape = () => {
+  const onEscape = (event: any) => {
     console.log('revert cell changes');
     setValue(savedValue);
-    setActive(false);
+    // mark itself as not editable but maintain focus
+    deactivateAndFocusCell(event.target.id);
   };
 
-  useKeyPress(/c/i, (event: any) => onCopy(event), {
-    id, 
-    withModifier: true,
-    isActive: !isReadOnly
-  });
-  useKeyPress('Escape', () => onEscape(), { 
+  useKeyPress('Escape', onEscape, { 
+    log: 'input',
     id,
     isActive: !isReadOnly
   });
-  useKeyPress(/^[a-z0-9]$/i, (event: any) => onOtherKeysPress(event), { 
-    id,
-    isActive: !isReadOnly
-  });
-  useKeyPress('Enter', () => onEnter(), { 
+  useKeyPress('Enter', onEnter, { 
+    log: 'input',
     id,
     isActive: !isReadOnly
   });
 
+  /**
+   * Save the value and notify the Editor that we're not editable anymore
+   */
   const onLoseFocus = (event: any) => {
-    console.log(`lost focus for id ${id}, save value: ${value}`);
-    setSavedValue(value);
-    setActive(false);
+    if (!isReadOnly) {
+      console.log(`lost focus for id ${id}, save value: ${value}`);
+      setSavedValue(value);
+      setEditable('');
+    }
   };
 
+  /**
+   * When the element receives focus, check if we should show a tooltip
+   */
   const onGainFocus = (event: any) => {
-    onMouseOver();
-    setCaretPositionAtEnd();
+    checkForOverflow();
   }
 
-  const onMouseOver = (event?: any) => {
+  /**
+   * Check if the element is overflown
+   */
+  const checkForOverflow = (event?: any) => {
     const element = event ? event.target : thisElement();
     const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
     console.log(`isOverflown: ${isOverflown}`);
     setOverflown(isOverflown);
   }
 
-  return (
-    <>
-      {isReadOnly ? (
-        <input 
-          className="pf-c-form-control editor-input" 
-          style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
-          type="text" 
-          defaultValue={`read-only ${value}`}
-          id={id}
-          aria-label={value}
-          readOnly
-        />
-      ) : (
-        <TextInput 
-          onMouseOver={(event) => onMouseOver(event)}
-          className="editor-input" 
-          isReadOnly={isReadOnly} 
-          style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
-          value={value} 
-          type="text" 
-          onChange={(value: any) => isActive && handleTextInputChange(value)}
-          onBlur={onLoseFocus}
-          onFocus={onGainFocus}
-          aria-label={value} 
-          id={id} 
-        />
-      )}
-    </>);
+  const input = (
+    <input 
+      ref={inputRef}
+      onMouseOver={checkForOverflow}
+      className="editor-input truncate" 
+      style={{ background: isReadOnly ? 'white' : 'yellow', cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
+      value={value} 
+      type="text" 
+      onChange={handleTextInputChange}
+      onBlur={onLoseFocus}
+      onFocus={onGainFocus}
+      aria-label={value} 
+      id={id} 
+      readOnly={isReadOnly}
+    />
+  );
+  return <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
+}, (prevProps, nextProps) => {
+  /*
+   return true if passing nextProps to render would return
+   the same result as passing prevProps to render,
+   otherwise return false
+   */
+  const shouldRerender = prevProps.isReadOnly !== nextProps.isReadOnly;
+  if (shouldRerender) {
+    console.log(`${nextProps.id} will re-render`);
+    return false;
+  }
+  return true;
+});
 
-  // return (
-  //   // @ts-ignore
-  //   <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'} tippyProps={{ isEnabled: false }}>
-  //     {isReadOnly ? (
-  //       <input 
-  //         className="pf-c-form-control editor-input" 
-  //         style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
-  //         type="text" 
-  //         defaultValue={`read-only ${value}`}
-  //         id={id}
-  //         aria-label={value}
-  //         readOnly        
-  //       />
-  //     ) : (
-  //       <TextInput 
-  //         onMouseOver={(event) => onMouseOver(event)}
-  //         className="editor-input" 
-  //         isReadOnly={isReadOnly} 
-  //         style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
-  //         value={value} 
-  //         type="text" 
-  //         onChange={(value: any) => isActive && handleTextInputChange(value)}
-  //         onBlur={onLoseFocus}
-  //         onFocus={onGainFocus}
-  //         aria-label={value} 
-  //         id={id} 
-  //       />
-  //     )}
-  //   </Tooltip>);
+// @ts-ignore
+Input.whyDidYouRender = {
+  customName: 'Input'
 };
 
 export { Input };

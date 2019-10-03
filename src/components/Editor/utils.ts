@@ -193,3 +193,17 @@ export const getDefinitions = (data: { value: { itemDefinition?: any; drgElement
   });
   return typeDefinitions;
 }
+
+export const setCaretPosition = (element: any, caretPos: number) => {
+  // (el.selectionStart === 0 added for Firefox bug)
+  if (element.selectionStart || element.selectionStart === 0) {
+    element.focus();
+    element.setSelectionRange(caretPos, caretPos);
+    return true;
+  }
+}
+
+export const setCaretPositionAtEnd = (element: HTMLInputElement) => {
+  const end = element.value.length;
+  setCaretPosition(element, end);
+};
