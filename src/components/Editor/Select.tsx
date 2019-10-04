@@ -40,8 +40,8 @@ const Select = React.memo<{
       onToggle(true);
       setTimeout(() => {
         const element = document.querySelector(`button[id="${id}"]`);
-        if (element && element.parentNode && element.parentNode.querySelector('.pf-c-select__menu-item')) {
-          (element.parentNode.querySelector('.pf-c-select__menu-item') as HTMLButtonElement).focus();
+        if (element && element.parentNode && (element.parentNode as HTMLElement).querySelector('.pf-c-select__menu-item')) {
+          ((element.parentNode as HTMLElement).querySelector('.pf-c-select__menu-item') as HTMLButtonElement).focus();
         }
       }, 1);
     }
