@@ -62,3 +62,7 @@
 .vList > div {
   display: contents;
 }
+
+.pf-c-select__menu {
+  right: 0;
+}

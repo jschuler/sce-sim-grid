@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Input } from './Input';
 import { Select } from './Select';
+import { FilteredRowsContext } from './EditorContainer';
 
 const compare = (prevProps: any, nextProps: any) => {
   /*
@@ -37,12 +38,10 @@ const compare = (prevProps: any, nextProps: any) => {
   return true;
 };
 
-const EditorRow = React.memo<{ 
+const EditorRow: React.SFC<{ 
   style: any,
   rowData: any,
   rowIndex: number,
-  columnNames: any,
-  definitions: any,
   onSelectToggleCallback: any,
   activeInput: any,
   onActivateInput: any,
@@ -50,12 +49,10 @@ const EditorRow = React.memo<{
   onCellDoubleClick: any,
   deactivateAndFocusCell: any,
   setEditable: any
-}>(({
+}> = ({ 
   style,
   rowData, 
   rowIndex,
-  columnNames, 
-  definitions, 
   onSelectToggleCallback, 
   activeInput, 
   onActivateInput, 
@@ -64,8 +61,36 @@ const EditorRow = React.memo<{
   deactivateAndFocusCell,
   setEditable
 }) => {
+// const EditorRow = React.memo<{ 
+//   style: any,
+//   rowData: any,
+//   rowIndex: number,
+//   columnNames: any,
+//   definitions: any,
+//   onSelectToggleCallback: any,
+//   activeInput: any,
+//   onActivateInput: any,
+//   onCellClick: any,
+//   onCellDoubleClick: any,
+//   deactivateAndFocusCell: any,
+//   setEditable: any
+// }>(({
+//   style,
+//   rowData, 
+//   rowIndex,
+//   columnNames, 
+//   definitions, 
+//   onSelectToggleCallback, 
+//   activeInput, 
+//   onActivateInput, 
+//   onCellClick,
+//   onCellDoubleClick,
+//   deactivateAndFocusCell,
+//   setEditable
+// }) => {
   // console.log('render EditorRow');
-  return (
+  const { definitions, columnNames } = React.useContext(FilteredRowsContext);
+  return !rowData ? null : (
     <div className="kie-grid__rule" style={style}>
       {rowData.map((cell: any, index: number) => {
         // get the type of the column to pass on to the input for formatting / validation
@@ -125,7 +150,8 @@ const EditorRow = React.memo<{
       })}
     </div>
   );
-}, compare);
+};
+// }, compare);
 
 // @ts-ignore
 EditorRow.whyDidYouRender = {

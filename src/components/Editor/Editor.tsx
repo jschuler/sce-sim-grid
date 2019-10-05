@@ -2,47 +2,49 @@ import * as React from 'react';
 import { EditorRow } from './EditorRow';
 import { getColumns, getRows, getColumnNames, setCaretPositionAtEnd } from "./utils";
 import { useKeyPress } from './useKeyPress';
-// import { useInfiniteScroll } from './useInfiniteScroll';
 import InfiniteScroll from 'react-infinite-scroll-component';
-// import InfiniteScroll from 'react-infinite-scroller';
 import classNames from 'classnames';
 import { Spinner } from '../Spinner';
+import { FilteredRowsContext } from './EditorContainer';
+import { Input } from './Input';
+import { Select } from './Select';
 import "./Editor.css";
 
-const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
+const Editor = React.memo(() => {
+// const Editor: React.FC = () => {
+  const rowsToFetch = 50;
+
   const [editableCell, setEditable] = React.useState<string>('');
   const [expandedSelect, setExpandedSelect] = React.useState(false);
+  const { columns: columnDefs, rows, definitions, columnNames } = React.useContext(FilteredRowsContext);
+  // console.log(`filtered rows`);
+  // console.log(rows);
+  // console.log('initial page');
+  const initialRowsToFetch = rows.slice(0, rowsToFetch);
+  // console.log(initialRowsToFetch);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [fetchedRows, setFetchedRows] = React.useState([...initialRowsToFetch]);
+  // console.log(`stateful value`);
+  // console.log(fetchedRows);
 
   const editorRef = React.useRef(null);
 
-  const rowsToFetch = 50;
-
-  const allColumns = getColumns(data, true, definitions);
-  let allRows = getRows(data);
-  const allColumnNames = getColumnNames(data);
-  // console.log(allColumnNames);
-  // console.log(allColumns);
-  // console.log(allRows);
-  const columnNames = allColumnNames;
-  const columnDefs = allColumns;
-  for (let i = 0; i < 2000; i++) {
-    const clonedArray = JSON.parse(JSON.stringify(allRows[0]))
-    clonedArray[0].value = (i + 6).toString();
-    allRows.push(clonedArray);
-  }
-  const rowData = allRows;
-  const rowDataLength = allRows.length;
-
-  
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [fetchedRows, setFetchedRows] = React.useState(rowData.slice(0, rowsToFetch));
+  // const rowData = rows;
+  const rowData = rows;
+  const rowDataLength = rows.length;
+  // let fetchedRows = rowData.slice(0, rowsToFetch);
 
   React.useEffect(() => {
     setTimeout(() => {
-      setNumGivenColumns(allColumns.numGiven);
-      setNumExpectColumns(allColumns.numExpect);
+      setNumGivenColumns(columnDefs.numGiven);
+      setNumExpectColumns(columnDefs.numExpect);
     }, 1)
   }, []);
+
+  React.useEffect(() => {
+    console.log('setting fetchedRows');
+    setFetchedRows(rowData.slice(0, rowsToFetch));
+  }, [rowData]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -281,130 +283,167 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
 
   // rowData
   const fetchMoreRows = (page?: number) => {
-    setTimeout(() => {
-      if (page) {
-        setFetchedRows(prevState => ([...prevState, ...rowData.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
-      } else {
-        setFetchedRows(prevState => ([...prevState, ...rowData.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
-        setCurrentPage(currentPage + 1);
-      }
-    }, 1);
+    if (page) {
+      // fetchedRows = rowData.slice(0, page * rowsToFetch + rowsToFetch);
+      setFetchedRows((prevState: any) => ([...prevState, ...rowData.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
+    } else {
+      setFetchedRows((prevState: any) => ([...prevState, ...rowData.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
+      // fetchedRows = rowData.slice(0, currentPage * rowsToFetch + rowsToFetch);
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   console.log('render Editor');
-  return (
-    <div id="kie-grid" className={classNames('kie-grid', className)} ref={editorRef}>
-      {columnDefs.other.map((other: { name: string }, index: number) => {
-        if (index === 0) {
-          return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
-        } else {
-          return (
-            <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
-          )
-        }
-      })}
-      {/* The GIVEN and EXPECT groups are always there so this can be hardcoded */}
-      <div className="kie-grid__header--given">
-        <div className="kie-grid__item kie-grid__given">GIVEN</div>
-      </div>
-      <div className="kie-grid__header--expect">
-        <div className="kie-grid__item kie-grid__expect">EXPECT</div>
-      </div>
-
-      {/* <!-- grid instance headers need to have a grid-column span set --> */}
-      <div className="kie-grid__header--given">
-        {columnDefs.given.map((given: any, index: number) => (
-          <div
-            key={`given instance ${index}`}
-            className="kie-grid__item kie-grid__instance"
-            style={{ gridColumn: `span ${given.children.length}` }}
-          >
-            {given.group}
-          </div>
-        ))}
-      </div>
-
-      <div className="kie-grid__header--expect">
-        {columnDefs.expect.map((expect: any, index: number) => (
-          <div
-            key={`expect instance ${index}`}
-            className="kie-grid__item kie-grid__instance"
-            style={{ gridColumn: `span ${expect.children.length}` }}
-          >
-            {expect.group}
-          </div>
-        ))}
-      </div>
-
-      <div className="kie-grid__header--given">
-        {columnDefs.given.map((given: any, index: number) => {
-          return given.children.map((givenChild: any, index: number) => (
-            <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
-          ));
+  // console.log(fetchedRows);
+  return !fetchedRows ? null : (
+    <>
+      <div id="kie-grid" className="kie-grid" ref={editorRef}>
+        {columnDefs.other.map((other: { name: string }, index: number) => {
+          if (index === 0) {
+            return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
+          } else {
+            return (
+              <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
+            )
+          }
         })}
-      </div>
-      <div className="kie-grid__header--expect">
-        {columnDefs.expect.map((expect: any, index: number) => {
-          return expect.children.map((expectChild: any, index: number) => (
-            <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
-          ));
-        })}
-      </div>
+        {/* The GIVEN and EXPECT groups are always there so this can be hardcoded */}
+        <div className="kie-grid__header--given">
+          <div className="kie-grid__item kie-grid__given">GIVEN</div>
+        </div>
+        <div className="kie-grid__header--expect">
+          <div className="kie-grid__item kie-grid__expect">EXPECT</div>
+        </div>
 
-      <div className="kie-grid__body">
-        <InfiniteScroll
-          dataLength={fetchedRows.length} //This is important field to render the next data
-          next={fetchMoreRows}
-          hasMore={fetchedRows.length < rowData.length}
-          loader={<Spinner text="Loading more rows..." />}
-        >
-            {fetchedRows.map((row, index) => (
-              <EditorRow
-                key={`row ${index}`}
-                rowData={rowData[index]} 
-                rowIndex={index}
-                columnNames={columnNames}
-                definitions={definitions}
-                onSelectToggleCallback={onSelectToggleCallback}
-                activeInput={editableCell}
-                onActivateInput={activateAndFocusCell}
-                setEditable={setEditable}
-                onCellClick={onCellClick}
-                onCellDoubleClick={onCellDoubleClick}
-                style={{}}
-                deactivateAndFocusCell={deactivateAndFocusCell}
-              />
-            ))}
-        </InfiniteScroll>
+        {/* <!-- grid instance headers need to have a grid-column span set --> */}
+        <div className="kie-grid__header--given">
+          {columnDefs.given.map((given: any, index: number) => (
+            <div
+              key={`given instance ${index}`}
+              className="kie-grid__item kie-grid__instance"
+              style={{ gridColumn: `span ${given.children.length}` }}
+            >
+              {given.group}
+            </div>
+          ))}
+        </div>
+
+        <div className="kie-grid__header--expect">
+          {columnDefs.expect.map((expect: any, index: number) => (
+            <div
+              key={`expect instance ${index}`}
+              className="kie-grid__item kie-grid__instance"
+              style={{ gridColumn: `span ${expect.children.length}` }}
+            >
+              {expect.group}
+            </div>
+          ))}
+        </div>
+
+        <div className="kie-grid__header--given">
+          {columnDefs.given.map((given: any, index: number) => {
+            return given.children.map((givenChild: any, index: number) => (
+              <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
+            ));
+          })}
+        </div>
+        <div className="kie-grid__header--expect">
+          {columnDefs.expect.map((expect: any, index: number) => {
+            return expect.children.map((expectChild: any, index: number) => (
+              <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
+            ));
+          })}
+        </div>
+
+        <div className="kie-grid__body">
+          <InfiniteScroll
+            dataLength={fetchedRows.length}
+            next={fetchMoreRows}
+            hasMore={fetchedRows.length < rowData.length}
+            loader={<Spinner text="Loading more rows..." />}
+            scrollableTarget="sce-sim-grid__main"
+          >
+              {fetchedRows.map((row: any, rowIndex: number) => (
+                // <EditorRow
+                //   key={`row ${row[0].value}`}
+                //   rowData={row} 
+                //   rowIndex={Number.parseInt(row[0].value)}
+                //   onSelectToggleCallback={onSelectToggleCallback}
+                //   activeInput={editableCell}
+                //   onActivateInput={activateAndFocusCell}
+                //   setEditable={setEditable}
+                //   onCellClick={onCellClick}
+                //   onCellDoubleClick={onCellDoubleClick}
+                //   style={{}}
+                //   deactivateAndFocusCell={deactivateAndFocusCell}
+                // />
+                <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
+                  {row.map((cell: any, index: number) => {
+                    // get the type of the column to pass on to the input for formatting / validation
+                    let type = 'string';
+                    let columnGroup = '';
+                    let columnName = '';
+                    if (index === 0) {
+                      // row index
+                      type = 'number';
+                    } else if (index === 1) {
+                      // description
+                      type = 'string';
+                    } else if (index > 1) {
+                      columnGroup = columnNames[index].group;
+                      columnName = columnNames[index].name;
+                      type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
+                    }
+                    const cellIndex = index;
+                    const value = cell && cell.value ? cell.value : '';
+                    const path = cell && cell.path ? cell.path : '';
+                    // const cellId = `cell ${cellIndex}`;
+                    const inputId = `row ${rowIndex} column ${cellIndex}`;
+                    let component;
+                    const typeArr = type.split(', ');
+                    if (typeArr.length > 1) {
+                      // Multiple options, render Select
+                      component = (
+                        <Select 
+                          isReadOnly={inputId !== editableCell} 
+                          id={inputId} 
+                          onSelectToggleCallback={onSelectToggleCallback} 
+                          options={typeArr} 
+                          originalValue={value}
+                          deactivateAndFocusCell={deactivateAndFocusCell}
+                          setEditable={setEditable}
+                        />
+                      );
+                    } else {
+                      component = (
+                        <Input
+                          isReadOnly={inputId !== editableCell} 
+                          onActivateInput={activateAndFocusCell} 
+                          originalValue={value} 
+                          path={path} 
+                          type={type} 
+                          id={inputId} 
+                          deactivateAndFocusCell={deactivateAndFocusCell}
+                          setEditable={setEditable}
+                        />
+                      );
+                    }
+                    return (
+                      <div className="kie-grid__item" key={inputId} onClick={onCellClick} onDoubleClick={onCellDoubleClick}>
+                        {cellIndex === 0 ? value : component}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+          </InfiniteScroll>
+        </div>
       </div>
-      {/* <InfiniteScroll
-        style={{ display: 'contents' }}
-        pageStart={1}
-        loadMore={fetchMoreRows}
-        hasMore={true || fetchedRows.length < rowData.length}
-        loader={<div className="loader" key={0}>Loading ...</div>}
-      >
-        {fetchedRows.map((row, index) => (
-          <EditorRow
-            key={`row ${index}`}
-            rowData={rowData[index]} 
-            rowIndex={index}
-            columnNames={columnNames}
-            definitions={definitions}
-            onSelectToggleCallback={onSelectToggleCallback}
-            activeInput={editableCell}
-            onActivateInput={activateAndFocusCell}
-            setActiveInput={setEditable}
-            onCellClick={onCellClick}
-            onCellDoubleClick={onCellDoubleClick}
-            style={{}}
-            deactivateAndFocusCell={deactivateAndFocusCell}
-          />
-        ))}
-      </InfiniteScroll> */}
-    </div>
+    </>
   );
-};
+}, (prevProps, nextProps) => {
+  return true;
+});
 
 // @ts-ignore
 Editor.whyDidYouRender = {
