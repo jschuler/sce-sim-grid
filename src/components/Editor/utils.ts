@@ -1,3 +1,16 @@
+export const getDmnFilePath = (data: {
+  value: {
+    simulation: {
+      simulationDescriptor: { dmnFilePath: any };
+    };
+  };
+}) => {
+  const {
+    dmnFilePath
+  } = data.value.simulation.simulationDescriptor;
+  return dmnFilePath;
+};
+
 export const getColumnNames = (data: {
   value: {
     simulation: {

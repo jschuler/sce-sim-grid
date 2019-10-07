@@ -4,7 +4,7 @@ import { Drawer, DrawerContent } from '@patternfly/react-core/dist/js/experiment
 import { BarsIcon } from '@patternfly/react-icons';
 import { Editor } from './Editor';
 import { DefinitionsDrawerPanel } from './DrawerPanel';
-import { getDefinitions, getColumns, getRows, getColumnNames } from "./utils";
+import { getDefinitions, getColumns, getRows, getColumnNames, getDmnFilePath } from "./utils";
 import EditorToolbar from './EditorToolbar';
 import classNames from 'classnames';
 
@@ -32,6 +32,8 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
   const definitions = getDefinitions(model);
   console.log(`definitions:`);
   console.log(definitions);
+
+  const dmnFilePath = getDmnFilePath(data);
 
   const columns = getColumns(data, true, definitions);
   let originalRows = getRows(data);
@@ -84,6 +86,9 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
                 <BarsIcon />
               </Button>
             </div>
+            <div className="pf-c-page__header-brand-link">
+              Kogito scesim editor (Pre-Alpha)
+            </div>
           </div>
             <div className="pf-c-page__header-tools">
               <EditorToolbar originalRows={originalRows} rows={filteredRows} updateRows={updateRows} columnNames={columnNames} />
@@ -91,7 +96,7 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
           </header>
           <div className={classNames("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
             <div className="pf-c-page__sidebar-body">
-              <DefinitionsDrawerPanel />
+              <DefinitionsDrawerPanel definitions={definitions} dmnFilePath={dmnFilePath} />
             </div>
           </div>
           <main role="main" className="pf-c-page__main" id="sce-sim-grid__main" tabIndex={-1}>
