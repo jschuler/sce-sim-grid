@@ -17,29 +17,31 @@ import {
 import { ListUlIcon, SortAlphaDownIcon, TableIcon } from '@patternfly/react-icons';
 import { FilteredRowsContext } from './EditorContainer';
 
-const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
+// const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
+const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any, columnNames: any }>(({ originalRows, rows, updateRows, columnNames }) => {
+  // const { originalRows, rows, updateRows, columnNames } = React.useContext(FilteredRowsContext);
+  
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
-  const [itemToColumnIndexMap, setItemToColumnIndexMap] = React.useState<any>({});
   const [searchValue, setSearchValue] = React.useState('');
 
-  const { rows, updateRows, columnNames } = React.useContext(FilteredRowsContext);
+  let itemToColumnIndexMap: any = [];
+  columnNames.forEach((item: any, index: number) => {
+    const value = `${item.group} ${item.name}`;
+    itemToColumnIndexMap[value] = index;
+  });
 
   React.useEffect(() => {
-    let map: any = [];
-    columnNames.forEach((item: any, index: number) => {
-      const value = `${item.group} ${item.name}`;
-      map[value] = index;
-    })
-    setItemToColumnIndexMap(map);
-  }, []);
+    console.log('updating filterRows');
+    filterRows(searchValue);
+  }, [selected]);
 
   const handleSearchChange = (value: string) => {
     filterRows(value);
     setSearchValue(value);
   };
 
-  const filterRows = (value: string) => {
+  const filterRows = (value: string, selections?: any[]) => {
     const searchRE = new RegExp(value, 'i');
     const filteredRows = originalRows.filter((row: any) => {
       let found = false;
@@ -63,7 +65,11 @@ const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
       }
       return found;
     });
+    debugger;
     updateRows(filteredRows);
+    // if (selections) {
+    //   setSelected(selections);
+    // }
   }
 
   const onSelectToggle = (isOpen: boolean) => {
@@ -78,9 +84,7 @@ const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
       selections = [...selected, selection];
     }
     setSelected(selections);
-    // setTimeout(() => {
-    //   filterRows(searchValue);
-    // }, 1)
+    // filterRows(searchValue, selections);
   };
 
   const clearSelection = () => {
@@ -125,6 +129,7 @@ const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
     );
   };
 
+  console.log('render EditorToolbar');
   return (
     <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
       <ToolbarGroup>
@@ -145,6 +150,18 @@ const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
       </ToolbarGroup>
     </Toolbar>
   );
-}
+}, (prevProps, nextProps) => {
+  debugger;
+  // TODO: Compare values as well not just length
+  if (prevProps.rows.length !== nextProps.rows.length) {
+    return false;
+  }
+  return true;
+});
+
+// @ts-ignore
+EditorToolbar.whyDidYouRender = {
+  customName: 'EditorToolbar'
+};
 
 export default EditorToolbar;

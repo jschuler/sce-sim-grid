@@ -39,7 +39,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      {isLoading ? <Spinner text="Loading tests" /> : (
+      {isLoading ? <Spinner text="Loading scenarios" /> : (
         <div className={classNames('editor-container', isTransitionDone && 'show')}>
           <EditorContainer data={data} model={model} />
         </div>

@@ -10,12 +10,14 @@ import classNames from 'classnames';
 
 export const FilteredRowsContext = React.createContext<{
   columns: any,
+  originalRows: any[],
   rows: any[], 
   updateRows?: any, 
   definitions?: any,
   columnNames?: any
 }>({
   columns: null,
+  originalRows: [],
   rows: [], 
   updateRows: null, 
   definitions: null,
@@ -24,6 +26,7 @@ export const FilteredRowsContext = React.createContext<{
 
 // const EditorContainer: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
+  debugger;
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
 
   const definitions = getDefinitions(model);
@@ -64,7 +67,7 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
 
   console.log('render EditorContainer');
   return (
-    <FilteredRowsContext.Provider value={{ columns, rows: filteredRows, updateRows, definitions, columnNames }}>
+    <FilteredRowsContext.Provider value={{ columns, originalRows, rows: filteredRows, updateRows, definitions, columnNames }}>
       <div className="pf-m-redhat-font">
         <div className="pf-c-page">
           <header role="banner" className="pf-c-page__header">
@@ -83,31 +86,27 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
             </div>
           </div>
             <div className="pf-c-page__header-tools">
-              <EditorToolbar rows={originalRows} />
+              <EditorToolbar originalRows={originalRows} rows={filteredRows} updateRows={updateRows} columnNames={columnNames} />
             </div>
           </header>
           <div className={classNames("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
             <div className="pf-c-page__sidebar-body">
-              <DefinitionsDrawerPanel rows={originalRows} closeDrawer={closeDrawer} />
+              <DefinitionsDrawerPanel />
             </div>
           </div>
           <main role="main" className="pf-c-page__main" id="sce-sim-grid__main" tabIndex={-1}>
             <section className="pf-c-page__main-section pf-m-light">
-              <Editor />
+              <Editor columns={columns} rows={filteredRows} definitions={definitions} columnNames={columnNames} />
             </section>
           </main>
         </div>
-        {/* <Drawer isExpanded={isDrawerExpanded} isInline>
-          <DrawerContent>
-            <div className="pf-u-m-lg">
-              <Editor />
-            </div>
-          </DrawerContent>
-          <DefinitionsDrawerPanel rows={originalRows} closeDrawer={closeDrawer} />
-        </Drawer> */}
       </div>
     </FilteredRowsContext.Provider>
   )
+}, (prevProps, nextProps) => {
+  console.log('compare props EditorContainer');
+  debugger;
+  return true;
 });
 
 // @ts-ignore

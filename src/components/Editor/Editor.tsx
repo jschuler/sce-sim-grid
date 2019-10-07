@@ -10,13 +10,14 @@ import { Input } from './Input';
 import { Select } from './Select';
 import "./Editor.css";
 
-const Editor = React.memo(() => {
+const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNames: any }>(({ columns: columnDefs, rows, definitions, columnNames }) => {
+  debugger;
 // const Editor: React.FC = () => {
   const rowsToFetch = 50;
 
   const [editableCell, setEditable] = React.useState<string>('');
   const [expandedSelect, setExpandedSelect] = React.useState(false);
-  const { columns: columnDefs, rows, definitions, columnNames } = React.useContext(FilteredRowsContext);
+  // const { columns: columnDefs, rows, definitions, columnNames } = React.useContext(FilteredRowsContext);
   // console.log(`filtered rows`);
   // console.log(rows);
   // console.log('initial page');
@@ -29,11 +30,6 @@ const Editor = React.memo(() => {
 
   const editorRef = React.useRef(null);
 
-  // const rowData = rows;
-  const rowData = rows;
-  const rowDataLength = rows.length;
-  // let fetchedRows = rowData.slice(0, rowsToFetch);
-
   React.useEffect(() => {
     setTimeout(() => {
       setNumGivenColumns(columnDefs.numGiven);
@@ -43,8 +39,8 @@ const Editor = React.memo(() => {
 
   React.useEffect(() => {
     console.log('setting fetchedRows');
-    setFetchedRows(rowData.slice(0, rowsToFetch));
-  }, [rowData]);
+    setFetchedRows(rows.slice(0, rowsToFetch));
+  }, [rows]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -172,7 +168,7 @@ const Editor = React.memo(() => {
       return;
     }
     const currentId = activeElement;
-    const maxRow = rowDataLength - 1;
+    const maxRow = rows.length - 1;
     let targetId;
     if (currentId) {
       // ['row', '1', 'column', '2']
@@ -256,7 +252,7 @@ const Editor = React.memo(() => {
   const onCopy = (event: any) => {
     /* Get the text field */
     const copyText = event.target;
-    if (copyText) {
+    if (copyText && copyText.select) {
       /* Select the text field */
       copyText.select();
       copyText.setSelectionRange(0, 99999); /*For mobile devices*/
@@ -285,9 +281,9 @@ const Editor = React.memo(() => {
   const fetchMoreRows = (page?: number) => {
     if (page) {
       // fetchedRows = rowData.slice(0, page * rowsToFetch + rowsToFetch);
-      setFetchedRows((prevState: any) => ([...prevState, ...rowData.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
+      setFetchedRows((prevState: any) => ([...prevState, ...rows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
     } else {
-      setFetchedRows((prevState: any) => ([...prevState, ...rowData.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
+      setFetchedRows((prevState: any) => ([...prevState, ...rows.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
       // fetchedRows = rowData.slice(0, currentPage * rowsToFetch + rowsToFetch);
       setCurrentPage(currentPage + 1);
     }
@@ -359,7 +355,7 @@ const Editor = React.memo(() => {
           <InfiniteScroll
             dataLength={fetchedRows.length}
             next={fetchMoreRows}
-            hasMore={fetchedRows.length < rowData.length}
+            hasMore={fetchedRows.length < rows.length}
             loader={<Spinner text="Loading more rows..." />}
             scrollableTarget="sce-sim-grid__main"
           >
@@ -442,6 +438,12 @@ const Editor = React.memo(() => {
     </>
   );
 }, (prevProps, nextProps) => {
+  console.log('compare props Editor');
+  debugger;
+  // TODO: Compare values as well not just length
+  if (prevProps.rows.length !== nextProps.rows.length) {
+    return false;
+  }
   return true;
 });
 
