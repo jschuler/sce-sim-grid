@@ -1,9 +1,8 @@
-import '@patternfly/react-core/dist/styles/base.css';
+import "@patternfly/patternfly/patternfly.min.css";
 import "@patternfly/patternfly/patternfly-addons.css";
 import React, { useState, useEffect } from "react";
 import { EditorContainer } from './components';
 import { getJsonFromSceSim, getJsonFromDmn } from './components/utils';
-import { Bullseye, Title } from '@patternfly/react-core';
 import classNames from 'classnames';
 import { Spinner } from './components/Spinner';
 import './App.css';

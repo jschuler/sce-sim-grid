@@ -103,7 +103,7 @@ const Input = React.memo<{
       ref={inputRef}
       onMouseOver={checkForOverflow}
       className="editor-input truncate" 
-      style={{ background: isReadOnly ? 'white' : 'yellow', cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
+      style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
       value={value} 
       type="text" 
       onChange={handleTextInputChange}

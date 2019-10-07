@@ -1,21 +1,15 @@
 import React from 'react';
 import {
   Button,
-  Dropdown,
-  DropdownPosition,
-  DropdownToggle,
-  DropdownItem,
-  KebabToggle,
   TextInput,
   Toolbar,
   ToolbarGroup,
   ToolbarItem,
-  ToolbarSection,
   Select,
   SelectOption
 } from '@patternfly/react-core';
-import { ListUlIcon, SortAlphaDownIcon, TableIcon } from '@patternfly/react-icons';
-import { FilteredRowsContext } from './EditorContainer';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
+import { HelpModal } from './HelpModal';
 
 // const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
 const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any, columnNames: any }>(({ originalRows, rows, updateRows, columnNames }) => {
@@ -24,6 +18,7 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
   const [searchValue, setSearchValue] = React.useState('');
+  const [isModelOpen, setModalOpen] = React.useState(false);
 
   let itemToColumnIndexMap: any = [];
   columnNames.forEach((item: any, index: number) => {
@@ -39,6 +34,14 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
   const handleSearchChange = (value: string) => {
     filterRows(value);
     setSearchValue(value);
+  };
+  
+  const openModal = () => {
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
   };
 
   const filterRows = (value: string, selections?: any[]) => {
@@ -131,24 +134,23 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
 
   console.log('render EditorToolbar');
   return (
-    <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-      <ToolbarGroup>
-        {originalRows.length === rows.length ? (
-          <ToolbarItem>{originalRows.length} items</ToolbarItem>
-        ) : (
-          <ToolbarItem>{rows.length} of {originalRows.length} items</ToolbarItem>
-        )}
-      </ToolbarGroup>
-      <ToolbarGroup>
-        <ToolbarItem className="pf-u-mr-xl">{buildSearchBox()}</ToolbarItem>
-        <ToolbarItem className="pf-u-mr-md">{buildSelect()}</ToolbarItem>
-        {/* <ToolbarItem>
-          <Button variant="plain" aria-label="Sort A-Z">
-            <SortAlphaDownIcon />
-          </Button>
-        </ToolbarItem> */}
-      </ToolbarGroup>
-    </Toolbar>
+    <>
+      <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+        <ToolbarGroup>
+          {originalRows.length === rows.length ? (
+            <ToolbarItem>{originalRows.length} items</ToolbarItem>
+          ) : (
+            <ToolbarItem>{rows.length} of {originalRows.length} items</ToolbarItem>
+          )}
+        </ToolbarGroup>
+        <ToolbarGroup>
+          <ToolbarItem className="pf-u-mr-xl">{buildSearchBox()}</ToolbarItem>
+          <ToolbarItem className="pf-u-mr-md">{buildSelect()}</ToolbarItem>
+          <ToolbarItem><Button variant="plain" onClick={openModal}><OutlinedQuestionCircleIcon size="md" /></Button></ToolbarItem>
+        </ToolbarGroup>
+      </Toolbar>
+      <HelpModal isOpen={isModelOpen} onClose={closeModal} />
+    </>
   );
 }, (prevProps, nextProps) => {
   debugger;
