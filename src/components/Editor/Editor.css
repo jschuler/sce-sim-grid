@@ -3,7 +3,7 @@
   --num-expect-columns: 3;
   display: grid;
 
-  grid-template-columns: [grid-start number-start] minmax(2em, auto) [number-end description-start] minmax(
+  grid-template-columns: [grid-start number-start] 3em [number-end description-start] minmax(
       auto,
       2fr
     ) [description-end given-start] repeat(
@@ -11,8 +11,8 @@
       minmax(auto, 1fr)
     ) [given-end expect-start] repeat(var(--num-expect-columns), 1fr) [expect-end grid-end];
 
-  grid-template-rows: [grid-row-start grid-row-header-start] 1fr [grid-row-instances-start] 1fr [grid-row-properties-start] 1fr [grid-row-header-end grid-row-data-start] 1fr [grid-row-data-end grid-row-end];
-  grid-auto-rows: 1fr;
+  grid-template-rows: [grid-row-start grid-row-header-start] auto [grid-row-instances-start] auto [grid-row-properties-start] auto [grid-row-header-end grid-row-data-start] auto [grid-row-data-end grid-row-end];
+  grid-auto-rows: auto;
 }
 
 .kie-grid__item {
