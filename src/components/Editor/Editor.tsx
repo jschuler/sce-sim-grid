@@ -1,41 +1,41 @@
-import * as React from "react";
-import { getColumns, getRows, getColumnNames } from "./utils";
+import * as React from 'react';
+import { setCaretPositionAtEnd } from "./utils";
+import { useKeyPress } from './useKeyPress';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { Spinner } from '../Spinner';
 import { Input } from './Input';
 import { Select } from './Select';
-import { useKeyPress } from './useKeyPress';
-import classNames from 'classnames';
 import "./Editor.css";
 
-const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({ data, definitions, className }) => {
-  const [columnDefs, setColumnDefs] = React.useState<any>({});
-  const [columnNames, setColumnNames] = React.useState<any[]>([]);
-  const [rowData, setRowData] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [activeInput, setActiveInput] = React.useState<string>('');
-  const [selectedCell, setSelectedCell] = React.useState<string>('');
-  const [expandedSelect, setExpandedSelect] = React.useState(false);
+const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNames: any }>(({ columns: columnDefs, rows, definitions, columnNames }) => {
+  const rowsToFetch = 50;
 
-  // const inputRefs = React.useRef(null);
+  const [editableCell, setEditable] = React.useState<string>('');
+  const [expandedSelect, setExpandedSelect] = React.useState(false);
+  // const { columns: columnDefs, rows, definitions, columnNames } = React.useContext(FilteredRowsContext);
+  // console.log(`filtered rows`);
+  // console.log(rows);
+  // console.log('initial page');
+  const initialRowsToFetch = rows.slice(0, rowsToFetch);
+  // console.log(initialRowsToFetch);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [fetchedRows, setFetchedRows] = React.useState([...initialRowsToFetch]);
+  // console.log(`stateful value`);
+  // console.log(fetchedRows);
+
+  const editorRef = React.useRef(null);
 
   React.useEffect(() => {
-    const allColumns = getColumns(data, true, definitions);
-    const allRows = getRows(data);
-    const allColumnNames = getColumnNames(data);
-    console.log(allColumnNames);
-    console.log(allColumns);
-    console.log(allRows);
-    setColumnNames(allColumnNames);
-    setColumnDefs(allColumns);
-    // for (let i = 0; i < 100; i++) {
-    //   allRows.push(allRows[0]);
-    // }
-    setRowData(allRows);
-    setLoading(false);
     setTimeout(() => {
-      setNumGivenColumns(allColumns.numGiven);
-      setNumExpectColumns(allColumns.numExpect);
+      setNumGivenColumns(columnDefs.numGiven);
+      setNumExpectColumns(columnDefs.numExpect);
     }, 1)
-  }, [data, definitions]);
+  }, []);
+
+  React.useEffect(() => {
+    console.log('setting fetchedRows');
+    setFetchedRows(rows.slice(0, rowsToFetch));
+  }, [rows]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -49,56 +49,90 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       .style.setProperty("--num-expect-columns", num.toString());
   };
 
-  const onCellClick = (event: any, id: string) => {
-    console.log(`selected: ${id}`);
-    if (id !== activeInput) {
-      // get out of previous cell editing mode
-      setActiveInput('');
+  const focusCell = (id: string) => {
+    if (id) {
+      console.log(`focusing ${id}`);
+      setTimeout(() => {
+        document.getElementById(id)!.focus();
+      }, 1)
     }
-    setSelectedCell(id);
-    focusElement(id);
+  }
+
+  const activateCell = (id: string) => {
+    if (id) {
+      console.log(`editing: ${id}`);
+      setEditable(id);
+    }
+  }
+
+  const deactivateCell = () => {
+    setEditable('');
+  }
+
+  const activateAndFocusCell = (id: string) => {
+    activateCell(id);
+    focusCell(id);
+  }
+
+  const deactivateAndFocusCell = (id: string) => {
+    deactivateCell();
+    focusCell(id);
+  }
+
+  const onCellClick = (event: any) => {
+    const { id } = event.target;
+    if (id === editableCell) {
+      // already active
+      return null;
+    }
+    console.log(`selected: ${id}`);
+    console.log(`current editableCell: ${editableCell}`);
+    if (editableCell) {
+      // get out of a previous cell editing mode
+      deactivateCell();
+    }
+    return id;
   };
 
-  const onCellDoubleClick = (event: any, id: string) => {
-    onActivateInput(id);
-  }
-
-  const onActivateInput = (id: string) => {
-    setActiveInput(id);
-    focusElement(id);
-  }
-
-  const focusElement = (id: string) => {
+  const onTabKeyPress = (event: any) => {
+    // small timeout to let the browser focus a cell first
     setTimeout(() => {
-      document.getElementById(id)!.focus();
+      onCellClick(event);
     }, 1)
+    onCellClick(event);
+  };
+
+  /**
+   * Enter editing mode
+   */
+  const onCellDoubleClick = (event: any) => {
+    const id = onCellClick(event);
+    if (id) {
+      activateAndFocusCell(id);
+    }
   }
 
-  useKeyPress('Escape', () => {
+  /**
+   * Enter editing mode
+   */
+  const onEnter = (event: any) => {
+    // don't want Input's onEnter listener to fire
+    event.stopPropagation();
+    onCellDoubleClick(event);
+  };
+
+  /**
+   * Up arrow key
+   */
+  const onUpKeyPress = (event: any) => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    console.log('exit edit');
-    setActiveInput('');
-  });
-
-  useKeyPress('Tab', () => {
-    console.log('tabbed');
-    setTimeout(() => {
-      const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-      onCellClick(null, activeElement);
-    }, 1);
-  });
-
-  // up
-  useKeyPress(38, () => {
-    if (expandedSelect) {
+    if (editableCell) {
       return;
     }
-    if (activeInput) {
-      return;
-    }
-    const currentId = selectedCell;
+    const currentId = activeElement;
     const minRow = 0;
     let targetId;
     if (currentId) {
@@ -112,21 +146,24 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       } else {
         targetId = `row ${newRow} column ${currentIdArr[3]}`;
         console.log('up');
-        onCellClick(null, targetId);
+        focusCell(targetId);
       }
     }
-  });
+  };
 
-  // down
-  useKeyPress(40, () => {
+  /**
+   * Down arrow key
+   */
+  const onDownKeyPress = (event: any) => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    if (activeInput) {
+    if (editableCell) {
       return;
     }
-    const currentId = selectedCell;
-    const maxRow = rowData.length - 1;
+    const currentId = activeElement;
+    const maxRow = rows.length - 1;
     let targetId;
     if (currentId) {
       // ['row', '1', 'column', '2']
@@ -139,20 +176,23 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       } else {
         targetId = `row ${newRow} column ${currentIdArr[3]}`;
         console.log('down');
-        onCellClick(null, targetId);
+        focusCell(targetId);
       }
     }
-  });
+  };
 
-  // left
-  useKeyPress(37, () => {
+  /**
+   * Left arrow key
+   */
+  const onLeftKeyPress = (event: any) => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    if (activeInput) {
+    if (editableCell) {
       return;
     }
-    const currentId = selectedCell;
+    const currentId = activeElement;
     const minCol = 1;
     let targetId;
     if (currentId) {
@@ -166,20 +206,23 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       } else {
         targetId = `row ${currentIdArr[1]} column ${newCol}`;
         console.log('left');
-        onCellClick(null, targetId);
+        focusCell(targetId);
       }
     }
-  });
+  };
 
-  // right
-  useKeyPress(39, () => {
+  /**
+   * Right arrow key
+   */
+  const onRightKeyPress = (event: any) => {
+    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
     if (expandedSelect) {
       return;
     }
-    if (activeInput) {
+    if (editableCell) {
       return;
     }
-    const currentId = selectedCell;
+    const currentId = activeElement;
     const maxCol = columnDefs.numGiven + columnDefs.numExpect + 1;
     let targetId;
     if (currentId) {
@@ -193,130 +236,214 @@ const Editor: React.FC<{ data: any, definitions: any, className?: string }> = ({
       } else {
         targetId = `row ${currentIdArr[1]} column ${newCol}`;
         console.log('right');
-        onCellClick(null, targetId);
+        focusCell(targetId);
       }
     }
-  });
+  };
+
+  /**
+   * Copy cell listener
+   */
+  const onCopy = (event: any) => {
+    /* Get the text field */
+    const copyText = event.target;
+    if (copyText && copyText.select) {
+      /* Select the text field */
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+      /* Copy the text inside the text field */
+      document.execCommand('copy');
+      // do not mark the whole text as selected
+      setCaretPositionAtEnd(copyText);
+      console.log(`Copied the text: ${copyText.value}`);
+    }
+  };
+
+  // Command / CTRL + C copies the focused cell content
+  useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
+  useKeyPress('Enter', onEnter, { log: 'editor', isActive: !editableCell });
+  useKeyPress('Tab', onTabKeyPress, { log: 'editor' });
+  useKeyPress(38, onUpKeyPress, { log: 'editor' });
+  useKeyPress(40, onDownKeyPress, { log: 'editor' });
+  useKeyPress(37, onLeftKeyPress, { log: 'editor' });
+  useKeyPress(39, onRightKeyPress, { log: 'editor' });
 
   const onSelectToggleCallback = (id: any, isExpanded: boolean) => {
     setExpandedSelect(isExpanded);
   };
 
-  return loading ? <div>Loading</div> : (
-    <div id="kogito-scesim-grid" className={classNames('kogito-scesim-grid', className)}>
-      {columnDefs.other.map((other: { name: string }, index: number) => {
-        if (index === 0) {
-          return <div className="kogito-scesim-grid__item kogito-scesim-grid__number" key="other-number">{other.name}</div>
-        } else {
-          return (
-            <div className="kogito-scesim-grid__item kogito-scesim-grid__description" key="other-description">{other.name}</div>
-          )
-        }
-      })}
-      {/* The GIVEN and EXPECT groups are always there so this can be hardcoded */}
-      <div className="kogito-scesim-grid__header--given">
-        <div className="kogito-scesim-grid__item kogito-scesim-grid__given">GIVEN</div>
-      </div>
-      <div className="kogito-scesim-grid__header--expect">
-        <div className="kogito-scesim-grid__item kogito-scesim-grid__expect">EXPECT</div>
-      </div>
+  // rowData
+  const fetchMoreRows = (page?: number) => {
+    if (page) {
+      // fetchedRows = rowData.slice(0, page * rowsToFetch + rowsToFetch);
+      setFetchedRows((prevState: any) => ([...prevState, ...rows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
+    } else {
+      setFetchedRows((prevState: any) => ([...prevState, ...rows.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
+      // fetchedRows = rowData.slice(0, currentPage * rowsToFetch + rowsToFetch);
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-      {/* <!-- grid instance headers need to have a grid-column span set --> */}
-      <div className="kogito-scesim-grid__header--given">
-        {columnDefs.given.map((given: any, index: number) => (
-          <div
-            key={`given instance ${index}`}
-            className="kogito-scesim-grid__item kogito-scesim-grid__instance"
-            style={{ gridColumn: `span ${given.children.length}` }}
-          >
-            {given.group}
-          </div>
-        ))}
-      </div>
-
-      <div className="kogito-scesim-grid__header--expect">
-        {columnDefs.expect.map((expect: any, index: number) => (
-          <div
-            key={`expect instance ${index}`}
-            className="kogito-scesim-grid__item kogito-scesim-grid__instance"
-            style={{ gridColumn: `span ${expect.children.length}` }}
-          >
-            {expect.group}
-          </div>
-        ))}
-      </div>
-
-      <div className="kogito-scesim-grid__header--given">
-        {columnDefs.given.map((given: any, index: number) => {
-          return given.children.map((givenChild: any, index: number) => (
-            <div key={`given property ${index}`} className="kogito-scesim-grid__item kogito-scesim-grid__property">{givenChild.name}</div>
-          ));
+  console.log('render Editor');
+  // console.log(fetchedRows);
+  return !fetchedRows ? null : (
+    <>
+      <div id="kie-grid" className="kie-grid" ref={editorRef}>
+        {columnDefs.other.map((other: { name: string }, index: number) => {
+          if (index === 0) {
+            return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
+          } else {
+            return (
+              <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
+            )
+          }
         })}
-      </div>
-      <div className="kogito-scesim-grid__header--expect">
-        {columnDefs.expect.map((expect: any, index: number) => {
-          return expect.children.map((expectChild: any, index: number) => (
-            <div key={`expect property ${index}`} className="kogito-scesim-grid__item kogito-scesim-grid__property">{expectChild.name}</div>
-          ));
-        })}
-      </div>
+        {/* The GIVEN and EXPECT groups are always there so this can be hardcoded */}
+        <div className="kie-grid__header--given">
+          <div className="kie-grid__item kie-grid__given">GIVEN</div>
+        </div>
+        <div className="kie-grid__header--expect">
+          <div className="kie-grid__item kie-grid__expect">EXPECT</div>
+        </div>
 
-      {rowData.map((row, index) => {
-        const rowIndex = index;
-        return (
-          <div className="kogito-scesim-grid__rule" key={`row ${rowIndex}`}>
-            {row.map((cell: any, index: number) => {
-              // get the type of the column to pass on to the input for formatting / validation
-              let type = 'string';
-              let columnGroup = '';
-              let columnName = '';
-              if (index === 0) {
-                // row index
-                type = 'number';
-              } else if (index === 1) {
-                // description
-                type = 'string';
-              } else if (index > 1) {
-                columnGroup = columnNames[index].group;
-                columnName = columnNames[index].name;
-                type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
-              }
-              const cellIndex = index;
-              const value = cell && cell.value ? cell.value : '';
-              const path = cell && cell.path ? cell.path : '';
-              // const cellId = `cell ${cellIndex}`;
-              const inputId = `row ${rowIndex} column ${cellIndex}`;
-              let component;
-              const typeArr = type.split(', ');
-              if (typeArr.length > 1) {
-                // Multiple options, render Select
-                component = (
-                  <Select id={inputId} onSelectToggleCallback={onSelectToggleCallback} options={typeArr} originalValue={value} />
-                );
-              } else {
-                component = (
-                  <Input
-                    isReadOnly={inputId !== activeInput} 
-                    onActivateInput={onActivateInput} 
-                    setActiveInput={setActiveInput} 
-                    originalValue={value} 
-                    path={path} 
-                    type={type} 
-                    id={inputId} 
-                  />
-                );
-              }
-              return (
-                <div className="kogito-scesim-grid__item" key={inputId} onClick={(event) => onCellClick(event, inputId)} onDoubleClick={(event) => onCellDoubleClick(event, inputId)}>
-                  {cellIndex === 0 ? value : component}
+        {/* <!-- grid instance headers need to have a grid-column span set --> */}
+        <div className="kie-grid__header--given">
+          {columnDefs.given.map((given: any, index: number) => (
+            <div
+              key={`given instance ${index}`}
+              className="kie-grid__item kie-grid__instance"
+              style={{ gridColumn: `span ${given.children.length}` }}
+            >
+              {given.group}
+            </div>
+          ))}
+        </div>
+
+        <div className="kie-grid__header--expect">
+          {columnDefs.expect.map((expect: any, index: number) => (
+            <div
+              key={`expect instance ${index}`}
+              className="kie-grid__item kie-grid__instance"
+              style={{ gridColumn: `span ${expect.children.length}` }}
+            >
+              {expect.group}
+            </div>
+          ))}
+        </div>
+
+        <div className="kie-grid__header--given">
+          {columnDefs.given.map((given: any, index: number) => {
+            return given.children.map((givenChild: any, index: number) => (
+              <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
+            ));
+          })}
+        </div>
+        <div className="kie-grid__header--expect">
+          {columnDefs.expect.map((expect: any, index: number) => {
+            return expect.children.map((expectChild: any, index: number) => (
+              <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
+            ));
+          })}
+        </div>
+
+        <div className="kie-grid__body">
+          <InfiniteScroll
+            dataLength={fetchedRows.length}
+            next={fetchMoreRows}
+            hasMore={fetchedRows.length < rows.length}
+            loader={<Spinner text="Loading more rows..." />}
+            scrollableTarget="sce-sim-grid__main"
+          >
+              {fetchedRows.map((row: any, rowIndex: number) => (
+                // <EditorRow
+                //   key={`row ${row[0].value}`}
+                //   rowData={row} 
+                //   rowIndex={Number.parseInt(row[0].value)}
+                //   onSelectToggleCallback={onSelectToggleCallback}
+                //   activeInput={editableCell}
+                //   onActivateInput={activateAndFocusCell}
+                //   setEditable={setEditable}
+                //   onCellClick={onCellClick}
+                //   onCellDoubleClick={onCellDoubleClick}
+                //   style={{}}
+                //   deactivateAndFocusCell={deactivateAndFocusCell}
+                // />
+                <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
+                  {row.map((cell: any, index: number) => {
+                    // get the type of the column to pass on to the input for formatting / validation
+                    let type = 'string';
+                    let columnGroup = '';
+                    let columnName = '';
+                    if (index === 0) {
+                      // row index
+                      type = 'number';
+                    } else if (index === 1) {
+                      // description
+                      type = 'string';
+                    } else if (index > 1) {
+                      columnGroup = columnNames[index].group;
+                      columnName = columnNames[index].name;
+                      type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
+                    }
+                    const cellIndex = index;
+                    const value = cell && cell.value ? cell.value : '';
+                    const path = cell && cell.path ? cell.path : '';
+                    // const cellId = `cell ${cellIndex}`;
+                    const inputId = `row ${rowIndex} column ${cellIndex}`;
+                    let component;
+                    const typeArr = type.split(', ');
+                    if (typeArr.length > 1) {
+                      // Multiple options, render Select
+                      component = (
+                        <Select 
+                          isReadOnly={inputId !== editableCell} 
+                          id={inputId} 
+                          onSelectToggleCallback={onSelectToggleCallback} 
+                          options={typeArr} 
+                          originalValue={value}
+                          deactivateAndFocusCell={deactivateAndFocusCell}
+                          setEditable={setEditable}
+                        />
+                      );
+                    } else {
+                      component = (
+                        <Input
+                          isReadOnly={inputId !== editableCell} 
+                          onActivateInput={activateAndFocusCell} 
+                          originalValue={value} 
+                          path={path} 
+                          type={type} 
+                          id={inputId} 
+                          deactivateAndFocusCell={deactivateAndFocusCell}
+                          setEditable={setEditable}
+                        />
+                      );
+                    }
+                    return (
+                      <div className="kie-grid__item" key={inputId} onClick={onCellClick} onDoubleClick={onCellDoubleClick}>
+                        {cellIndex === 0 ? value : component}
+                      </div>
+                    )
+                  })}
                 </div>
-              )
-            })}
-          </div>
-        )
-      })}
-    </div>
+              ))}
+          </InfiniteScroll>
+        </div>
+      </div>
+    </>
   );
+}, (prevProps, nextProps) => {
+  console.log('compare props Editor');
+  // TODO: Compare values as well not just length
+  if (prevProps.rows.length !== nextProps.rows.length) {
+    return false;
+  }
+  return true;
+});
+
+// @ts-ignore
+Editor.whyDidYouRender = {
+  customName: 'Editor'
 };
 
 export { Editor };

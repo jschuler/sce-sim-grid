@@ -4,7 +4,7 @@ import { useKeyPress } from './useKeyPress';
 import './Input.css';
 import './Select.css';
 
-const Select: React.FC<{ 
+const Select = React.memo<{ 
   originalValue?: any, 
   path?: string, 
   id?: any, 
@@ -13,39 +13,39 @@ const Select: React.FC<{
   isReadOnly?: boolean,
   setActiveInput?: any,
   onSelectToggleCallback?: any,
-  options: any
-}> = ({ originalValue, path, id, type, onActivateInput, isReadOnly, setActiveInput, onSelectToggleCallback, options }) => {
-  const [value, setValue] = React.useState<any>(originalValue);
-  const [savedValue, setSavedValue] = React.useState<any>(originalValue);
-  const [isActive, setActive] = React.useState<boolean>(false);
+  options?: any,
+  deactivateAndFocusCell?: any,
+  setEditable: any
+}>(({ originalValue, path, id, type, onActivateInput, isReadOnly, setActiveInput, onSelectToggleCallback, options, deactivateAndFocusCell, setEditable }) => {
+  // console.log(`render select ${id}`);
   const [overflown, setOverflown] = React.useState<boolean>(false);
+  const [isExpanded, setExpanded] = React.useState<boolean>(true);
+  const [selected, setSelected] = React.useState<any>(originalValue);
 
-  const allOptions = options.map((option: string, index: number) => (
+  const thisElement = () => {
+    return document.getElementById(id) as HTMLInputElement;
+  }
+
+  const selectOptions = options.map((option: string, index: number) => (
     <SelectOption key={index} value={option} isSelected />
   ));
-  const getInitialOption = () => {
-    let valueIndex: number = 0;
-    for (const [index, option] of options.entries()) {
-      if (option === originalValue) {
-        valueIndex = index;
-        break;
-      }
-    }
-    return (
-      <SelectProvider value={{ onSelect: () => {}, onClose: () => {}, variant: 'single' }}>
-        {/* {allOptions[valueIndex]} */}
-        <SelectOption value={originalValue} />
-      </SelectProvider>
-    );
-  };
-  const [isExpanded, setExpanded] = React.useState<boolean>(false);
-  const [selected, setSelected] = React.useState<any>(originalValue);
-  const [selectOptions, setSelectOptions] = React.useState<any>(allOptions);
 
   const onToggle = (isExpanded: boolean) => {
     setExpanded(isExpanded);
     onSelectToggleCallback(id, isExpanded);
   };
+
+  React.useEffect(() => {
+    if (!isReadOnly) {
+      onToggle(true);
+      setTimeout(() => {
+        const element = document.querySelector(`button[id="${id}"]`);
+        if (element && element.parentNode && (element.parentNode as HTMLElement).querySelector('.pf-c-select__menu-item')) {
+          ((element.parentNode as HTMLElement).querySelector('.pf-c-select__menu-item') as HTMLButtonElement).focus();
+        }
+      }, 1);
+    }
+  }, [isReadOnly]);
 
   const onSelect = (event: React.MouseEvent | React.ChangeEvent, selection: string | SelectOptionObject, isPlaceholder?: boolean) => {
     if (isPlaceholder) clearSelection();
@@ -53,6 +53,8 @@ const Select: React.FC<{
       setSelected(selection);
       onToggle(false);
       console.log('selected:', selection);
+      // mark itself as not active
+      deactivateAndFocusCell(id);
     }
   };
 
@@ -61,27 +63,9 @@ const Select: React.FC<{
     onToggle(false);
   };
 
-  const customFilter = (e: any) => {
-    let input: RegExp;
-    try {
-      input = new RegExp(e.target.value, 'i');
-    } catch (err) {
-      input = new RegExp(e.target.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    }
-    let typeaheadFilteredChildren =
-      e.target.value !== ''
-        ? selectOptions.filter((child: any) => input.test(child.props.value))
-        : selectOptions;
-    return typeaheadFilteredChildren;
-  }
-
   const getActiveElement = () => {
     return (document && document.activeElement && document.activeElement.getAttribute('id')) || id;
   };
-
-  const thisElement = () => {
-    return document.getElementById(id) as HTMLInputElement;
-  }
 
   const setCaretPosition = (el: any, caretPos: number) => {
     // (el.selectionStart === 0 added for Firefox bug)
@@ -116,10 +100,14 @@ const Select: React.FC<{
     }
   };
 
-  const handleTextInputChange = (value: any) => {
-    console.log('handleTextInputChange');
-    setValue(value);
-  }
+  // const onEscape = (event: any) => {
+  //   console.log('revert cell changes');
+  //   // setValue(savedValue);
+  //   // mark itself as not active
+  //   // setActiveInput('');
+  //   // setActive(false);
+  //   deactivateAndFocusCell(event.target.id);
+  // };
 
   // copy cell
   useKeyPress(/c/i, (event: any) => {
@@ -127,19 +115,21 @@ const Select: React.FC<{
       // if not in editing mode, copy the whole cell
       copyToClipboard();
     }
-  }, id, true);
+  }, { id, withModifier: true, isActive: !isReadOnly });
 
-  /**
-   * Enters editing mode for the currently focused cell and overwrites the content
-   */
-  // useKeyPress(/^[a-z0-9]$/i, (event: any) => {
-  //   if (!isActive) {
-  //     onActivateInput(id);
-  //     console.log(`setting value: ${event.key}`)
-  //     setValue(event.key);
-  //     setTimeout(() => setActive(true), 1);
-  //   }
-  // }, id);
+  // useKeyPress('Escape', onEscape, { 
+  //   log: 'input',
+  //   id,
+  //   isActive: !isReadOnly
+  // });
+
+  const onKeyDown = (event: any) => {
+    const { key } = event;
+    if (key === 'Escape') {
+      onSelectToggleCallback(false);
+      deactivateAndFocusCell(id);
+    }
+  }
 
   // either save current input, or enter editing mode
   // useKeyPress('Enter', () => {
@@ -158,22 +148,16 @@ const Select: React.FC<{
   //   }
   // }, id);
 
-  useKeyPress('Escape', () => {
-    console.log('revert cell changes');
-    setValue(savedValue);
-    setActive(false);
-  }, id);
+  // const onLoseFocus = (event: any) => {
+  //   console.log(`lost focus for id ${id}, save value: ${value}`);
+  //   setValue(value);
+  //   setActive(false);
+  // };
 
-  const onLoseFocus = (event: any) => {
-    console.log(`lost focus for id ${id}, save value: ${value}`);
-    setSavedValue(value);
-    setActive(false);
-  };
-
-  const onGainFocus = (event: any) => {
-    onMouseOver();
-    setCaretPositionAtEnd();
-  }
+  // const onGainFocus = (event: any) => {
+  //   onMouseOver();
+  //   setCaretPositionAtEnd();
+  // }
 
   const onMouseOver = (event?: any) => {
     const element = event ? event.target : thisElement();
@@ -215,20 +199,47 @@ const Select: React.FC<{
   //   </PfSelect>
   // );
 
+  // console.log('render Select');
   return (
-    <PfSelect
-      toggleId={id}
-      variant={SelectVariant.single}
-      aria-label="Select Input"
-      onToggle={onToggle}
-      onSelect={onSelect}
-      selections={selected}
-      isExpanded={isExpanded}
-      ariaLabelledBy="typeahead-select-id"
-    >
-      {selectOptions}
-    </PfSelect>
-  );
-};
+    <>
+      {isReadOnly ? (
+        <input 
+          className="editor-input" 
+          style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
+          type="text" 
+          defaultValue={selected}
+          id={id}
+          aria-label={selected}
+          readOnly
+        />
+      ) : (
+        <PfSelect
+          toggleId={id}
+          variant={SelectVariant.single}
+          aria-label="Select Input"
+          onToggle={onToggle}
+          onSelect={onSelect}
+          selections={selected}
+          isExpanded={isExpanded}
+          ariaLabelledBy="typeahead-select-id"
+          onKeyDown={onKeyDown}
+        >
+          {selectOptions}
+        </PfSelect>
+      )}
+    </>);
+}, (prevProps, nextProps) => {
+  /*
+   return true if passing nextProps to render would return
+   the same result as passing prevProps to render,
+   otherwise return false
+   */
+  const shouldRerender = prevProps.isReadOnly !== nextProps.isReadOnly;
+  if (shouldRerender) {
+    console.log(`${nextProps.id} will re-render`);
+    return false;
+  }
+  return true;
+});
 
 export { Select };

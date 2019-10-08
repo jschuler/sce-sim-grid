@@ -1,3 +1,10 @@
+beforeEach(() => {
+  jest.resetModules();
+});
+
+jest.mock('amdefine', () => {});
+// jest.mock('require', () => {});
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';

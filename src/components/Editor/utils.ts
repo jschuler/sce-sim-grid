@@ -1,3 +1,16 @@
+export const getDmnFilePath = (data: {
+  value: {
+    simulation: {
+      simulationDescriptor: { dmnFilePath: any };
+    };
+  };
+}) => {
+  const {
+    dmnFilePath
+  } = data.value.simulation.simulationDescriptor;
+  return dmnFilePath;
+};
+
 export const getColumnNames = (data: {
   value: {
     simulation: {
@@ -193,3 +206,17 @@ export const getDefinitions = (data: { value: { itemDefinition?: any; drgElement
   });
   return typeDefinitions;
 }
+
+export const setCaretPosition = (element: any, caretPos: number) => {
+  // (el.selectionStart === 0 added for Firefox bug)
+  if (element.selectionStart || element.selectionStart === 0) {
+    element.focus();
+    element.setSelectionRange(caretPos, caretPos);
+    return true;
+  }
+}
+
+export const setCaretPositionAtEnd = (element: HTMLInputElement) => {
+  const end = element.value.length;
+  setCaretPosition(element, end);
+};
