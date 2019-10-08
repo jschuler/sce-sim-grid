@@ -27,8 +27,10 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
   });
 
   React.useEffect(() => {
-    console.log('updating filterRows');
-    filterRows(searchValue);
+    if (searchValue) {
+      console.log('updating filterRows');
+      filterRows(searchValue);
+    }
   }, [selected]);
 
   const handleSearchChange = (value: string) => {
@@ -68,11 +70,7 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
       }
       return found;
     });
-    debugger;
     updateRows(filteredRows);
-    // if (selections) {
-    //   setSelected(selections);
-    // }
   }
 
   const onSelectToggle = (isOpen: boolean) => {
@@ -87,7 +85,6 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
       selections = [...selected, selection];
     }
     setSelected(selections);
-    // filterRows(searchValue, selections);
   };
 
   const clearSelection = () => {
@@ -153,7 +150,6 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
     </>
   );
 }, (prevProps, nextProps) => {
-  debugger;
   // TODO: Compare values as well not just length
   if (prevProps.rows.length !== nextProps.rows.length) {
     return false;

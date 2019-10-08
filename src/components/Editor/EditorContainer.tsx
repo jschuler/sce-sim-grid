@@ -26,7 +26,6 @@ export const FilteredRowsContext = React.createContext<{
 
 // const EditorContainer: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
-  debugger;
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
 
   const definitions = getDefinitions(model);
@@ -110,7 +109,6 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
   )
 }, (prevProps, nextProps) => {
   console.log('compare props EditorContainer');
-  debugger;
   return true;
 });
 

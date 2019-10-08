@@ -1,18 +1,13 @@
 import * as React from 'react';
-import { EditorRow } from './EditorRow';
-import { getColumns, getRows, getColumnNames, setCaretPositionAtEnd } from "./utils";
+import { setCaretPositionAtEnd } from "./utils";
 import { useKeyPress } from './useKeyPress';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import classNames from 'classnames';
 import { Spinner } from '../Spinner';
-import { FilteredRowsContext } from './EditorContainer';
 import { Input } from './Input';
 import { Select } from './Select';
 import "./Editor.css";
 
 const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNames: any }>(({ columns: columnDefs, rows, definitions, columnNames }) => {
-  debugger;
-// const Editor: React.FC = () => {
   const rowsToFetch = 50;
 
   const [editableCell, setEditable] = React.useState<string>('');
@@ -439,7 +434,6 @@ const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNa
   );
 }, (prevProps, nextProps) => {
   console.log('compare props Editor');
-  debugger;
   // TODO: Compare values as well not just length
   if (prevProps.rows.length !== nextProps.rows.length) {
     return false;
