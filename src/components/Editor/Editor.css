@@ -1,4 +1,4 @@
-.kie-grid {
+.kogito-scesim-grid {
   --num-given-columns: 4;
   --num-expect-columns: 3;
   display: grid;
@@ -15,36 +15,36 @@
   grid-auto-rows: auto;
 }
 
-.kie-grid__item {
+.kogito-scesim-grid__item {
   border: 1px solid var(--pf-global--BorderColor--100);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.kie-grid__number {
+.kogito-scesim-grid__number {
   grid-column: number-start / number-end;
   grid-row: grid-row-header-start / grid-row-header-end;
 }
-.kie-grid__description {
+.kogito-scesim-grid__description {
   grid-column: description-start / description-end;
   grid-row: grid-row-header-start / grid-row-header-end;
 }
-.kie-grid__given {
+.kogito-scesim-grid__given {
   grid-column: given-start / given-end;
   grid-row: grid-row-header-start;
 }
-.kie-grid__expect {
+.kogito-scesim-grid__expect {
   grid-column: expect-start / expect-end;
   grid-row: grid-row-header-start;
 }
 
-.kie-grid__header--given * {
+.kogito-scesim-grid__header--given * {
   background-color: #def3ff;
   padding: var(--pf-global--spacer--sm);
   text-align: center;
 }
-.kie-grid__header--expect * {
+.kogito-scesim-grid__header--expect * {
   background-color: #bee1f4;
   padding: var(--pf-global--spacer--xs) var(--pf-global--spacer--sm);
   text-align: center;
