@@ -6,14 +6,21 @@ import {
   ToolbarGroup,
   ToolbarItem,
   Select,
-  SelectOption
+  SelectOption,
+  Expandable
 } from '@patternfly/react-core';
-import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
+import { OutlinedQuestionCircleIcon, UndoIcon, RedoIcon } from '@patternfly/react-icons';
 import { HelpModal } from './HelpModal';
+import './EditorToolbar.scss';
 
-// const EditorToolbar: React.FC<{ rows: any[] }> = ({ rows: originalRows }) => {
-const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any, columnNames: any }>(({ originalRows, rows, updateRows, columnNames }) => {
-  // const { originalRows, rows, updateRows, columnNames } = React.useContext(FilteredRowsContext);
+const EditorToolbar = React.memo<{ 
+  originalRows: any, 
+  rows: any, 
+  updateRows: any, 
+  columnNames: any,
+  changes: any[],
+  onUndo: any
+}>(({ originalRows, rows, updateRows, columnNames, changes, onUndo }) => {
   
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
@@ -130,19 +137,87 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
   };
 
   console.log('render EditorToolbar');
+  console.log(`changes: ${changes}`);
+
+  const getChangeText = () => {
+    if (changes.length === 1) {
+      return `1 change`;
+    } else {
+      return `${changes.length} changes`;
+    }
+  };
+
+  const focusElement = (id: string) => {
+    const element = document.getElementById(id) as HTMLInputElement;
+    if (element) {
+      element.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+      console.log(`focusing ${id}`);
+      setTimeout(() => {
+        element.focus();
+      }, 1000)
+    }
+  }
+
+  const changeTracker = () => {
+    const input = (
+      <input 
+        className="pf-c-form-control" 
+        type="button" 
+        id="textInput10" 
+        name="textInput10" 
+        aria-label="Input example with popover" 
+        value={getChangeText()}
+      />
+    );
+    if (changes.length) {
+      return (
+        <Expandable toggleText={getChangeText()} className="kie-changes">
+          <div className="pf-c-content">
+            <dl>
+              {changes.map((change: any) => (
+                <>
+                  <dt><Button variant="link" onClick={() => focusElement(change.id)} isInline>{change.id}</Button></dt>
+                  <dd>{change.value}</dd>
+                </>
+              ))}
+            </dl>
+          </div>
+        </Expandable>
+      );
+    } else {
+      return input;
+    }
+  }
+
+  const undoChange = () => {
+    console.log('undo');
+    onUndo(changes[0]);
+  };
+
   return (
     <>
       <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
         <ToolbarGroup>
-          {originalRows.length === rows.length ? (
-            <ToolbarItem>{originalRows.length} items</ToolbarItem>
-          ) : (
-            <ToolbarItem>{rows.length} of {originalRows.length} items</ToolbarItem>
-          )}
+          <ToolbarItem>
+            <div className="pf-c-input-group">
+              <Button onClick={undoChange} variant="control" isDisabled={changes.length === 0}>
+                <UndoIcon />
+              </Button>
+              {changeTracker()}
+              <Button variant="control" isDisabled>
+                <RedoIcon />
+              </Button>
+            </div>
+          </ToolbarItem>
         </ToolbarGroup>
         <ToolbarGroup>
-          <ToolbarItem className="pf-u-mr-xl">{buildSearchBox()}</ToolbarItem>
-          <ToolbarItem className="pf-u-mr-md">{buildSelect()}</ToolbarItem>
+          {originalRows.length === rows.length ? (
+            <ToolbarItem className="pf-u-mr-md">{originalRows.length} items</ToolbarItem>
+          ) : (
+            <ToolbarItem className="pf-u-mr-md">{rows.length} of {originalRows.length} items</ToolbarItem>
+          )}
+          <ToolbarItem className="pf-u-mr-md">{buildSearchBox()}</ToolbarItem>
+          <ToolbarItem>{buildSelect()}</ToolbarItem>
           <ToolbarItem><Button variant="plain" onClick={openModal}><OutlinedQuestionCircleIcon size="md" /></Button></ToolbarItem>
         </ToolbarGroup>
       </Toolbar>
@@ -152,6 +227,9 @@ const EditorToolbar = React.memo<{ originalRows: any, rows: any, updateRows: any
 }, (prevProps, nextProps) => {
   // TODO: Compare values as well not just length
   if (prevProps.rows.length !== nextProps.rows.length) {
+    return false;
+  }
+  if (prevProps.changes !== nextProps.changes) {
     return false;
   }
   return true;

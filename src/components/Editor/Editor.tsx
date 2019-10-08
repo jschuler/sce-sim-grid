@@ -7,7 +7,23 @@ import { Input } from './Input';
 import { Select } from './Select';
 import "./Editor.css";
 
-const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNames: any }>(({ columns: columnDefs, rows, definitions, columnNames }) => {
+const Editor = React.memo<{ 
+  columns: any, 
+  rows : any, 
+  definitions: any, 
+  columnNames: any,
+  onSave: any,
+  originalRows: any[],
+  lastChangedCell: string
+}>(({ 
+  columns: columnDefs, 
+  rows, 
+  definitions, 
+  columnNames,
+  onSave,
+  originalRows,
+  lastChangedCell
+}) => {
   const rowsToFetch = 50;
 
   const [editableCell, setEditable] = React.useState<string>('');
@@ -416,6 +432,8 @@ const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNa
                           id={inputId} 
                           deactivateAndFocusCell={deactivateAndFocusCell}
                           setEditable={setEditable}
+                          onSave={onSave}
+                          originalRows={originalRows}
                         />
                       );
                     }
@@ -435,7 +453,11 @@ const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNa
 }, (prevProps, nextProps) => {
   console.log('compare props Editor');
   // TODO: Compare values as well not just length
+  debugger;
   if (prevProps.rows.length !== nextProps.rows.length) {
+    return false;
+  }
+  if (prevProps.lastChangedCell !== nextProps.lastChangedCell) {
     return false;
   }
   return true;

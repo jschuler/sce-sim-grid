@@ -12,8 +12,10 @@ const Input = React.memo<{
   onActivateInput?: any, 
   isReadOnly?: boolean,
   deactivateAndFocusCell: any,
-  setEditable: any
-}>(({ originalValue, path, id, type, onActivateInput, isReadOnly, deactivateAndFocusCell, setEditable }) => {
+  setEditable: any,
+  onSave: any,
+  originalRows: any[]
+}>(({ originalValue, path, id, type, onActivateInput, isReadOnly, deactivateAndFocusCell, setEditable, onSave, originalRows }) => {
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
   const [overflown, setOverflown] = React.useState<boolean>(false);
@@ -29,13 +31,26 @@ const Input = React.memo<{
   }
 
   React.useEffect(() => {
-    setTimeout(() => {
-      if (!isReadOnly) {
-        console.log('set caret position at end');
-        setCaretPositionAtEnd(thisElement());
-      }
-    }, 1)
+    if (!isReadOnly) {
+      setTimeout(() => {
+          console.log('set caret position at end');
+          setCaretPositionAtEnd(thisElement());
+      }, 1);
+    }
   });
+
+  React.useEffect(() => {
+    console.log('oh my')
+    setValue(originalValue);
+  }, [originalValue]);
+
+  React.useEffect(() => {
+    if (!isReadOnly) {
+      // track the change
+      console.log('track change')
+      onSave && onSave(id, savedValue, originalValue);
+    }
+  }, [savedValue]);
 
   const handleTextInputChange = (event: any) => {
     setValue(event.currentTarget.value);
@@ -94,7 +109,7 @@ const Input = React.memo<{
   const checkForOverflow = (event?: any) => {
     const element = event ? event.target : thisElement();
     const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-    console.log(`isOverflown: ${isOverflown}`);
+    // console.log(`isOverflown: ${isOverflown}`);
     setOverflown(isOverflown);
   }
 
@@ -121,7 +136,7 @@ const Input = React.memo<{
    the same result as passing prevProps to render,
    otherwise return false
    */
-  const shouldRerender = prevProps.isReadOnly !== nextProps.isReadOnly;
+  const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
     console.log(`${nextProps.id} will re-render`);
     return false;

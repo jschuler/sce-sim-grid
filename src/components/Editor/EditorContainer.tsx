@@ -24,9 +24,16 @@ export const FilteredRowsContext = React.createContext<{
   columnNames: null
 });
 
+export const TrackChangesContext = React.createContext<{
+  changes: any[]
+}>({
+  changes: []
+});
+
 // const EditorContainer: React.FC<{ data: any, model: any }> = ({ data, model }) => {
 const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
+  const [changes, setChanges] = React.useState<any[]>([]);
 
   const definitions = getDefinitions(model);
   console.log(`definitions:`);
@@ -43,6 +50,8 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
   }
   const columnNames = getColumnNames(data);
 
+  const [lastChangedCell, setLastChangedCell] = React.useState('');
+  const [allRows, setAllRows] = React.useState(originalRows);
   const [filteredRows, updateFilteredRows] = React.useState(originalRows);
 
   const updateRows = (rows: any[]) => {
@@ -57,18 +66,31 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
     setDrawerExpanded(!isDrawerExpanded);
   }
 
-  const filteredText = () => {
-    if (originalRows.length === filteredRows.length) {
-      // unfiltered
-      return `${originalRows.length} rows`;
-    } else {
-      return `Filtered down to ${filteredRows.length}/${originalRows.length} rows`
-    }
+  const addToChanges = (id: string, value: string, previousValue: string) => {
+    setChanges((prevState: any) => ([...prevState, { id, value, previousValue }]));
+    // update allRows
+    const currentIdArr: string[] = id.split(' ');
+    const row = Number.parseInt(currentIdArr[1]);
+    const column = Number.parseInt(currentIdArr[3]);
+    allRows[row][column].value = value;
+    setAllRows(allRows);
+  }
+
+  const revertOneChange = (entry: any) => {
+    const { id, previousValue, value } = entry;
+    console.log('reverting something');
+    debugger;
+    const currentIdArr: string[] = id.split(' ');
+    const row = Number.parseInt(currentIdArr[1]);
+    const column = Number.parseInt(currentIdArr[3]);
+    allRows[row][column].value = previousValue;
+    setAllRows(allRows);
+    setLastChangedCell(id);
   }
 
   console.log('render EditorContainer');
   return (
-    <FilteredRowsContext.Provider value={{ columns, originalRows, rows: filteredRows, updateRows, definitions, columnNames }}>
+    <FilteredRowsContext.Provider value={{ columns, originalRows: allRows, rows: filteredRows, updateRows, definitions, columnNames }}>
       <div className="pf-m-redhat-font">
         <div className="pf-c-page">
           <header role="banner" className="pf-c-page__header">
@@ -90,7 +112,7 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
             </div>
           </div>
             <div className="pf-c-page__header-tools">
-              <EditorToolbar originalRows={originalRows} rows={filteredRows} updateRows={updateRows} columnNames={columnNames} />
+              <EditorToolbar originalRows={allRows} rows={filteredRows} updateRows={updateRows} columnNames={columnNames} changes={changes} onUndo={revertOneChange} />
             </div>
           </header>
           <div className={classNames("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
@@ -100,7 +122,7 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
           </div>
           <main role="main" className="pf-c-page__main" id="sce-sim-grid__main" tabIndex={-1}>
             <section className="pf-c-page__main-section pf-m-light">
-              <Editor columns={columns} rows={filteredRows} definitions={definitions} columnNames={columnNames} />
+              <Editor originalRows={allRows} lastChangedCell={lastChangedCell} columns={columns} rows={filteredRows} definitions={definitions} columnNames={columnNames} onSave={addToChanges} />
             </section>
           </main>
         </div>
