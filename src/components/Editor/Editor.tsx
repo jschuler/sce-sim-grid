@@ -39,13 +39,13 @@ const Editor = React.memo<{ columns: any, rows : any, definitions: any, columnNa
 
   const setNumGivenColumns = (num: number) => {
     document
-      .getElementById("kogito-scesim-grid")!
+      .getElementById("kie-grid")!
       .style.setProperty("--num-given-columns", num.toString());
   };
 
   const setNumExpectColumns = (num: number) => {
     document
-      .getElementById("kogito-scesim-grid")!
+      .getElementById("kie-grid")!
       .style.setProperty("--num-expect-columns", num.toString());
   };
 
