@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TextInput, Tooltip, Select as PfSelect, SelectOption, SelectVariant, SelectOptionObject, SelectProvider } from '@patternfly/react-core';
+import { Tooltip, Select as PfSelect, SelectOption, SelectVariant, SelectOptionObject, SelectProvider } from '@patternfly/react-core';
 import { useKeyPress } from './useKeyPress'; 
 import './Input.css';
 import './Select.css';
@@ -166,40 +166,6 @@ const Select = React.memo<{
     setOverflown(isOverflown);
   }
 
-  // const input = (
-  //   <TextInput 
-  //     onMouseOver={(event) => onMouseOver(event)}
-  //     className="editor-input" 
-  //     isReadOnly={isReadOnly} 
-  //     style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
-  //     value={value} 
-  //     type="text" 
-  //     onChange={(value: any) => isActive && handleTextInputChange(value)}
-  //     onBlur={onLoseFocus}
-  //     onFocus={onGainFocus}
-  //     aria-label={value} 
-  //     id={id} 
-  //   />
-  // );
-
-  // const input = (
-  //   <PfSelect
-  //     variant={SelectVariant.typeahead}
-  //     aria-label="Select a state"
-  //     onToggle={onToggle}
-  //     onSelect={onSelect}
-  //     onClear={clearSelection}
-  //     onFilter={customFilter}
-  //     selections={selected}
-  //     isExpanded={isExpanded}
-  //     ariaLabelledBy="typeahead-select-id"
-  //     placeholderText="Select a state"
-  //   >
-  //     {selectOptions}
-  //   </PfSelect>
-  // );
-
-  // console.log('render Select');
   return (
     <>
       {isReadOnly ? (

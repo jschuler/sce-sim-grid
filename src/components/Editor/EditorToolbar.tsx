@@ -14,13 +14,13 @@ import { HelpModal } from './HelpModal';
 import './EditorToolbar.scss';
 
 const EditorToolbar = React.memo<{ 
-  originalRows: any, 
+  allRows: any, 
   rows: any, 
   updateRows: any, 
   columnNames: any,
   changes: any[],
   onUndo: any
-}>(({ originalRows, rows, updateRows, columnNames, changes, onUndo }) => {
+}>(({ allRows, rows, updateRows, columnNames, changes, onUndo }) => {
   
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
@@ -55,7 +55,7 @@ const EditorToolbar = React.memo<{
 
   const filterRows = (value: string, selections?: any[]) => {
     const searchRE = new RegExp(value, 'i');
-    const filteredRows = originalRows.filter((row: any) => {
+    const filteredRows = allRows.filter((row: any) => {
       let found = false;
       if (selected.length === 0) {
         // search all columns
@@ -175,10 +175,10 @@ const EditorToolbar = React.memo<{
           <div className="pf-c-content">
             <dl>
               {changes.map((change: any) => (
-                <>
+                <React.Fragment key={`${change.id} - ${change.value}`}>
                   <dt><Button variant="link" onClick={() => focusElement(change.id)} isInline>{change.id}</Button></dt>
                   <dd>{change.value}</dd>
-                </>
+                </React.Fragment>
               ))}
             </dl>
           </div>
@@ -211,10 +211,10 @@ const EditorToolbar = React.memo<{
           </ToolbarItem>
         </ToolbarGroup>
         <ToolbarGroup>
-          {originalRows.length === rows.length ? (
-            <ToolbarItem className="pf-u-mr-md">{originalRows.length} items</ToolbarItem>
+          {allRows.length === rows.length ? (
+            <ToolbarItem className="pf-u-mr-md">{allRows.length} items</ToolbarItem>
           ) : (
-            <ToolbarItem className="pf-u-mr-md">{rows.length} of {originalRows.length} items</ToolbarItem>
+            <ToolbarItem className="pf-u-mr-md">{rows.length} of {allRows.length} items</ToolbarItem>
           )}
           <ToolbarItem className="pf-u-mr-md">{buildSearchBox()}</ToolbarItem>
           <ToolbarItem>{buildSelect()}</ToolbarItem>

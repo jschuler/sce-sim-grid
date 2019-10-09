@@ -13,7 +13,7 @@ const Editor = React.memo<{
   definitions: any, 
   columnNames: any,
   onSave: any,
-  originalRows: any[],
+  allRows: any[],
   lastChangedCell: string
 }>(({ 
   columns: columnDefs, 
@@ -21,36 +21,31 @@ const Editor = React.memo<{
   definitions, 
   columnNames,
   onSave,
-  originalRows,
+  allRows,
   lastChangedCell
 }) => {
   const rowsToFetch = 50;
 
   const [editableCell, setEditable] = React.useState<string>('');
   const [expandedSelect, setExpandedSelect] = React.useState(false);
-  // const { columns: columnDefs, rows, definitions, columnNames } = React.useContext(FilteredRowsContext);
-  // console.log(`filtered rows`);
-  // console.log(rows);
-  // console.log('initial page');
-  const initialRowsToFetch = rows.slice(0, rowsToFetch);
-  // console.log(initialRowsToFetch);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [fetchedRows, setFetchedRows] = React.useState([...initialRowsToFetch]);
-  // console.log(`stateful value`);
-  // console.log(fetchedRows);
+  const [fetchedRows, setFetchedRows] = React.useState(rows.slice(0, rowsToFetch));
 
   const editorRef = React.useRef(null);
 
   React.useEffect(() => {
+    console.log(`Editor hook setColumns`);
     setTimeout(() => {
       setNumGivenColumns(columnDefs.numGiven);
       setNumExpectColumns(columnDefs.numExpect);
     }, 1)
-  }, []);
+  }, [columnDefs]);
 
   React.useEffect(() => {
-    console.log('setting fetchedRows');
-    setFetchedRows(rows.slice(0, rowsToFetch));
+    if (JSON.stringify(fetchedRows) !== JSON.stringify(rows.slice(0, rowsToFetch))) {
+      console.log('Editor hook: setFetchedRows');
+      setFetchedRows(rows.slice(0, rowsToFetch));
+    }
   }, [rows]);
 
   const setNumGivenColumns = (num: number) => {
@@ -367,23 +362,10 @@ const Editor = React.memo<{
             dataLength={fetchedRows.length}
             next={fetchMoreRows}
             hasMore={fetchedRows.length < rows.length}
-            loader={<Spinner text="Loading more rows..." />}
+            loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
             scrollableTarget="sce-sim-grid__main"
           >
               {fetchedRows.map((row: any, rowIndex: number) => (
-                // <EditorRow
-                //   key={`row ${row[0].value}`}
-                //   rowData={row} 
-                //   rowIndex={Number.parseInt(row[0].value)}
-                //   onSelectToggleCallback={onSelectToggleCallback}
-                //   activeInput={editableCell}
-                //   onActivateInput={activateAndFocusCell}
-                //   setEditable={setEditable}
-                //   onCellClick={onCellClick}
-                //   onCellDoubleClick={onCellDoubleClick}
-                //   style={{}}
-                //   deactivateAndFocusCell={deactivateAndFocusCell}
-                // />
                 <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
                   {row.map((cell: any, index: number) => {
                     // get the type of the column to pass on to the input for formatting / validation
@@ -407,7 +389,7 @@ const Editor = React.memo<{
                     // const cellId = `cell ${cellIndex}`;
                     const inputId = `row ${rowIndex} column ${cellIndex}`;
                     let component;
-                    const typeArr = type.split(', ');
+                    const typeArr = type.split(',');
                     if (typeArr.length > 1) {
                       // Multiple options, render Select
                       component = (
@@ -415,7 +397,7 @@ const Editor = React.memo<{
                           isReadOnly={inputId !== editableCell} 
                           id={inputId} 
                           onSelectToggleCallback={onSelectToggleCallback} 
-                          options={typeArr} 
+                          options={typeArr.map(string => string.trim())} 
                           originalValue={value}
                           deactivateAndFocusCell={deactivateAndFocusCell}
                           setEditable={setEditable}
@@ -425,7 +407,6 @@ const Editor = React.memo<{
                       component = (
                         <Input
                           isReadOnly={inputId !== editableCell} 
-                          onActivateInput={activateAndFocusCell} 
                           originalValue={value} 
                           path={path} 
                           type={type} 
@@ -433,7 +414,6 @@ const Editor = React.memo<{
                           deactivateAndFocusCell={deactivateAndFocusCell}
                           setEditable={setEditable}
                           onSave={onSave}
-                          originalRows={originalRows}
                         />
                       );
                     }
@@ -451,13 +431,13 @@ const Editor = React.memo<{
     </>
   );
 }, (prevProps, nextProps) => {
-  console.log('compare props Editor');
-  // TODO: Compare values as well not just length
-  debugger;
-  if (prevProps.rows.length !== nextProps.rows.length) {
+  // console.log('compare props Editor');
+  if (prevProps.rows.length !== nextProps.rows.length || JSON.stringify(prevProps.rows) !== JSON.stringify(nextProps.rows)) {
+    // rows have changed, re-render
     return false;
   }
   if (prevProps.lastChangedCell !== nextProps.lastChangedCell) {
+    // last changed cell has changed, re-render
     return false;
   }
   return true;

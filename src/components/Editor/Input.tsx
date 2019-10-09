@@ -9,22 +9,14 @@ const Input = React.memo<{
   path: string, 
   id?: any, 
   type?: string, 
-  onActivateInput?: any, 
   isReadOnly?: boolean,
   deactivateAndFocusCell: any,
   setEditable: any,
-  onSave: any,
-  originalRows: any[]
-}>(({ originalValue, path, id, type, onActivateInput, isReadOnly, deactivateAndFocusCell, setEditable, onSave, originalRows }) => {
+  onSave: any
+}>(({ originalValue, path, id, type, isReadOnly, deactivateAndFocusCell, setEditable, onSave }) => {
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
   const [overflown, setOverflown] = React.useState<boolean>(false);
-
-  const inputRef = React.useRef(null);
-
-  const getActiveElement = () => {
-    return (document && document.activeElement && document.activeElement.getAttribute('id')) || id;
-  };
 
   const thisElement = () => {
     return document.getElementById(id) as HTMLInputElement;
@@ -33,15 +25,17 @@ const Input = React.memo<{
   React.useEffect(() => {
     if (!isReadOnly) {
       setTimeout(() => {
-          console.log('set caret position at end');
-          setCaretPositionAtEnd(thisElement());
+        console.log('set caret position at end');
+        setCaretPositionAtEnd(thisElement());
       }, 1);
     }
   });
 
   React.useEffect(() => {
-    console.log('oh my')
-    setValue(originalValue);
+    if (value !== originalValue) {
+      console.log('oh my')
+      setValue(originalValue);
+    }
   }, [originalValue]);
 
   React.useEffect(() => {
@@ -115,7 +109,6 @@ const Input = React.memo<{
 
   const input = (
     <input 
-      ref={inputRef}
       onMouseOver={checkForOverflow}
       className="editor-input truncate" 
       style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
@@ -123,7 +116,7 @@ const Input = React.memo<{
       type="text" 
       onChange={handleTextInputChange}
       onBlur={onLoseFocus}
-      onFocus={onGainFocus}
+      // onFocus={onGainFocus}
       aria-label={value} 
       id={id} 
       readOnly={isReadOnly}

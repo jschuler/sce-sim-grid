@@ -58,6 +58,10 @@
   display: contents;
 }
 
+.kie-grid__item--loading {
+  grid-column: 1 / -1
+}
+
 .vList,
 .vList > div {
   display: contents;
