@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Button } from '@patternfly/react-core';
 import { BarsIcon } from '@patternfly/react-icons';
-import { Editor } from './Editor';
-import { DefinitionsDrawerPanel } from './DrawerPanel';
+import { Editor } from '../Editor';
+import { DefinitionsDrawerPanel } from '../Sidebar';
 import { getDefinitions, getColumns, getRows, getColumnNames, getDmnFilePath } from "./scesimUtils";
-import EditorToolbar from './EditorToolbar';
+import { EditorToolbar } from '../Toolbar';
 import classNames from 'classnames';
 
 export const TrackChangesContext = React.createContext<{

@@ -1,10 +1,8 @@
 import * as React from 'react';
-import { setCaretPositionAtEnd, focusCell } from "./utils";
-import { useKeyPress } from './useKeyPress';
+import { useKeyPress, setCaretPositionAtEnd, focusCell } from "../utils";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { Spinner } from '../Spinner';
-import { Input } from './Input';
-import { Select } from './Select';
+import { Input, Select } from '../Cell';
 import "./Editor.css";
 
 const Editor = React.memo<{ 

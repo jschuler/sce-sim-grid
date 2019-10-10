@@ -12,7 +12,7 @@ import {
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { HelpModal } from './HelpModal';
-import { focusCell } from './utils';
+import { focusCell } from '../utils';
 import './EditorToolbar.scss';
 
 const EditorToolbar = React.memo<{ 
@@ -53,7 +53,9 @@ const EditorToolbar = React.memo<{
   };
 
   const debouncedFilterRows = debounce((value: any) => {
-    filterRows(value)
+    filterRows(value);
+    // TODO: Find out why need to refocus
+    setTimeout(() => focusCell('gridSearch'), 1);
   }, 1000);
   
   /**
@@ -270,4 +272,4 @@ EditorToolbar.whyDidYouRender = {
   customName: 'EditorToolbar'
 };
 
-export default EditorToolbar;
+export { EditorToolbar };

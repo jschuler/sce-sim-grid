@@ -2,8 +2,8 @@ import * as React from "react";
 import { Expandable, TextContent, Button } from '@patternfly/react-core';
 import { CopyIcon, AngleRightIcon } from '@patternfly/react-icons';
 import classNames from 'classnames';
-import { setCaretPositionAtEnd } from "./utils";
-import './DrawerPanel.scss';
+import { setCaretPositionAtEnd } from "../utils";
+import './Sidebar.scss';
 
 const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }> = ({ definitions, dmnFilePath }) => {
   // console.log('render DefinitionsDrawerPanel');
