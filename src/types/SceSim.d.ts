@@ -1,3 +1,7 @@
+/**
+ * Types generated from .scesim JSON file using https://quicktype.io/typescript/
+ */
+
 export interface Scesim {
   name:  Name;
   value: Value;

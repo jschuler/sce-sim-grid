@@ -1,14 +1,12 @@
 import { useEffect } from 'react';
 
 export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
-  const deps = (options && options.hasOwnProperty('deps')) ? options.deps : [];
-  const combinedDeps: any[] = [targetKey, fn, options].concat(deps);
   useEffect(() => {
     const ref = (options && options.hasOwnProperty('ref')) ? options.ref : null;
     const id = (options && options.hasOwnProperty('id')) ? options.id : null;
     const withModifier = (options && options.hasOwnProperty('withModifier')) ? options.withModifier : false;
     const isActive = (options && options.hasOwnProperty('isActive')) ? options.isActive : true;
-    const log = (options && options.hasOwnProperty('log')) ? options.log : '';
+    // const log = (options && options.hasOwnProperty('log')) ? options.log : '';
     
     if (isActive === false) {
       return;

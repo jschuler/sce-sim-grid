@@ -2,7 +2,7 @@ import "@patternfly/patternfly/patternfly.min.css";
 import "@patternfly/patternfly/patternfly-addons.css";
 import React, { useState, useEffect } from "react";
 import { EditorContainer } from './components';
-import { getJsonFromSceSim, getJsonFromDmn } from './components/utils';
+import { getJsonFromSceSim, getJsonFromDmn } from './components/jsonixUtils';
 import classNames from 'classnames';
 import { Spinner } from './components/Spinner';
 import { Select, SelectOption, SelectOptionObject } from '@patternfly/react-core';

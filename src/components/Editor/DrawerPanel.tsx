@@ -1,27 +1,36 @@
 import * as React from "react";
 import { Expandable, TextContent, Button } from '@patternfly/react-core';
 import { CopyIcon, AngleRightIcon } from '@patternfly/react-icons';
-import className from 'classnames';
+import classNames from 'classnames';
 import { setCaretPositionAtEnd } from "./utils";
 import './DrawerPanel.scss';
 
 const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }> = ({ definitions, dmnFilePath }) => {
+  // console.log('render DefinitionsDrawerPanel');
+
+  // DMN file path ClipboardCopy expansion
   const [isExpanded, setExpanded] = React.useState(false);
-  console.log('render DefinitionsDrawerPanel');
-  const onCopyClick = () => {
-    setExpanded(!isExpanded);
-  };
 
   React.useEffect(() => {
+    // scroll towards the end of the DMN file path input
     setTimeout(() => {
       const element = document.getElementById('dmnFilePath') as HTMLInputElement;
       if (element) {
-        console.log('set caret position at end');
         setCaretPositionAtEnd(element);
       }
     }, 1)
   });
 
+  /**
+   * Toggles the DMN file path
+   */
+  const onToggle = () => {
+    setExpanded(!isExpanded);
+  };
+
+  /**
+   * Copy the DMN file path
+   */
   const onCopy = (event: any) => {
     /* Get the text field */
     const copyText = document.getElementById('dmnFilePath') as HTMLInputElement;
@@ -33,31 +42,31 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
       document.execCommand('copy');
       // do not mark the whole text as selected
       setCaretPositionAtEnd(copyText);
-      console.log(`Copied the text: ${copyText.value}`);
     }
   };
 
   const ClipboardCopy = () => (
-    <div className={className('pf-c-clipboard-copy', isExpanded && 'pf-m-expanded')}>
+    <div className={classNames('pf-c-clipboard-copy', isExpanded && 'pf-m-expanded')}>
       <div className="pf-c-clipboard-copy__group">
         <button className="pf-c-clipboard-copy__group-toggle"
-            id="toggle-6" aria-labelledby="toggle-6 text-input-6" aria-controls="content-6"
+            id="dmnPathToggle" aria-labelledby="dmnPathToggle dmnFilePath" aria-controls="content-6"
             aria-expanded="true"
             aria-label="Show content"
-            onClick={onCopyClick}
+            onClick={onToggle}
           >
             <AngleRightIcon className="pf-c-clipboard-copy__group-toggle-icon" />
         </button>
         <input className="pf-c-form-control" readOnly type="text" value={dmnFilePath} id="dmnFilePath" aria-label="Copyable input"></input>
         <button className="pf-c-clipboard-copy__group-copy"
           aria-label="Copy to clipboard"
-            id="copy-button-6" aria-labelledby="copy-button-6 text-input-6"
+            id="dmnPathCopy" 
+            aria-labelledby="dmnPathCopy dmnFilePath"
             onClick={onCopy}
           >
           <CopyIcon />
         </button>
       </div>
-      {isExpanded && <div className="pf-c-clipboard-copy__expandable-content" id="content-6" style={{ color: 'rgb(33, 36, 39)' }}>{dmnFilePath}</div>}
+      {isExpanded && <div className="pf-c-clipboard-copy__expandable-content" id="dmnPathContent" style={{ color: 'rgb(33, 36, 39)' }}>{dmnFilePath}</div>}
     </div>
   );
   return (

@@ -1,9 +1,11 @@
 /* eslint-disable */
+
 /**
  * Copied jsonix locally to make this fix: https://github.com/boundlessgeo/jsonix/commit/3342c011779261a860488b1a692fa09910cd273e
  * Webpack does not like the define. See https://github.com/highsource/jsonix/issues/171
+ * 
+ * TODO: Get rid of this file and instead maybe monkey patch the dependency in node_modules
  */
-
 
 var _jsonix_factory = function(_jsonix_xmldom, _jsonix_xmlhttprequest, _jsonix_fs)
 {

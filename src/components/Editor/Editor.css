@@ -62,11 +62,7 @@
   grid-column: 1 / -1
 }
 
-.vList,
-.vList > div {
-  display: contents;
-}
-
+/* Filter on column dropdown right-aligned */
 .pf-c-select__menu {
   right: 0;
 }

@@ -7,10 +7,12 @@ import {
   ToolbarItem,
   Select,
   SelectOption,
-  Expandable
+  Expandable,
+  debounce
 } from '@patternfly/react-core';
-import { OutlinedQuestionCircleIcon, UndoIcon, RedoIcon } from '@patternfly/react-icons';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { HelpModal } from './HelpModal';
+import { focusCell } from './utils';
 import './EditorToolbar.scss';
 
 const EditorToolbar = React.memo<{ 
@@ -21,7 +23,8 @@ const EditorToolbar = React.memo<{
   changes: any[],
   onUndo: any
 }>(({ allRows, rows, updateRows, columnNames, changes, onUndo }) => {
-  
+  console.log('render EditorToolbar');
+
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
   const [searchValue, setSearchValue] = React.useState('');
@@ -34,25 +37,42 @@ const EditorToolbar = React.memo<{
   });
 
   React.useEffect(() => {
+    // When selections in the filter change, update the filtered rows
     if (searchValue) {
-      console.log('updating filterRows');
       filterRows(searchValue);
     }
   }, [selected]);
 
+  /**
+   * Update filtered rows on search change
+   */
   const handleSearchChange = (value: string) => {
-    filterRows(value);
     setSearchValue(value);
+    // @ts-ignore
+    debouncedFilterRows(value);
   };
+
+  const debouncedFilterRows = debounce((value: any) => {
+    filterRows(value)
+  }, 1000);
   
+  /**
+   * Opens the Help modal
+   */
   const openModal = () => {
     setModalOpen(true);
   };
 
+  /**
+   * Closes the Help modal
+   */
   const closeModal = () => {
     setModalOpen(false);
   };
 
+  /**
+   * Filter the rows based on search and filter selection
+   */
   const filterRows = (value: string, selections?: any[]) => {
     const searchRE = new RegExp(value, 'i');
     const filteredRows = allRows.filter((row: any) => {
@@ -80,10 +100,16 @@ const EditorToolbar = React.memo<{
     updateRows(filteredRows);
   }
 
+  /**
+   * Toggles the filter select
+   */
   const onSelectToggle = (isOpen: boolean) => {
     setExpanded(isOpen);
   };
 
+  /**
+   * Updates selection on filter select change
+   */
   const onSelect = (event: any, selection: any) => {
     let selections;
     if (selected.includes(selection)) {
@@ -94,10 +120,9 @@ const EditorToolbar = React.memo<{
     setSelected(selections);
   };
 
-  const clearSelection = () => {
-    setSelected([]);
-  };
-
+  /**
+   * Builds the search box
+   */
   const buildSearchBox = () => {
     return (
       <TextInput
@@ -112,6 +137,9 @@ const EditorToolbar = React.memo<{
     );
   };
 
+  /**
+   * Builds the filter select
+   */
   const buildSelect = () => {
     let items: any[] = [];
     columnNames.forEach((item: any, index: number) => {
@@ -136,9 +164,9 @@ const EditorToolbar = React.memo<{
     );
   };
 
-  console.log('render EditorToolbar');
-  console.log(`changes: ${changes}`);
-
+  /**
+   * The text to display for the change-tracker
+   */
   const getChangeText = () => {
     if (changes.length === 1) {
       return `1 change`;
@@ -147,17 +175,16 @@ const EditorToolbar = React.memo<{
     }
   };
 
+  /**
+   * When a cell id is clicked in the change-tracker, it scrolls and focuses the corresponding element in the grid
+   */
   const focusElement = (id: string) => {
-    const element = document.getElementById(id) as HTMLInputElement;
-    if (element) {
-      element.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-      console.log(`focusing ${id}`);
-      setTimeout(() => {
-        element.focus();
-      }, 1000)
-    }
+    focusCell(id, 250, true);
   }
 
+  /**
+   * The change-tracker element
+   */
   const changeTracker = () => {
     const input = (
       <input 
@@ -171,11 +198,11 @@ const EditorToolbar = React.memo<{
     );
     if (changes.length) {
       return (
-        <Expandable toggleText={getChangeText()} className="kie-changes">
+        <Expandable toggleText={getChangeText()} className="kie-changes pf-u-mx-sm">
           <div className="pf-c-content">
             <dl>
-              {changes.map((change: any) => (
-                <React.Fragment key={`${change.id} - ${change.value}`}>
+              {changes.map((change: any, index: number) => (
+                <React.Fragment key={index}>
                   <dt><Button variant="link" onClick={() => focusElement(change.id)} isInline>{change.id}</Button></dt>
                   <dd>{change.value}</dd>
                 </React.Fragment>
@@ -189,8 +216,10 @@ const EditorToolbar = React.memo<{
     }
   }
 
+  /**
+   * Undoes the last change
+   */
   const undoChange = () => {
-    console.log('undo');
     onUndo(changes[0]);
   };
 
@@ -200,13 +229,13 @@ const EditorToolbar = React.memo<{
         <ToolbarGroup>
           <ToolbarItem>
             <div className="pf-c-input-group">
-              <Button onClick={undoChange} variant="control" isDisabled={changes.length === 0}>
+              {/* <Button onClick={undoChange} variant="control" isDisabled={changes.length === 0}>
                 <UndoIcon />
-              </Button>
+              </Button> */}
               {changeTracker()}
-              <Button variant="control" isDisabled>
+              {/* <Button variant="control" isDisabled>
                 <RedoIcon />
-              </Button>
+              </Button> */}
             </div>
           </ToolbarItem>
         </ToolbarGroup>
@@ -225,11 +254,12 @@ const EditorToolbar = React.memo<{
     </>
   );
 }, (prevProps, nextProps) => {
-  // TODO: Compare values as well not just length
-  if (prevProps.rows.length !== nextProps.rows.length) {
+  if (prevProps.rows.length !== nextProps.rows.length || JSON.stringify(prevProps.rows) !== JSON.stringify(nextProps.rows)) {
+    // rows have changed, re-render
     return false;
   }
-  if (prevProps.changes !== nextProps.changes) {
+  if (prevProps.changes.length !== nextProps.changes.length || JSON.stringify(prevProps.changes) !== JSON.stringify(nextProps.changes)) {
+    // last changed cell has changed, re-render
     return false;
   }
   return true;

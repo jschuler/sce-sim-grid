@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Tooltip } from '@patternfly/react-core';
 import { useKeyPress } from './useKeyPress'; 
-import { setCaretPositionAtEnd } from './utils';
+import { setCaretPositionAtEnd, focusCell } from './utils';
 import './Input.css';
 
 const Input = React.memo<{ 
@@ -13,57 +13,72 @@ const Input = React.memo<{
   deactivateAndFocusCell: any,
   setEditable: any,
   onSave: any
-}>(({ originalValue, path, id, type, isReadOnly, deactivateAndFocusCell, setEditable, onSave }) => {
+}>(({ 
+  originalValue, 
+  path, 
+  id, 
+  type, 
+  isReadOnly, 
+  deactivateAndFocusCell, 
+  setEditable, 
+  onSave 
+}) => {
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
   const [overflown, setOverflown] = React.useState<boolean>(false);
 
+  /**
+   * Returns the current DOM element
+   * 
+   * TODO: Possibly change to React refs
+   */
   const thisElement = () => {
     return document.getElementById(id) as HTMLInputElement;
   }
 
   React.useEffect(() => {
     if (!isReadOnly) {
+      // set caret at the end of the input
       setTimeout(() => {
-        console.log('set caret position at end');
         setCaretPositionAtEnd(thisElement());
       }, 1);
     }
   });
 
-  React.useEffect(() => {
-    if (value !== originalValue) {
-      console.log('oh my')
-      setValue(originalValue);
-    }
-  }, [originalValue]);
-
-  React.useEffect(() => {
-    if (!isReadOnly) {
-      // track the change
-      console.log('track change')
-      onSave && onSave(id, savedValue, originalValue);
-    }
-  }, [savedValue]);
-
+  /**
+   * Set the value on input
+   */
   const handleTextInputChange = (event: any) => {
     setValue(event.currentTarget.value);
+  }
+
+  /**
+   * Saves the current value
+   */
+  const save = () => {
+    if (savedValue !== value) {
+      setSavedValue(value);
+      onSave && onSave(id, value, originalValue);
+    }
   }
 
   /**
    * save current input
    */
   const onEnter = (event: any) => {
-    console.log('currently editable, will save');
     // save operation
-    setSavedValue(value);
+    save();
     // mark itself as not editable but maintain focus
     deactivateAndFocusCell(event.target.id);
   };
 
+  /**
+   * Reverts input to previous saved value if changed
+   */
   const onEscape = (event: any) => {
-    console.log('revert cell changes');
-    setValue(savedValue);
+    if (savedValue !== value) {
+      setValue(savedValue);
+    }
     // mark itself as not editable but maintain focus
     deactivateAndFocusCell(event.target.id);
   };
@@ -80,21 +95,22 @@ const Input = React.memo<{
   });
 
   /**
+   * When the element loses focus
    * Save the value and notify the Editor that we're not editable anymore
    */
   const onLoseFocus = (event: any) => {
     if (!isReadOnly) {
-      console.log(`lost focus for id ${id}, save value: ${value}`);
-      setSavedValue(value);
       setEditable('');
+      save();
     }
   };
 
   /**
-   * When the element receives focus, check if we should show a tooltip
+   * When the element receives focus
    */
   const onGainFocus = (event: any) => {
-    checkForOverflow();
+    // TODO: Figure out why the cell needs to be re-focused after tabbing in
+    focusCell(id);
   }
 
   /**
@@ -103,7 +119,6 @@ const Input = React.memo<{
   const checkForOverflow = (event?: any) => {
     const element = event ? event.target : thisElement();
     const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-    // console.log(`isOverflown: ${isOverflown}`);
     setOverflown(isOverflown);
   }
 
@@ -116,7 +131,7 @@ const Input = React.memo<{
       type="text" 
       onChange={handleTextInputChange}
       onBlur={onLoseFocus}
-      // onFocus={onGainFocus}
+      onFocus={onGainFocus}
       aria-label={value} 
       id={id} 
       readOnly={isReadOnly}
@@ -124,14 +139,9 @@ const Input = React.memo<{
   );
   return <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
 }, (prevProps, nextProps) => {
-  /*
-   return true if passing nextProps to render would return
-   the same result as passing prevProps to render,
-   otherwise return false
-   */
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
-    console.log(`${nextProps.id} will re-render`);
+    console.log(`re-render Input ${nextProps.id}`)
     return false;
   }
   return true;
