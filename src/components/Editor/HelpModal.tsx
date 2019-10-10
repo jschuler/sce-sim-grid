@@ -2,7 +2,8 @@ import * as React from "react";
 import { Modal, Button } from '@patternfly/react-core';
 
 const HelpModal: React.SFC<{ isOpen: boolean, onClose: any }> = ({ isOpen, onClose }) => {
-  console.log('render HelpModal');
+  // console.log('render HelpModal');
+  
   return (
     <Modal
       isSmall

@@ -1,3 +1,5 @@
+import { Scesim } from '../types/SceSim';
+
 const Jsonix = require('./jsonix').Jsonix;
 
 // Load the schema rules
@@ -16,26 +18,39 @@ const dmnUnmarshaller = dmnContext.createUnmarshaller();
 const sceSimMarshaller = sceSimContext.createMarshaller();
 const dmnMarshaller = dmnContext.createMarshaller();
 
-export const getJsonFromSceSim = scesim => {
+/**
+ * Convert a scesim XML string into JSON
+ */
+export const getJsonFromSceSim = (scesim: string) => {
   const unmarshalled = sceSimUnmarshaller.unmarshalString(scesim);
-  console.log(unmarshalled);
+  // console.log(unmarshalled);
   return unmarshalled;
 }
 
-export const setSceSimFromJson = json => {
+/**
+ * Convert JSON to scesim XML string
+ */
+export const setSceSimFromJson = (json: Scesim) => {
   const marshalled = sceSimMarshaller.marshalString(json);
-  console.log(marshalled);
+  // console.log(marshalled);
   return marshalled;
 }
 
-export const getJsonFromDmn = dmn => {
+/**
+ * 
+ * @param dmn Convert dmn XML string into JSON
+ */
+export const getJsonFromDmn = (dmn: string) => {
   const unmarshalled = dmnUnmarshaller.unmarshalString(dmn);
-  console.log(unmarshalled);
+  // console.log(unmarshalled);
   return unmarshalled;
 }
 
-export const setDmnFromJson = json => {
+/**
+ * Convert JSON to dmn XML string
+ */
+export const setDmnFromJson = (json: any) => {
   const marshalled = dmnMarshaller.marshalString(json);
-  console.log(marshalled);
+  // console.log(marshalled);
   return marshalled;
 }

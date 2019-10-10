@@ -1,5 +1,6 @@
 export * from './EditorContainer';
 export * from './Editor';
-export * from './EditorRow';
 export * from './DrawerPanel';
+export * from './HelpModal';
+export * from './scesimUtils';
 export * from './utils';
