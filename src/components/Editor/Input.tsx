@@ -141,7 +141,7 @@ const Input = React.memo<{
 }, (prevProps, nextProps) => {
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
-    console.log(`re-render Input ${nextProps.id}`)
+    // console.log(`re-render Input ${nextProps.id}`)
     return false;
   }
   return true;

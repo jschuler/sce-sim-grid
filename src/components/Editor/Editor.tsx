@@ -20,7 +20,7 @@ const Editor = React.memo<{
   columnNames,
   onSave
 }) => {
-  console.log('render Editor');
+  // console.log('render Editor');
 
   const rowsToFetch = 50;
 

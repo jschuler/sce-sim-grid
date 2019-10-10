@@ -54,7 +54,6 @@ const App: React.FC = () => {
     } else {
       setSelected(selection);
       onToggle(false);
-      console.log('selected:', selection);
       if (selection === 'Example 1') {
         setData(data1);
       } else {

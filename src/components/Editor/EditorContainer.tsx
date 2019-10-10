@@ -14,7 +14,7 @@ export const TrackChangesContext = React.createContext<{
 });
 
 const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
-  console.log('render EditorContainer');
+  // console.log('render EditorContainer');
 
   const increaseRows = (rows: any) => {
     // increase rows for performance testing / infinite sroll testing etc

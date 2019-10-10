@@ -23,7 +23,7 @@ const EditorToolbar = React.memo<{
   changes: any[],
   onUndo: any
 }>(({ allRows, rows, updateRows, columnNames, changes, onUndo }) => {
-  console.log('render EditorToolbar');
+  // console.log('render EditorToolbar');
 
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
