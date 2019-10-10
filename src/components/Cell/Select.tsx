@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Select as PfSelect, SelectOption, SelectVariant, SelectOptionObject } from '@patternfly/react-core';
-import { focusCell } from './utils';
+import { focusCell } from '../utils';
 import './Input.css';
 import './Select.css';
 

@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Tooltip } from '@patternfly/react-core';
-import { useKeyPress } from './useKeyPress'; 
-import { setCaretPositionAtEnd, focusCell } from './utils';
+import { useKeyPress, setCaretPositionAtEnd, focusCell  } from '../utils'; 
 import './Input.css';
 
 const Input = React.memo<{ 

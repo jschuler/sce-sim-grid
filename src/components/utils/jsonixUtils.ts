@@ -1,10 +1,10 @@
-import { Scesim } from '../types/SceSim';
+import { Scesim } from '../../types/SceSim';
 
 const Jsonix = require('./jsonix').Jsonix;
 
 // Load the schema rules
-const SceSimRules = require('../rules/scesim').scesim;
-const DmnRules = require('../rules/dmn').dmn;
+const SceSimRules = require('../../rules/scesim').scesim;
+const DmnRules = require('../../rules/dmn').dmn;
 
 // Construct a Jsonix context - a factory for unmarshaller (parser) and marshaller (serializer)
 const sceSimContext = new Jsonix.Context([SceSimRules]);
