@@ -20,11 +20,22 @@ const Input = React.memo<{
   isReadOnly, 
   deactivateAndFocusCell, 
   setEditable, 
-  onSave 
+  onSave
 }) => {
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
   const [overflown, setOverflown] = React.useState<boolean>(false);
+  const [changes, setChanges] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (isReadOnly) {
+      // update cell on data changes coming from EditorContainer -> Editor
+      if (value !== originalValue) {
+        setValue(originalValue);
+        setSavedValue(originalValue);
+      }
+    }
+  }, [originalValue]);
 
   /**
    * Returns the current DOM element
@@ -56,10 +67,14 @@ const Input = React.memo<{
    */
   const save = () => {
     if (savedValue !== value) {
+      setChanges([...changes, {
+        value,
+        previousValue: savedValue
+      }]);
       setSavedValue(value);
       onSave && onSave(id, value, originalValue);
     }
-  }
+  };
 
   /**
    * save current input
@@ -138,6 +153,7 @@ const Input = React.memo<{
   );
   return <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
 }, (prevProps, nextProps) => {
+  // console.log(`${prevProps.originalValue} => ${nextProps.originalValue}`);
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
     // console.log(`re-render Input ${nextProps.id}`)

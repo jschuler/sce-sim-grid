@@ -4,21 +4,17 @@ import { BarsIcon } from '@patternfly/react-icons';
 import { Editor } from '../Editor';
 import { DefinitionsDrawerPanel } from '../Sidebar';
 import { getDefinitions, getColumns, getRows, getColumnNames, getDmnFilePath } from "./scesimUtils";
+import { getRowColumnFromId } from '../utils';
 import { EditorToolbar } from '../Toolbar';
 import classNames from 'classnames';
-
-export const TrackChangesContext = React.createContext<{
-  changes: any[]
-}>({
-  changes: []
-});
+import { cloneDeep } from 'lodash';
 
 const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
   // console.log('render EditorContainer');
 
   const increaseRows = (rows: any) => {
     // increase rows for performance testing / infinite sroll testing etc
-    const enabled = false;
+    const enabled = true;
     const numRowsToAdd = 2000;
     if (enabled) {
       for (let i = 0; i < numRowsToAdd; i++) {
@@ -35,14 +31,26 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
   const initialColumns = getColumns(data, true);
   let initialRows = getRows(data, initialColumns);
   initialRows = increaseRows(initialRows);
+  const initialColumnNames = getColumnNames(data);
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
-  const [changes, setChanges] = React.useState<any[]>([]);
+  const [undoRedo, setUndoRedo] = React.useState<any>({ 
+    undoList: [], 
+    redoList: []
+  });
   const [allRows, setAllRows] = React.useState(initialRows);
   const [filteredRows, setFilteredRows] = React.useState(initialRows);
   const [definitions, setDefinitions] = React.useState(initialDefinitions);
   const [dmnFilePath, setDmnFilePath] = React.useState(getDmnFilePath(data));
   const [columns, setColumns] = React.useState(initialColumns);
-  const [columnNames, setColumnNames] = React.useState(getColumnNames(data));
+  const [columnNames, setColumnNames] = React.useState(initialColumnNames);
+  let initialItemToColumnIndexMap: any = [];
+  initialColumnNames.forEach((item: any, index: number) => {
+    const value = `${item.group} ${item.name}`;
+    initialItemToColumnIndexMap[value] = index;
+  });
+  const [itemToColumnIndexMap, setItemToColumnIndexMap] = React.useState(initialItemToColumnIndexMap);
+  const [searchValue, setSearchValue] = React.useState('');
+  const [filterSelection, setFilterSelection] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     // when data or model changes, recompute rows and columns
@@ -59,6 +67,16 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
       setColumnNames(getColumnNames(data));
       setAllRows(updatedRows);
       setFilteredRows(updatedRows);
+      setUndoRedo({
+        undoList: [],
+        redoList: []
+      });
+      let itemToColumnIndexMap: any = [];
+      initialColumnNames.forEach((item: any, index: number) => {
+        const value = `${item.group} ${item.name}`;
+        itemToColumnIndexMap[value] = index;
+      });
+      setItemToColumnIndexMap(initialColumnNames);
     }
   }, [data, model]);
 
@@ -69,37 +87,96 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
     setDrawerExpanded(!isDrawerExpanded);
   }
 
-  /**
-   * Callback function for EditorToolbar, called on filter change
-   */
-  const updateRows = (rows: any) => {
-    setFilteredRows(rows);
-  }
-
   /** 
    * Callback function for Editor inputs. When they're saved we add it to the list of changes for change-tracking.
    */
   const addToChanges = (id: string, value: string, previousValue: string) => {
-    setChanges((prevState: any) => ([...prevState, { id, value, previousValue }]));
-    // update allRows
-    // const currentIdArr: string[] = id.split(' ');
-    // const row = Number.parseInt(currentIdArr[1]);
-    // const column = Number.parseInt(currentIdArr[3]);
-    // allRows[row][column].value = value;
-    // setAllRows(allRows);
+    const { row, column } = getRowColumnFromId(id);
+    const clonedAllRows = cloneDeep(allRows);
+    clonedAllRows[row][column].value = value;
+    setAllRows(clonedAllRows);
+    // new change clears the redoList
+    setUndoRedo({
+      undoList: [...undoRedo.undoList, { id, value, previousValue }],
+      redoList: []
+    });
   }
 
   /**
    * Reverts the last Input change
+   * Pop the undo stack and push it onto redo stack
    */
-  const revertOneChange = (entry: any) => {
-    // const { id, previousValue, value } = entry;
-    // const currentIdArr: string[] = id.split(' ');
-    // const row = Number.parseInt(currentIdArr[1]);
-    // const column = Number.parseInt(currentIdArr[3]);
-    // allRows[row][column].value = previousValue;
-    // setAllRows(allRows);
-    // setLastChangedCell(id);
+  const onUndo = () => {
+    if (undoRedo.undoList.length > 0) {
+      const clonedChanges = cloneDeep(undoRedo.undoList);
+      const lastChange = clonedChanges.pop();
+      const { id, previousValue } = lastChange;
+      const { row, column } = getRowColumnFromId(id);
+      const clonedAllRows = cloneDeep(allRows);
+      clonedAllRows[row][column].value = previousValue;
+      setAllRows(clonedAllRows);
+      setUndoRedo({
+        undoList: clonedChanges,
+        redoList: [...undoRedo.redoList, lastChange]
+      });
+    }
+  }
+
+  /**
+   * Pop it from the redo stack and push it onto undo stack
+   * a new change clears the redo stack
+   */
+  const onRedo = () => {
+    if (undoRedo.redoList.length > 0) {
+      const clonedRedoList = cloneDeep(undoRedo.redoList);
+      const lastRedo = clonedRedoList.pop();
+      const { id, value } = lastRedo;
+      const { row, column } = getRowColumnFromId(id);
+      const clonedAllRows = cloneDeep(allRows);
+      clonedAllRows[row][column].value = value;
+      setAllRows(clonedAllRows);
+      setUndoRedo({
+        undoList: [...undoRedo.undoList, lastRedo],
+        redoList: clonedRedoList
+      });
+    }
+  }
+
+  React.useEffect(() => {
+    filterRows(searchValue, filterSelection);
+  }, [allRows]);
+
+  /**
+   * Filter the rows based on search and filter selection
+   * Callback function for EditorToolbar, called on filter/search change
+   */
+  const filterRows = (value: string, selected: any[]) => {
+    const searchRE = new RegExp(value, 'i');
+    const filteredRows = allRows.filter((row: any) => {
+      let found = false;
+      if (selected.length === 0) {
+        // search all columns
+        for (let col of row) {
+          if (col && searchRE.test(col.value)) {
+            found = true;
+            break;
+          }
+        }
+      } else {
+        // search only the selected columns
+        for (let sel of selected) {
+          const columnIndex = itemToColumnIndexMap[sel];
+          if (row[columnIndex] && searchRE.test(row[columnIndex].value)) {
+            found = true;
+            break;
+          }
+        }
+      }
+      return found;
+    });
+    setSearchValue(value);
+    setFilterSelection(selected);
+    setFilteredRows(filteredRows);
   }
 
   return (
@@ -126,11 +203,13 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
           <div className="pf-c-page__header-tools">
             <EditorToolbar 
               allRows={allRows} 
-              rows={filteredRows} 
-              updateRows={updateRows} 
+              filteredRowsLength={filteredRows.length} 
+              filterRows={filterRows} 
               columnNames={columnNames} 
-              changes={changes} 
-              onUndo={revertOneChange} 
+              changes={undoRedo.undoList} 
+              redoList={undoRedo.redoList}
+              onUndo={onUndo}
+              onRedo={onRedo}
             />
           </div>
         </header>
@@ -146,10 +225,12 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
           <section className="pf-c-page__main-section pf-m-light">
             <Editor 
               columns={columns} 
-              rows={filteredRows} 
+              filteredRows={filteredRows} 
               definitions={definitions} 
               columnNames={columnNames} 
-              onSave={addToChanges} 
+              onSave={addToChanges}
+              onUndo={onUndo}
+              onRedo={onRedo}
             />
           </section>
         </main>

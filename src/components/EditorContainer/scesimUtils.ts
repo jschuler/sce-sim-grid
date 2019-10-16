@@ -112,15 +112,21 @@ export const getRows = (data: Scesim, columns?: any) => {
       const entries = dataRow.factMappingValues.factMappingValue;
       entries.forEach((col: { rawValue?: { value: any }, expressionIdentifier: { name: string } }, index: number) => {
         const { name } = col.expressionIdentifier;
+        const path = `${dataPath}[${index}].rawValue.value`;
         if (!col.rawValue) {
           if (name) {
-            row[columns.fieldIndices[name]] = null;
+            row[columns.fieldIndices[name]] = {
+              value: null,
+              path
+            };
           } else {
             hasExpressionIdentifierName = false;
-            row[index] = null;
+            row[index] = {
+              value: null,
+              path
+            };
           }
         } else {
-          const path = `${dataPath}[${index}].rawValue.value`;
           const { value } = col.rawValue;
           if (name) {
             row[columns.fieldIndices[name]] = {

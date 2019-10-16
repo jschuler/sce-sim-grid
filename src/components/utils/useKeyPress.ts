@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+ import { useEffect } from 'react';
 
 export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
   useEffect(() => {
     const ref = (options && options.hasOwnProperty('ref')) ? options.ref : null;
     const id = (options && options.hasOwnProperty('id')) ? options.id : null;
     const withModifier = (options && options.hasOwnProperty('withModifier')) ? options.withModifier : false;
+    const withShift = (options && options.hasOwnProperty('withShift')) ? options.withShift : false;
     const isActive = (options && options.hasOwnProperty('isActive')) ? options.isActive : true;
     // const log = (options && options.hasOwnProperty('log')) ? options.log : '';
     
@@ -20,24 +21,25 @@ export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
         // ignore key combination like ctrl+c/command+c unless we specifically asked to use with modifier
         return;
       }
-      if (typeof targetKey === 'string' || typeof targetKey === 'number') {
-        if (key === targetKey || keyCode === targetKey) {
-          if (withModifier) {
-            if (event.ctrlKey || event.metaKey) {
+      if (
+        (typeof targetKey === 'string' && key === targetKey) || 
+        (typeof targetKey === 'number' && keyCode === targetKey) || 
+        (targetKey.test && targetKey.test(key))) {
+          if (withModifier && !withShift) {
+            if ((event.ctrlKey || event.metaKey) && !event.shiftKey) {
+              fn(event);
+            }
+          } else if (!withModifier && withShift) {
+            if (!event.ctrlKey && !event.metaKey && event.shiftKey) {
+              fn(event);
+            }
+          } else if (withModifier && withShift) {
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
               fn(event);
             }
           } else {
             fn(event);
           }
-        }
-      } else if (targetKey.test(key)) {
-        if (withModifier) {
-          if (event.ctrlKey || event.metaKey) {
-            fn(event);
-          }
-        } else {
-          fn(event);
-        }
       }
     }
     if (ref && ref.current) {

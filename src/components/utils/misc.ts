@@ -21,3 +21,13 @@ export const focusCell = (id: string, focusTimeout: number = 1, scrollTo: boolea
     }, focusTimeout)
   }
 }
+
+export const getRowColumnFromId = (id: string) => {
+  const currentIdArr: string[] = id.split(' ');
+  const row = Number.parseInt(currentIdArr[1]);
+  const column = Number.parseInt(currentIdArr[3]);
+  return {
+    row,
+    column
+  }
+}

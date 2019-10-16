@@ -5,11 +5,17 @@ import classNames from 'classnames';
 import { setCaretPositionAtEnd } from "../utils";
 import './Sidebar.scss';
 
-const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }> = ({ definitions, dmnFilePath }) => {
-  // console.log('render DefinitionsDrawerPanel');
+const DefinitionsDrawerPanel = React.memo<{ 
+  definitions: any, 
+  dmnFilePath: string
+}>(({ definitions, dmnFilePath }) => {
+// const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }> = ({ definitions, dmnFilePath }) => {
+  console.log('render DefinitionsDrawerPanel');
 
   // DMN file path ClipboardCopy expansion
   const [isExpanded, setExpanded] = React.useState(false);
+  const [definitionsState, setDefinitionsState] = React.useState(definitions);
+  const [dmnFilePathState, setDmnFilePathState] = React.useState(dmnFilePath);
 
   React.useEffect(() => {
     // scroll towards the end of the DMN file path input
@@ -19,7 +25,16 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
         setCaretPositionAtEnd(element);
       }
     }, 1)
-  });
+  }, [dmnFilePath]);
+
+  React.useEffect(() => {
+    if (definitions !== definitionsState) {
+      setDefinitionsState(definitions);
+    }
+    if (dmnFilePath !== dmnFilePathState) {
+      setDmnFilePathState(dmnFilePath);
+    }
+  }, [definitions, dmnFilePath]);
 
   /**
    * Toggles the DMN file path
@@ -56,7 +71,7 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
           >
             <AngleRightIcon className="pf-c-clipboard-copy__group-toggle-icon" />
         </button>
-        <input className="pf-c-form-control" readOnly type="text" value={dmnFilePath} id="dmnFilePath" aria-label="Copyable input"></input>
+        <input className="pf-c-form-control" readOnly type="text" value={dmnFilePathState} id="dmnFilePath" aria-label="Copyable input"></input>
         <button className="pf-c-clipboard-copy__group-copy"
           aria-label="Copy to clipboard"
             id="dmnPathCopy" 
@@ -66,7 +81,7 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
           <CopyIcon />
         </button>
       </div>
-      {isExpanded && <div className="pf-c-clipboard-copy__expandable-content" id="dmnPathContent" style={{ color: 'rgb(33, 36, 39)' }}>{dmnFilePath}</div>}
+      {isExpanded && <div className="pf-c-clipboard-copy__expandable-content" id="dmnPathContent" style={{ color: 'rgb(33, 36, 39)' }}>{dmnFilePathState}</div>}
     </div>
   );
   return (
@@ -79,7 +94,7 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
         <p>To create a test template, define the "Given" and "Expect" columns by using the expression editor below.</p>
         <h2>Select Data Object</h2>
         <h3>Complex Types</h3>
-        {definitions.complex.map((item: any) => (
+        {definitionsState.complex.map((item: any) => (
           <Expandable key={item.typeRef} toggleText={item.text}>
             {Object.keys(item.elements).map((elementKey: any) => (
               <div className="pf-u-mb-sm" key={elementKey}>
@@ -91,7 +106,7 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
         ))}
         
         <h3>Simple Types</h3>
-        {definitions.simple.map((item: any) => (
+        {definitionsState.simple.map((item: any) => (
           <Expandable key={item.typeRef} toggleText={item.text}>
             {Object.keys(item.elements).map((elementKey: any) => (
               <div className="pf-u-mb-sm" key={elementKey}>
@@ -104,6 +119,16 @@ const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }
       </TextContent>
     </div>
   )
-};
+}, (prevProps, nextProps) => {
+  if (JSON.stringify(prevProps.definitions) !== JSON.stringify(nextProps.definitions)) {
+    // definitions have changed, re-render
+    return false;
+  }
+  if (prevProps.dmnFilePath !== nextProps.dmnFilePath) {
+    // dmnFilePath have changed, re-render
+    return false;
+  }
+  return true;
+});
 
 export { DefinitionsDrawerPanel };

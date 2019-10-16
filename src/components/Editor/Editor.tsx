@@ -7,16 +7,20 @@ import "./Editor.css";
 
 const Editor = React.memo<{ 
   columns: any, 
-  rows : any, 
+  filteredRows : any, 
   definitions: any, 
   columnNames: any,
-  onSave: any
+  onSave: any,
+  onUndo: any,
+  onRedo: any
 }>(({ 
   columns: columnDefs, 
-  rows, 
+  filteredRows, 
   definitions, 
   columnNames,
-  onSave
+  onSave,
+  onUndo,
+  onRedo
 }) => {
   // console.log('render Editor');
 
@@ -25,7 +29,12 @@ const Editor = React.memo<{
   const [editableCell, setEditable] = React.useState<string>('');
   const [expandedSelect, setExpandedSelect] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [fetchedRows, setFetchedRows] = React.useState(rows.slice(0, rowsToFetch));
+
+  // state from props
+  const [columnDefsState, setColumnDefsState] = React.useState(columnDefs);
+  const [fetchedRows, setFetchedRows] = React.useState(filteredRows.slice(0, rowsToFetch));
+  const [definitionsState, setDefinitionsState] = React.useState(definitions);
+  const [columnNamesState, setColumnNamesState] = React.useState(columnNames);
 
   const editorRef = React.useRef(null);
 
@@ -37,10 +46,20 @@ const Editor = React.memo<{
   }, [columnDefs]);
 
   React.useEffect(() => {
-    if (JSON.stringify(fetchedRows) !== JSON.stringify(rows.slice(0, rowsToFetch))) {
-      setFetchedRows(rows.slice(0, rowsToFetch));
+    // render depends on updated value of fetchedRows
+    if (JSON.stringify(columnDefsState) !== JSON.stringify(columnDefs)) {
+      setColumnDefsState(columnDefs);
     }
-  }, [rows]);
+    if (JSON.stringify(fetchedRows) !== JSON.stringify(filteredRows.slice(0, rowsToFetch))) {
+      setFetchedRows(filteredRows.slice(0, rowsToFetch));
+    }
+    if (JSON.stringify(definitionsState) !== JSON.stringify(definitions)) {
+      setDefinitionsState(definitions);
+    }
+    if (JSON.stringify(columnNamesState) !== JSON.stringify(columnNames)) {
+      setColumnNamesState(columnNames);
+    }
+  }, [columnDefs, filteredRows, definitions, columnNames]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -147,7 +166,7 @@ const Editor = React.memo<{
       return;
     }
     const currentId = activeElement;
-    const maxRow = rows.length - 1;
+    const maxRow = filteredRows.length - 1;
     let targetId;
     if (currentId) {
       // ['row', '1', 'column', '2']
@@ -239,8 +258,12 @@ const Editor = React.memo<{
     }
   };
 
-  // Command / CTRL + C copies the focused cell content
+  // Command + C / CTRL + C copies the focused cell content
   useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
+  // Command + Z / CTRL + Z undo the last change
+  useKeyPress(/z/i, onUndo, { log: 'editor', withModifier: true });
+  // Command + Shift + Z / CTRL + Shift + Z undo the last change
+  useKeyPress(/z/i, onRedo, { log: 'editor', withModifier: true, withShift: true });
   useKeyPress('Enter', onEnter, { log: 'editor', isActive: !editableCell });
   useKeyPress(38, onUpKeyPress, { log: 'editor' });
   useKeyPress(40, onDownKeyPress, { log: 'editor' });
@@ -254,19 +277,19 @@ const Editor = React.memo<{
   // rowData
   const fetchMoreRows = (page?: number) => {
     if (page) {
-      // fetchedRows = rowData.slice(0, page * rowsToFetch + rowsToFetch);
-      setFetchedRows((prevState: any) => ([...prevState, ...rows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
+      setFetchedRows((prevState: any) => ([...prevState, ...filteredRows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
     } else {
-      setFetchedRows((prevState: any) => ([...prevState, ...rows.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
-      // fetchedRows = rowData.slice(0, currentPage * rowsToFetch + rowsToFetch);
+      setFetchedRows((prevState: any) => ([...prevState, ...filteredRows.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
       setCurrentPage(currentPage + 1);
     }
   };
-
+  
+  console.log(fetchedRows);
+  console.log(columnNamesState);
   return !fetchedRows ? null : (
     <>
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
-        {columnDefs.other.map((other: { name: string }, index: number) => {
+        {columnDefsState.other.map((other: { name: string }, index: number) => {
           if (index === 0) {
             return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
           } else {
@@ -285,7 +308,7 @@ const Editor = React.memo<{
 
         {/* <!-- grid instance headers need to have a grid-column span set --> */}
         <div className="kie-grid__header--given">
-          {columnDefs.given.map((given: any, index: number) => (
+          {columnDefsState.given.map((given: any, index: number) => (
             <div
               key={`given instance ${index}`}
               className="kie-grid__item kie-grid__instance"
@@ -297,7 +320,7 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--expect">
-          {columnDefs.expect.map((expect: any, index: number) => (
+          {columnDefsState.expect.map((expect: any, index: number) => (
             <div
               key={`expect instance ${index}`}
               className="kie-grid__item kie-grid__instance"
@@ -309,14 +332,14 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--given">
-          {columnDefs.given.map((given: any, index: number) => {
+          {columnDefsState.given.map((given: any, index: number) => {
             return given.children.map((givenChild: any, index: number) => (
               <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
             ));
           })}
         </div>
         <div className="kie-grid__header--expect">
-          {columnDefs.expect.map((expect: any, index: number) => {
+          {columnDefsState.expect.map((expect: any, index: number) => {
             return expect.children.map((expectChild: any, index: number) => (
               <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
             ));
@@ -327,7 +350,7 @@ const Editor = React.memo<{
           <InfiniteScroll
             dataLength={fetchedRows.length}
             next={fetchMoreRows}
-            hasMore={fetchedRows.length < rows.length}
+            hasMore={fetchedRows.length < filteredRows.length}
             loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
             scrollableTarget="sce-sim-grid__main"
           >
@@ -345,9 +368,9 @@ const Editor = React.memo<{
                       // description
                       type = 'string';
                     } else if (index > 1) {
-                      columnGroup = columnNames[index].group;
-                      columnName = columnNames[index].name;
-                      type = (definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
+                      columnGroup = columnNamesState[index].group;
+                      columnName = columnNamesState[index].name;
+                      type = (definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
                     }
                     const cellIndex = index;
                     const value = cell && cell.value ? cell.value : '';
@@ -398,8 +421,8 @@ const Editor = React.memo<{
     </>
   );
 }, (prevProps, nextProps) => {
-  if (prevProps.rows.length !== nextProps.rows.length || JSON.stringify(prevProps.rows) !== JSON.stringify(nextProps.rows)) {
-    // rows have changed, re-render
+  if (prevProps.filteredRows.length !== nextProps.filteredRows.length || JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
+    // filteredRows have changed, re-render
     return false;
   }
   return true;

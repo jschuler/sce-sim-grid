@@ -44,6 +44,11 @@ const Select = React.memo<{
     }
   }, [isReadOnly]);
 
+  React.useEffect(() => {
+    setSelected(originalValue);
+    setSavedSelection(originalValue);
+  }, [originalValue]);
+
   /**
    * Saves the current value
    */
@@ -109,7 +114,7 @@ const Select = React.memo<{
           className="editor-input" 
           style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
           type="text" 
-          defaultValue={selected}
+          value={selected}
           id={id}
           aria-label={selected}
           readOnly
@@ -134,6 +139,7 @@ const Select = React.memo<{
 }, (prevProps, nextProps) => {
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
+    console.log(`prevProps ${prevProps.originalValue}, nextProps ${nextProps.originalValue}`);
     return false;
   }
   return true;
