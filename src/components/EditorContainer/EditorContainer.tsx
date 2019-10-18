@@ -7,14 +7,19 @@ import { getDefinitions, getColumns, getRows, getColumnNames, getDmnFilePath } f
 import { getRowColumnFromId } from '../utils';
 import { EditorToolbar } from '../Toolbar';
 import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, clone } from 'lodash';
 
-const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) => {
-  // console.log('render EditorContainer');
+const EditorContainer = React.memo<{ 
+  data: any, 
+  model: any, 
+  showSidePanel?: boolean, 
+  readOnly?: boolean 
+}>(({ data, model, showSidePanel = true, readOnly = false }) => {
+  console.log('render EditorContainer');
 
   const increaseRows = (rows: any) => {
     // increase rows for performance testing / infinite sroll testing etc
-    const enabled = true;
+    const enabled = false;
     const numRowsToAdd = 2000;
     if (enabled) {
       for (let i = 0; i < numRowsToAdd; i++) {
@@ -35,7 +40,8 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
   const [undoRedo, setUndoRedo] = React.useState<any>({ 
     undoList: [], 
-    redoList: []
+    redoList: [],
+    skipUpdate: false
   });
   const [allRows, setAllRows] = React.useState(initialRows);
   const [filteredRows, setFilteredRows] = React.useState(initialRows);
@@ -49,8 +55,9 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
     initialItemToColumnIndexMap[value] = index;
   });
   const [itemToColumnIndexMap, setItemToColumnIndexMap] = React.useState(initialItemToColumnIndexMap);
-  const [searchValue, setSearchValue] = React.useState('');
+  const [searchValueState, setSearchValueState] = React.useState('');
   const [filterSelection, setFilterSelection] = React.useState<any[]>([]);
+  const [lastForcedUpdateState, setLastForcedUpdateState] = React.useState((Date.now()).toString());
 
   React.useEffect(() => {
     // when data or model changes, recompute rows and columns
@@ -69,7 +76,8 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
       setFilteredRows(updatedRows);
       setUndoRedo({
         undoList: [],
-        redoList: []
+        redoList: [],
+        skipUpdate: false
       });
       let itemToColumnIndexMap: any = [];
       initialColumnNames.forEach((item: any, index: number) => {
@@ -79,6 +87,15 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
       setItemToColumnIndexMap(initialColumnNames);
     }
   }, [data, model]);
+
+  React.useEffect(() => {
+    const searchValue = (document.getElementById('gridSearch') as HTMLInputElement).value;
+    filterRows(searchValue, filterSelection, allRows);
+    if (undoRedo.skipUpdate) {
+      return;
+    }
+    setLastForcedUpdateState((Date.now()).toString());
+  }, [ undoRedo ]);
 
   /**
    * Toggle the sidebar
@@ -92,14 +109,15 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
    */
   const addToChanges = (id: string, value: string, previousValue: string) => {
     const { row, column } = getRowColumnFromId(id);
-    const clonedAllRows = cloneDeep(allRows);
-    clonedAllRows[row][column].value = value;
-    setAllRows(clonedAllRows);
+    // const clonedAllRows = cloneDeep(allRows);
+    allRows[row][column].value = value;
+    // setAllRows(allRows);
     // new change clears the redoList
-    setUndoRedo({
-      undoList: [...undoRedo.undoList, { id, value, previousValue }],
-      redoList: []
-    });
+    setUndoRedo((previousState: any) => ({
+      undoList: [...previousState.undoList, { id, value, previousValue }],
+      redoList: [],
+      skipUpdate: true
+    }));
   }
 
   /**
@@ -110,15 +128,19 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
     if (undoRedo.undoList.length > 0) {
       const clonedChanges = cloneDeep(undoRedo.undoList);
       const lastChange = clonedChanges.pop();
+      setUndoRedo((previousState: any) => ({
+        undoList: clonedChanges,
+        redoList: [...previousState.redoList, lastChange],
+        skipUpdate: false
+      }));
+
       const { id, previousValue } = lastChange;
       const { row, column } = getRowColumnFromId(id);
-      const clonedAllRows = cloneDeep(allRows);
-      clonedAllRows[row][column].value = previousValue;
-      setAllRows(clonedAllRows);
-      setUndoRedo({
-        undoList: clonedChanges,
-        redoList: [...undoRedo.redoList, lastChange]
-      });
+      allRows[row][column].value = previousValue;
+      // let clonedAllRows = cloneDeep(allRows);
+      // clonedAllRows[row][column].value = previousValue;
+      // setAllRows(clonedAllRows);
+      // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
   }
 
@@ -130,29 +152,37 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
     if (undoRedo.redoList.length > 0) {
       const clonedRedoList = cloneDeep(undoRedo.redoList);
       const lastRedo = clonedRedoList.pop();
+      setUndoRedo((previousState: any) => ({
+        undoList: [...previousState.undoList, lastRedo],
+        redoList: clonedRedoList,
+        skipUpdate: false
+      }));
+      
       const { id, value } = lastRedo;
       const { row, column } = getRowColumnFromId(id);
-      const clonedAllRows = cloneDeep(allRows);
-      clonedAllRows[row][column].value = value;
-      setAllRows(clonedAllRows);
-      setUndoRedo({
-        undoList: [...undoRedo.undoList, lastRedo],
-        redoList: clonedRedoList
-      });
+      allRows[row][column].value = value;
+      // const clonedAllRows = cloneDeep(allRows);
+      // clonedAllRows[row][column].value = value;
+      // setAllRows(clonedAllRows);
+      // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
   }
-
-  React.useEffect(() => {
-    filterRows(searchValue, filterSelection);
-  }, [allRows]);
 
   /**
    * Filter the rows based on search and filter selection
    * Callback function for EditorToolbar, called on filter/search change
    */
-  const filterRows = (value: string, selected: any[]) => {
+  const filterRows = (value: string, selected: any[], rowsToFilter?: any[]) => {
+    const rows = rowsToFilter || allRows;
+    if (JSON.stringify(filterSelection) !== JSON.stringify(selected)) {
+      setFilterSelection(selected);
+    }
+    if (!value) {
+      // no search term, show all rows
+      return setFilteredRows(rows);
+    }
     const searchRE = new RegExp(value, 'i');
-    const filteredRows = allRows.filter((row: any) => {
+    const filteredRows = rows.filter((row: any) => {
       let found = false;
       if (selected.length === 0) {
         // search all columns
@@ -174,8 +204,6 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
       }
       return found;
     });
-    setSearchValue(value);
-    setFilterSelection(selected);
     setFilteredRows(filteredRows);
   }
 
@@ -184,7 +212,7 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
       <div className="pf-c-page">
         <header role="banner" className="pf-c-page__header">
         <div className="pf-c-page__header-brand">
-          <div className="pf-c-page__header-brand-toggle">
+          {showSidePanel && <div className="pf-c-page__header-brand-toggle">
             <Button
               id="nav-toggle"
               onClick={toggleDrawer}
@@ -195,32 +223,33 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
             >
               <BarsIcon />
             </Button>
-          </div>
+          </div>}
           <div className="pf-c-page__header-brand-link">
             {definitions._title}
           </div>
         </div>
           <div className="pf-c-page__header-tools">
             <EditorToolbar 
-              allRows={allRows} 
+              data={data}
+              allRowsLength={allRows.length} 
               filteredRowsLength={filteredRows.length} 
               filterRows={filterRows} 
               columnNames={columnNames} 
-              changes={undoRedo.undoList} 
-              redoList={undoRedo.redoList}
+              readOnly={readOnly}
+              undoRedo={undoRedo}
               onUndo={onUndo}
               onRedo={onRedo}
             />
           </div>
         </header>
-        <div className={classNames("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
+        {showSidePanel && <div className={classNames("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
           <div className="pf-c-page__sidebar-body">
             <DefinitionsDrawerPanel 
               definitions={definitions} 
               dmnFilePath={dmnFilePath} 
             />
           </div>
-        </div>
+        </div>}
         <main role="main" className="pf-c-page__main" id="sce-sim-grid__main" tabIndex={-1}>
           <section className="pf-c-page__main-section pf-m-light">
             <Editor 
@@ -231,6 +260,8 @@ const EditorContainer = React.memo<{ data: any, model: any }>(({ data, model }) 
               onSave={addToChanges}
               onUndo={onUndo}
               onRedo={onRedo}
+              lastForcedUpdate={lastForcedUpdateState}
+              readOnly={readOnly}
             />
           </section>
         </main>

@@ -12,49 +12,43 @@ import { ChangeTracker } from './ChangeTracker';
 import './EditorToolbar.scss';
 
 const EditorToolbar = React.memo<{ 
-  allRows: any, 
+  data: any, 
+  allRowsLength: any,
   filteredRowsLength: number, 
   filterRows: any, 
   columnNames: any,
-  changes: any[],
-  redoList: any[],
+  undoRedo: any,
   onUndo: any,
-  onRedo: any
-}>(({ allRows, filteredRowsLength, filterRows, columnNames, changes, redoList, onUndo, onRedo }) => {
+  onRedo: any,
+  readOnly: boolean
+}>(({ data, allRowsLength, filteredRowsLength, filterRows, columnNames, undoRedo, onUndo, onRedo, readOnly }) => {
   console.log('render EditorToolbar');
 
   const [isModelOpen, setModalOpen] = React.useState(false);
 
   const [toolbarStateFromProps, setToolbarStateFromProps] = React.useState({ 
-    allRows, 
+    data,
+    allRowsLength, 
     filteredRowsLength, 
     columnNames, 
-    changes,
-    redoList
+    undoRedo
   });
 
   React.useEffect(() => {
     // update state from props
     setToolbarStateFromProps({
-      allRows, 
+      data,
+      allRowsLength, 
       filteredRowsLength, 
       columnNames, 
-      changes,
-      redoList
+      undoRedo
     });
-
-    // let updatedItemToColumnIndexMap: any = [];
-    // columnNames.forEach((item: any, index: number) => {
-    //   const value = `${item.group} ${item.name}`;
-    //   updatedItemToColumnIndexMap[value] = index;
-    // });
-    // setItemToColumnIndexMap(updatedItemToColumnIndexMap);
   }, [
-    allRows, 
+    data,
+    allRowsLength, 
     filteredRowsLength, 
     columnNames, 
-    changes,
-    redoList
+    undoRedo
   ]);
 
   const onSearchChange = (value: string, selected: any[]) => {
@@ -78,24 +72,24 @@ const EditorToolbar = React.memo<{
   return (
     <>
       <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+        {!readOnly && <ToolbarGroup>
+          <ChangeTracker undoRedo={toolbarStateFromProps.undoRedo} onUndo={onUndo} onRedo={onRedo} />
+        </ToolbarGroup>}
         <ToolbarGroup>
-          <ChangeTracker changes={toolbarStateFromProps.changes} redoList={toolbarStateFromProps.redoList} onUndo={onUndo} onRedo={onRedo} />
-        </ToolbarGroup>
-        <ToolbarGroup>
-          {toolbarStateFromProps.allRows.length === filteredRowsLength ? (
-            <ToolbarItem className="pf-u-mr-md">{toolbarStateFromProps.allRows.length} items</ToolbarItem>
+          {toolbarStateFromProps.allRowsLength === filteredRowsLength ? (
+            <ToolbarItem className="pf-u-mr-md">{toolbarStateFromProps.allRowsLength} items</ToolbarItem>
           ) : (
-            <ToolbarItem className="pf-u-mr-md">{filteredRowsLength} of {toolbarStateFromProps.allRows.length} items</ToolbarItem>
+            <ToolbarItem className="pf-u-mr-md">{filteredRowsLength} of {toolbarStateFromProps.allRowsLength} items</ToolbarItem>
           )}
-          <Search allRows={toolbarStateFromProps.allRows} columnNames={toolbarStateFromProps.columnNames} onChange={onSearchChange} />
+          <Search data={data} columnNames={toolbarStateFromProps.columnNames} onChange={onSearchChange} />
           <ToolbarItem><Button variant="plain" onClick={openModal}><OutlinedQuestionCircleIcon size="md" /></Button></ToolbarItem>
         </ToolbarGroup>
       </Toolbar>
-      <HelpModal isOpen={isModelOpen} onClose={closeModal} />
+      <HelpModal isOpen={isModelOpen} onClose={closeModal} readOnly={readOnly} />
     </>
   );
 }, (prevProps, nextProps) => {
-  if (prevProps.allRows.length !== nextProps.allRows.length || JSON.stringify(prevProps.allRows) !== JSON.stringify(nextProps.allRows)) {
+  if (prevProps.allRowsLength !== nextProps.allRowsLength) {
     // filteredRows have changed, re-render
     return false;
   }
@@ -103,11 +97,11 @@ const EditorToolbar = React.memo<{
     // filteredRows have changed, re-render
     return false;
   }
-  if (prevProps.changes.length !== nextProps.changes.length || JSON.stringify(prevProps.changes) !== JSON.stringify(nextProps.changes)) {
+  if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length || JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
     // last changed cell has changed, re-render
     return false;
   }
-  if (prevProps.redoList.length !== nextProps.redoList.length || JSON.stringify(prevProps.redoList) !== JSON.stringify(nextProps.redoList)) {
+  if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length || JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
     // last changed cell has changed, re-render
     return false;
   }

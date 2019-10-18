@@ -12,7 +12,9 @@ const Editor = React.memo<{
   columnNames: any,
   onSave: any,
   onUndo: any,
-  onRedo: any
+  onRedo: any,
+  lastForcedUpdate: string,
+  readOnly: boolean
 }>(({ 
   columns: columnDefs, 
   filteredRows, 
@@ -20,9 +22,11 @@ const Editor = React.memo<{
   columnNames,
   onSave,
   onUndo,
-  onRedo
+  onRedo,
+  lastForcedUpdate,
+  readOnly
 }) => {
-  // console.log('render Editor');
+  console.log('render Editor');
 
   const rowsToFetch = 50;
 
@@ -35,6 +39,7 @@ const Editor = React.memo<{
   const [fetchedRows, setFetchedRows] = React.useState(filteredRows.slice(0, rowsToFetch));
   const [definitionsState, setDefinitionsState] = React.useState(definitions);
   const [columnNamesState, setColumnNamesState] = React.useState(columnNames);
+  const [lastForcedUpdateState, setLastForcedUpdateState] = React.useState(lastForcedUpdate);
 
   const editorRef = React.useRef(null);
 
@@ -50,7 +55,7 @@ const Editor = React.memo<{
     if (JSON.stringify(columnDefsState) !== JSON.stringify(columnDefs)) {
       setColumnDefsState(columnDefs);
     }
-    if (JSON.stringify(fetchedRows) !== JSON.stringify(filteredRows.slice(0, rowsToFetch))) {
+    if (lastForcedUpdateState !== lastForcedUpdate || JSON.stringify(fetchedRows) !== JSON.stringify(filteredRows.slice(0, rowsToFetch))) {
       setFetchedRows(filteredRows.slice(0, rowsToFetch));
     }
     if (JSON.stringify(definitionsState) !== JSON.stringify(definitions)) {
@@ -59,7 +64,7 @@ const Editor = React.memo<{
     if (JSON.stringify(columnNamesState) !== JSON.stringify(columnNames)) {
       setColumnNamesState(columnNames);
     }
-  }, [columnDefs, filteredRows, definitions, columnNames]);
+  }, [columnDefs, filteredRows, definitions, columnNames, lastForcedUpdate]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -89,7 +94,7 @@ const Editor = React.memo<{
   }
 
   const deactivateAndFocusCell = (id: string) => {
-    deactivateCell();
+    deactivateCell(); // expensive, causes re-renders?
     focusCell(id);
   }
 
@@ -110,6 +115,9 @@ const Editor = React.memo<{
    * Enter editing mode
    */
   const onCellDoubleClick = (event: any) => {
+    if (readOnly) {
+      return;
+    }
     const id = onCellClick(event);
     if (id) {
       activateAndFocusCell(id);
@@ -261,10 +269,10 @@ const Editor = React.memo<{
   // Command + C / CTRL + C copies the focused cell content
   useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
   // Command + Z / CTRL + Z undo the last change
-  useKeyPress(/z/i, onUndo, { log: 'editor', withModifier: true });
+  useKeyPress(/z/i, onUndo, { log: 'editor', withModifier: true, isActive: !readOnly });
   // Command + Shift + Z / CTRL + Shift + Z undo the last change
-  useKeyPress(/z/i, onRedo, { log: 'editor', withModifier: true, withShift: true });
-  useKeyPress('Enter', onEnter, { log: 'editor', isActive: !editableCell });
+  useKeyPress(/z/i, onRedo, { log: 'editor', withModifier: true, withShift: true, isActive: !readOnly });
+  useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!editableCell && !readOnly) });
   useKeyPress(38, onUpKeyPress, { log: 'editor' });
   useKeyPress(40, onDownKeyPress, { log: 'editor' });
   useKeyPress(37, onLeftKeyPress, { log: 'editor' });
@@ -284,8 +292,8 @@ const Editor = React.memo<{
     }
   };
   
-  console.log(fetchedRows);
-  console.log(columnNamesState);
+  // console.log(fetchedRows);
+  // console.log(columnNamesState);
   return !fetchedRows ? null : (
     <>
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
@@ -421,6 +429,10 @@ const Editor = React.memo<{
     </>
   );
 }, (prevProps, nextProps) => {
+  if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
+    console.log('forced Editor update');
+    return false;
+  }
   if (prevProps.filteredRows.length !== nextProps.filteredRows.length || JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
     // filteredRows have changed, re-render
     return false;

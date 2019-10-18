@@ -8,36 +8,29 @@ import { UndoIcon, RedoIcon } from '@patternfly/react-icons';
 import { focusCell } from '../utils';
 
 const ChangeTracker = React.memo<{ 
-  changes: any[],
-  redoList: any[],
+  undoRedo: any,
   onUndo: any,
   onRedo: any
-}>(({ changes, redoList, onUndo, onRedo }) => {
+}>(({ undoRedo, onUndo, onRedo }) => {
   console.log('render ChangeTracker');
 
   const [stateFromProps, setStateFromProps] = React.useState({ 
-    changes, 
-    redoList
+    undoRedo
   });
 
   React.useEffect(() => {
     // sync props to state
-    if (changes !== stateFromProps.changes || redoList !== stateFromProps.redoList) {
-      setStateFromProps({
-        changes,
-        redoList
-      })
-    }
-  }, [ changes, redoList ]);
+    setStateFromProps({ undoRedo });
+  }, [ undoRedo ]);
 
   /**
    * The text to display for the change-tracker
    */
   const getChangeText = () => {
-    if (stateFromProps.changes.length === 1) {
+    if (stateFromProps.undoRedo.undoList.length === 1) {
       return `1 change`;
     } else {
-      return `${stateFromProps.changes.length} changes`;
+      return `${stateFromProps.undoRedo.undoList.length} changes`;
     }
   };
 
@@ -62,12 +55,12 @@ const ChangeTracker = React.memo<{
         value={getChangeText()}
       />
     );
-    if (stateFromProps.changes.length) {
+    if (stateFromProps.undoRedo.undoList.length) {
       return (
         <Expandable toggleText={getChangeText()} className="kie-changes pf-u-mx-sm">
           <div className="pf-c-content">
             <dl>
-              {stateFromProps.changes.map((change: any, index: number) => (
+              {stateFromProps.undoRedo.undoList.map((change: any, index: number) => (
                 <React.Fragment key={index}>
                   <dt><Button variant="link" onClick={() => focusElement(change.id)} isInline>{change.id}</Button></dt>
                   <dd>{change.value}</dd>
@@ -82,43 +75,43 @@ const ChangeTracker = React.memo<{
     }
   }
 
-  const redoTracker = () => {
-    return (
-      <Expandable toggleText={(stateFromProps.redoList.length).toString()} className="kie-changes pf-u-mx-sm">
-        <div className="pf-c-content">
-          <dl>
-            {stateFromProps.redoList.map((redo: any, index: number) => (
-              <React.Fragment key={index}>
-                <dt><Button variant="link" onClick={() => focusElement(redo.id)} isInline>{redo.id}</Button></dt>
-                <dd>{redo.value}</dd>
-              </React.Fragment>
-            ))}
-          </dl>
-        </div>
-      </Expandable>
-    );
-  }
+  // const redoTracker = () => {
+  //   return (
+  //     <Expandable toggleText={(stateFromProps.redoList.length).toString()} className="kie-changes pf-u-mx-sm">
+  //       <div className="pf-c-content">
+  //         <dl>
+  //           {stateFromProps.redoList.map((redo: any, index: number) => (
+  //             <React.Fragment key={index}>
+  //               <dt><Button variant="link" onClick={() => focusElement(redo.id)} isInline>{redo.id}</Button></dt>
+  //               <dd>{redo.value}</dd>
+  //             </React.Fragment>
+  //           ))}
+  //         </dl>
+  //       </div>
+  //     </Expandable>
+  //   );
+  // }
 
   return (
     <ToolbarItem>
       <div className="pf-c-input-group">
-        <Button onClick={onUndo} variant="control" isDisabled={changes.length === 0}>
+        <Button onClick={onUndo} variant="control" isDisabled={stateFromProps.undoRedo.undoList.length === 0}>
           <UndoIcon />
         </Button>
         {changeTracker()}
         {/* {redoTracker()} */}
-        <Button onClick={onRedo} variant="control" isDisabled={redoList.length === 0}>
+        <Button onClick={onRedo} variant="control" isDisabled={stateFromProps.undoRedo.redoList.length === 0}>
           <RedoIcon />
         </Button>
       </div>
     </ToolbarItem>
   );
 }, (prevProps, nextProps) => {
-  if (prevProps.changes.length !== nextProps.changes.length || JSON.stringify(prevProps.changes) !== JSON.stringify(nextProps.changes)) {
+  if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length || JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
     // last changed cell has changed, re-render
     return false;
   }
-  if (prevProps.redoList.length !== nextProps.redoList.length || JSON.stringify(prevProps.redoList) !== JSON.stringify(nextProps.redoList)) {
+  if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length || JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
     // last changed cell has changed, re-render
     return false;
   }

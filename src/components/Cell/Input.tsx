@@ -8,7 +8,7 @@ const Input = React.memo<{
   path: string, 
   id?: any, 
   type?: string, 
-  isReadOnly?: boolean,
+  isReadOnly: boolean,
   deactivateAndFocusCell: any,
   setEditable: any,
   onSave: any
@@ -22,13 +22,22 @@ const Input = React.memo<{
   setEditable, 
   onSave
 }) => {
+  // console.log(`render Input`);
   const [value, setValue] = React.useState<any>(originalValue);
   const [savedValue, setSavedValue] = React.useState<any>(originalValue);
   const [overflown, setOverflown] = React.useState<boolean>(false);
-  const [changes, setChanges] = React.useState<any[]>([]);
+  // const [changes, setChanges] = React.useState<any[]>([]);
+  const [isReadOnlyState, setReadOnlyState] = React.useState<boolean>(isReadOnly);
 
   React.useEffect(() => {
-    if (isReadOnly) {
+    // sync prop to state
+    if (isReadOnly !== isReadOnlyState) {
+      setReadOnlyState(isReadOnly);
+    }
+  }, [isReadOnly]);
+
+  React.useEffect(() => {
+    if (isReadOnlyState) {
       // update cell on data changes coming from EditorContainer -> Editor
       if (value !== originalValue) {
         setValue(originalValue);
@@ -47,7 +56,7 @@ const Input = React.memo<{
   }
 
   React.useEffect(() => {
-    if (!isReadOnly) {
+    if (!isReadOnlyState) {
       // set caret at the end of the input
       setTimeout(() => {
         setCaretPositionAtEnd(thisElement());
@@ -67,10 +76,10 @@ const Input = React.memo<{
    */
   const save = () => {
     if (savedValue !== value) {
-      setChanges([...changes, {
-        value,
-        previousValue: savedValue
-      }]);
+      // setChanges((prevState: any) => ([...prevState, {
+      //   value,
+      //   previousValue: savedValue
+      // }]));
       setSavedValue(value);
       onSave && onSave(id, value, originalValue);
     }
@@ -83,7 +92,9 @@ const Input = React.memo<{
     // save operation
     save();
     // mark itself as not editable but maintain focus
-    deactivateAndFocusCell(event.target.id);
+    // deactivateAndFocusCell(event.target.id);
+    setEditable('');
+    setReadOnlyState(true);
   };
 
   /**
@@ -94,18 +105,20 @@ const Input = React.memo<{
       setValue(savedValue);
     }
     // mark itself as not editable but maintain focus
-    deactivateAndFocusCell(event.target.id);
+    // deactivateAndFocusCell(event.target.id);
+    setEditable('');
+    setReadOnlyState(true);
   };
 
   useKeyPress('Escape', onEscape, { 
     log: 'input',
     id,
-    isActive: !isReadOnly
+    isActive: !isReadOnlyState
   });
   useKeyPress('Enter', onEnter, { 
     log: 'input',
     id,
-    isActive: !isReadOnly
+    isActive: !isReadOnlyState
   });
 
   /**
@@ -113,19 +126,12 @@ const Input = React.memo<{
    * Save the value and notify the Editor that we're not editable anymore
    */
   const onLoseFocus = (event: any) => {
-    if (!isReadOnly) {
-      setEditable('');
+    if (!isReadOnlyState) {
+      setReadOnlyState(true);
+      // setEditable('');
       save();
     }
   };
-
-  /**
-   * When the element receives focus
-   */
-  const onGainFocus = (event: any) => {
-    // TODO: Figure out why the cell needs to be re-focused after tabbing in
-    focusCell(id);
-  }
 
   /**
    * Check if the element is overflown
@@ -140,20 +146,18 @@ const Input = React.memo<{
     <input 
       onMouseOver={checkForOverflow}
       className="editor-input truncate" 
-      style={{ cursor: isReadOnly ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
+      style={{ cursor: isReadOnlyState ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
       value={value} 
       type="text" 
       onChange={handleTextInputChange}
       onBlur={onLoseFocus}
-      onFocus={onGainFocus}
       aria-label={value} 
       id={id} 
-      readOnly={isReadOnly}
+      readOnly={isReadOnlyState}
     />
   );
   return <Tooltip content={value} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>{input}</Tooltip>;
 }, (prevProps, nextProps) => {
-  // console.log(`${prevProps.originalValue} => ${nextProps.originalValue}`);
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
     // console.log(`re-render Input ${nextProps.id}`)

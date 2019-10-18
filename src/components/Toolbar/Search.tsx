@@ -8,10 +8,10 @@ import {
 import { useDebounce } from '../utils';
 
 const Search = React.memo<{ 
-  allRows: any,
+  data: any,
   columnNames: any,
   onChange: any
-}>(({ allRows, columnNames, onChange }) => {
+}>(({ data, columnNames, onChange }) => {
   console.log('render Search');
 
   const [isExpanded, setExpanded] = React.useState(false);
@@ -30,15 +30,13 @@ const Search = React.memo<{
     if (searchValue) {
       onChange(searchValue, selected);
     }
-  }, [selected]);
+  }, [ selected ]);
 
   React.useEffect(() => {
     // reset search and selection if the underlying data has changed
     setSelected([]);
     setSearchValue('');
-  }, [
-    allRows
-  ]);
+  }, [ data ]);
 
   /**
    * Update filtered rows on search change
@@ -118,8 +116,8 @@ const Search = React.memo<{
     </>
   );
 }, (prevProps, nextProps) => {
-  if (prevProps.allRows.length !== nextProps.allRows.length || JSON.stringify(prevProps.allRows) !== JSON.stringify(nextProps.allRows)) {
-    // allRows have changed, re-render
+  if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) {
+    // data has changed, re-render
     return false;
   }
   if (JSON.stringify(prevProps.columnNames) !== JSON.stringify(nextProps.columnNames)) {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Select as PfSelect, SelectOption, SelectVariant, SelectOptionObject } from '@patternfly/react-core';
+import { Tooltip, Select as PfSelect, SelectOption, SelectVariant, SelectOptionObject } from '@patternfly/react-core';
 import { focusCell } from '../utils';
 import './Input.css';
 import './Select.css';
@@ -27,9 +27,11 @@ const Select = React.memo<{
   setEditable,
   onSave
 }) => {
+  // console.log('render Select');
   const [isExpanded, setExpanded] = React.useState<boolean>(true);
   const [selected, setSelected] = React.useState<any>(originalValue);
   const [savedSelection, setSavedSelection] = React.useState<any>(originalValue);
+  const [overflown, setOverflown] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     // workaround to focus on the first list item to enable keyboard navigation
@@ -48,6 +50,15 @@ const Select = React.memo<{
     setSelected(originalValue);
     setSavedSelection(originalValue);
   }, [originalValue]);
+
+  /**
+   * Returns the current DOM element
+   * 
+   * TODO: Possibly change to React refs
+   */
+  const thisElement = () => {
+    return document.getElementById(id) as HTMLInputElement;
+  }
 
   /**
    * Saves the current value
@@ -100,26 +111,29 @@ const Select = React.memo<{
   }
 
   /**
-   * When the element receives focus
+   * Check if the element is overflown
    */
-  const onGainFocus = (event: any) => {
-    // TODO: Figure out why the cell needs to be re-focused after tabbing in
-    focusCell(id);
+  const checkForOverflow = (event?: any) => {
+    const element = event ? event.target : thisElement();
+    const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+    setOverflown(isOverflown);
   }
 
   return (
     <>
       {isReadOnly ? (
-        <input 
-          className="editor-input" 
-          style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
-          type="text" 
-          value={selected}
-          id={id}
-          aria-label={selected}
-          readOnly
-          onFocus={onGainFocus}
-        />
+        <Tooltip content={selected} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>
+          <input 
+            onMouseOver={checkForOverflow}
+            className="editor-input truncate" 
+            style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
+            type="text" 
+            value={selected}
+            id={id}
+            aria-label={selected}
+            readOnly
+          />
+        </Tooltip>
       ) : (
         <PfSelect
           toggleId={id}

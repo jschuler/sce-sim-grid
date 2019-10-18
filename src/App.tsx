@@ -95,7 +95,7 @@ const App: React.FC = () => {
             </Select>
           </div>
           <div className={classNames('editor-container', isTransitionDone && 'show')}>
-            <EditorContainer data={data} model={model} />
+            <EditorContainer data={data} model={model} showSidePanel={true} readOnly={false} />
           </div>
         </>
       )}
