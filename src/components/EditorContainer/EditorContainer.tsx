@@ -7,7 +7,6 @@ import { getDefinitions, getColumns, getRows, getColumnNames, getDmnFilePath } f
 import { getRowColumnFromId } from '../utils';
 import { EditorToolbar } from '../Toolbar';
 import classNames from 'classnames';
-import { cloneDeep, clone } from 'lodash';
 
 const EditorContainer = React.memo<{ 
   data: any, 
@@ -126,7 +125,7 @@ const EditorContainer = React.memo<{
    */
   const onUndo = () => {
     if (undoRedo.undoList.length > 0) {
-      const clonedChanges = cloneDeep(undoRedo.undoList);
+      const clonedChanges = [...undoRedo.undoList];
       const lastChange = clonedChanges.pop();
       setUndoRedo((previousState: any) => ({
         undoList: clonedChanges,
@@ -150,7 +149,7 @@ const EditorContainer = React.memo<{
    */
   const onRedo = () => {
     if (undoRedo.redoList.length > 0) {
-      const clonedRedoList = cloneDeep(undoRedo.redoList);
+      const clonedRedoList = [...undoRedo.redoList];
       const lastRedo = clonedRedoList.pop();
       setUndoRedo((previousState: any) => ({
         undoList: [...previousState.undoList, lastRedo],
