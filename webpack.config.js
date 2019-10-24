@@ -13,7 +13,7 @@ module.exports = {
   //   "bundle.min.css": glob.sync("dist/**/*.css").map(f => path.resolve(__dirname, f)),
   //   "bundle.min.js": glob.sync("dist/**/*.js").map(f => path.resolve(__dirname, f))
   // },
-  entry: './src/lib/index.ts',
+  entry: './src/index.ts',
   output: {
     // filename: "[name]",
     filename: "sce-sim-grid.js",

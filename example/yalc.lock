@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "sce-sim-grid": {
+      "signature": "d7dd97de3ff669c581008628e1a3f984",
+      "file": true
+    }
+  }
+}

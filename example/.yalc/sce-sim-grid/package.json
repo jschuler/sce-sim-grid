@@ -1,6 +1,6 @@
 {
   "name": "sce-sim-grid",
-  "version": "0.3.0-rc3",
+  "version": "0.3.0-rc3-d7dd97de",
   "main": "bundle/sce-sim-grid.js",
   "module": "dist/index.js",
   "files": [
@@ -27,38 +27,6 @@
   "peerDependencies": {
     "react": ">= 16.8.0",
     "react-dom": ">= 16.8.0"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.4",
-    "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/plugin-proposal-numeric-separator": "^7.2.0",
-    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/preset-react": "^7.6.3",
-    "@babel/preset-typescript": "^7.6.0",
-    "@types/classnames": "^2.2.9",
-    "@types/jest": "24.0.19",
-    "@types/node": "12.11.6",
-    "@types/react": "16.9.9",
-    "@types/react-dom": "16.9.2",
-    "@types/react-infinite-scroll-component": "^4.2.4",
-    "babel-loader": "^8.0.6",
-    "css-loader": "^3.2.0",
-    "extract-text-webpack-plugin": "^3.0.2",
-    "file-loader": "^4.2.0",
-    "jsonix-schema-compiler": "^2.3.9",
-    "mini-css-extract-plugin": "^0.8.0",
-    "node-sass": "^4.12.0",
-    "react": "16.11.0",
-    "react-dom": "16.11.0",
-    "rimraf": "^3.0.0",
-    "style-loader": "^1.0.0",
-    "typescript": "3.7.0-dev.20191021",
-    "uglifyjs-webpack-plugin": "^2.2.0",
-    "webpack": "^5.0.0-beta.1",
-    "webpack-cli": "^3.3.9",
-    "webpack-node-externals": "^1.7.2"
   },
   "browserslist": {
     "production": [

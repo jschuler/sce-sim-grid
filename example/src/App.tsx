@@ -1,8 +1,7 @@
 import "@patternfly/patternfly/patternfly.min.css";
 import "@patternfly/patternfly/patternfly-addons.css";
 import React, { useState, useEffect } from "react";
-import { EditorContainer, Spinner } from './lib/components';
-import { getJsonFromSceSim, getJsonFromDmn } from './lib/components/utils';
+import { EditorContainer, Spinner, getJsonFromSceSim, getJsonFromDmn } from 'sce-sim-grid/dist';
 import classNames from 'classnames';
 import { Select, SelectOption, SelectOptionObject } from '@patternfly/react-core';
 import './App.css';
