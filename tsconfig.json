@@ -28,5 +28,10 @@
   },
   "include": [
     "src/**/*"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "lib-*",
+    "example"
   ]
 }

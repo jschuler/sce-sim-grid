@@ -1,60 +1,60 @@
-import * as React from 'react';
 import {
   Button,
   Toolbar,
   ToolbarGroup,
-  ToolbarItem
+  ToolbarItem,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
-import { HelpModal } from './HelpModal';
-import { Search } from './Search';
+import * as React from 'react';
 import { ChangeTracker } from './ChangeTracker';
 import './EditorToolbar.css';
+import { HelpModal } from './HelpModal';
+import { Search } from './Search';
 
-const EditorToolbar = React.memo<{ 
-  data: any, 
+const EditorToolbar = React.memo<{
+  data: any,
   allRowsLength: any,
-  filteredRowsLength: number, 
-  filterRows: any, 
+  filteredRowsLength: number,
+  filterRows: any,
   columnNames: any,
   undoRedo: any,
   onUndo: any,
   onRedo: any,
-  readOnly: boolean
+  readOnly: boolean,
 }>(({ data, allRowsLength, filteredRowsLength, filterRows, columnNames, undoRedo, onUndo, onRedo, readOnly }) => {
-  console.log('render EditorToolbar');
+  // console.log('render EditorToolbar');
 
   const [isModelOpen, setModalOpen] = React.useState(false);
 
-  const [toolbarStateFromProps, setToolbarStateFromProps] = React.useState({ 
+  const [toolbarStateFromProps, setToolbarStateFromProps] = React.useState({
     data,
-    allRowsLength, 
-    filteredRowsLength, 
-    columnNames, 
-    undoRedo
+    allRowsLength,
+    filteredRowsLength,
+    columnNames,
+    undoRedo,
   });
 
   React.useEffect(() => {
     // update state from props
     setToolbarStateFromProps({
       data,
-      allRowsLength, 
-      filteredRowsLength, 
-      columnNames, 
-      undoRedo
+      allRowsLength,
+      filteredRowsLength,
+      columnNames,
+      undoRedo,
     });
   }, [
     data,
-    allRowsLength, 
-    filteredRowsLength, 
-    columnNames, 
-    undoRedo
+    allRowsLength,
+    filteredRowsLength,
+    columnNames,
+    undoRedo,
   ]);
 
   const onSearchChange = (value: string, selected: any[]) => {
     filterRows(value, selected);
   };
-  
+
   /**
    * Opens the Help modal
    */
@@ -97,11 +97,13 @@ const EditorToolbar = React.memo<{
     // filteredRows have changed, re-render
     return false;
   }
-  if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length || JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
+  if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length ||
+    JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
     // last changed cell has changed, re-render
     return false;
   }
-  if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length || JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
+  if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length ||
+    JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
     // last changed cell has changed, re-render
     return false;
   }
@@ -110,7 +112,7 @@ const EditorToolbar = React.memo<{
 
 // @ts-ignore
 EditorToolbar.whyDidYouRender = {
-  customName: 'EditorToolbar'
+  customName: 'EditorToolbar',
 };
 
 export { EditorToolbar };

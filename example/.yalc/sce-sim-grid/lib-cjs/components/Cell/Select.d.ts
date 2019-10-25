@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import './Input.css';
 import './Select.css';
 declare const Select: React.NamedExoticComponent<{

@@ -7,15 +7,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
 var react_icons_1 = require("@patternfly/react-icons");
+var React = __importStar(require("react"));
 var utils_1 = require("../utils");
 var ChangeTracker = React.memo(function (_a) {
+    // console.log('render ChangeTracker');
     var undoRedo = _a.undoRedo, onUndo = _a.onUndo, onRedo = _a.onRedo;
-    console.log('render ChangeTracker');
     var _b = React.useState({
-        undoRedo: undoRedo
+        undoRedo: undoRedo,
     }), stateFromProps = _b[0], setStateFromProps = _b[1];
     React.useEffect(function () {
         // sync props to state
@@ -79,11 +79,13 @@ var ChangeTracker = React.memo(function (_a) {
             React.createElement(react_core_1.Button, { onClick: onRedo, variant: "control", isDisabled: stateFromProps.undoRedo.redoList.length === 0 },
                 React.createElement(react_icons_1.RedoIcon, null)))));
 }, function (prevProps, nextProps) {
-    if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length || JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
+    if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length ||
+        JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
         // last changed cell has changed, re-render
         return false;
     }
-    if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length || JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
+    if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length ||
+        JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
         // last changed cell has changed, re-render
         return false;
     }
@@ -92,6 +94,6 @@ var ChangeTracker = React.memo(function (_a) {
 exports.ChangeTracker = ChangeTracker;
 // @ts-ignore
 ChangeTracker.whyDidYouRender = {
-    customName: 'ChangeTracker'
+    customName: 'ChangeTracker',
 };
 //# sourceMappingURL=ChangeTracker.js.map

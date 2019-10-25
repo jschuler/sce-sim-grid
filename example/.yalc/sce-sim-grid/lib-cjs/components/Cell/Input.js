@@ -7,8 +7,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
+var React = __importStar(require("react"));
 var utils_1 = require("../utils");
 require("./Input.css");
 var Input = React.memo(function (_a) {
@@ -66,7 +66,9 @@ var Input = React.memo(function (_a) {
             //   previousValue: savedValue
             // }]));
             setSavedValue(value);
-            onSave && onSave(id, value, originalValue);
+            if (onSave) {
+                onSave(id, value, originalValue);
+            }
         }
     };
     /**
@@ -95,12 +97,12 @@ var Input = React.memo(function (_a) {
     utils_1.useKeyPress('Escape', onEscape, {
         log: 'input',
         id: id,
-        isActive: !isReadOnlyState
+        isActive: !isReadOnlyState,
     });
     utils_1.useKeyPress('Enter', onEnter, {
         log: 'input',
         id: id,
-        isActive: !isReadOnlyState
+        isActive: !isReadOnlyState,
     });
     /**
      * When the element loses focus
@@ -134,6 +136,6 @@ var Input = React.memo(function (_a) {
 exports.Input = Input;
 // @ts-ignore
 Input.whyDidYouRender = {
-    customName: 'Input'
+    customName: 'Input',
 };
 //# sourceMappingURL=Input.js.map

@@ -1,10 +1,10 @@
-import * as React from "react";
-import { Modal, Button } from '@patternfly/react-core';
+import { Button, Modal } from '@patternfly/react-core';
+import * as React from 'react';
 var HelpModal = function (_a) {
     // console.log('render HelpModal');
     var isOpen = _a.isOpen, onClose = _a.onClose, readOnly = _a.readOnly;
     return (React.createElement(Modal, { isSmall: true, title: "Help", isOpen: isOpen, onClose: onClose, actions: [
-            React.createElement(Button, { key: "confirm", variant: "primary", onClick: onClose }, "Close")
+            React.createElement(Button, { key: "confirm", variant: "primary", onClick: onClose }, "Close"),
         ], isFooterLeftAligned: true },
         React.createElement("div", { className: "pf-c-content" },
             React.createElement("p", null, "The following keyboard interactions are available:"),

@@ -1,18 +1,18 @@
-import * as React from 'react';
 import {
+  Select,
+  SelectOption,
   TextInput,
   ToolbarItem,
-  Select,
-  SelectOption
 } from '@patternfly/react-core';
+import * as React from 'react';
 import { useDebounce } from '../utils';
 
-const Search = React.memo<{ 
+const Search = React.memo<{
   data: any,
   columnNames: any,
-  onChange: any
+  onChange: any,
 }>(({ data, columnNames, onChange }) => {
-  console.log('render Search');
+  // console.log('render Search');
 
   const [isExpanded, setExpanded] = React.useState(false);
   const [selected, setSelected] = React.useState<any[]>([]);
@@ -86,16 +86,16 @@ const Search = React.memo<{
    * Builds the filter select
    */
   const buildSelect = () => {
-    let items: any[] = [];
+    const items: any[] = [];
     columnNames.forEach((item: any, index: number) => {
       const value = `${item.group} ${item.name}`;
       items.push(
-        <SelectOption key={index} index={index} value={value} />
+        <SelectOption key={index} index={index} value={value} />,
       );
-    })
+    });
     return (
       <Select
-        variant='checkbox'
+        variant="checkbox"
         aria-label="Select Input"
         onToggle={onSelectToggle}
         onSelect={onSelect}
@@ -129,7 +129,7 @@ const Search = React.memo<{
 
 // @ts-ignore
 Search.whyDidYouRender = {
-  customName: 'Search'
+  customName: 'Search',
 };
 
 export { Search };

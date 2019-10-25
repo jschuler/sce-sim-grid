@@ -1,6 +1,6 @@
 {
   "name": "sce-sim-grid",
-  "version": "0.3.0-rc3-40a05b1c",
+  "version": "0.3.0-rc3-a6df0ea5",
   "main": "lib-cjs/index.js",
   "module": "lib-esm/index.js",
   "files": [
@@ -20,11 +20,18 @@
     "build:babel": "yarn clean && yarn build:types && yarn build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "rm -rf lib-es6-babel && babel src --out-dir lib-es6-babel --source-maps --copy-files --extensions \".js,.ts,.tsx\" --ignore __tests__,spec.js,test.js,__snapshots__",
-    "test": "jest"
+    "test": "jest",
+    "test:ts": "npx tsc",
+    "watch": "npx tsc -w",
+    "lint": "tslint -c tslint.json 'src/**/*.{ts,tsx}'",
+    "compile:schemas": "rm -rf src/schemas && yarn compile:schema:scesim && yarn compile:schema:dmn",
+    "compile:schema:scesim": "java -jar ./node_modules/jsonix-schema-compiler/lib/jsonix-schema-compiler-full.jar -generateJsonSchema -p scesim -d src/schemas data/scesim.xsd",
+    "compile:schema:dmn": "java -jar ./node_modules/jsonix-schema-compiler/lib/jsonix-schema-compiler-full.jar -generateJsonSchema -p dmn -d src/schemas data/DMN12.xsd"
   },
   "dependencies": {
     "@patternfly/patternfly": "^2.33.5",
     "@patternfly/react-core": "3.117.5",
+    "@patternfly/react-icons": "^3.14.14",
     "@welldone-software/why-did-you-render": "^3.3.5",
     "classnames": "^2.2.6",
     "jsonix": "^3.0.0",

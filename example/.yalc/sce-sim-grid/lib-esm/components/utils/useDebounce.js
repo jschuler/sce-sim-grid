@@ -1,5 +1,5 @@
 // https://dev.to/gabe_ragland/debouncing-with-react-hooks-jci
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 // Our hook
 export function useDebounce(value, delay) {
     // State and setters for debounced value
@@ -11,7 +11,7 @@ export function useDebounce(value, delay) {
         }, delay);
         // Return a cleanup function that will be called every time ...
         // ... useEffect is re-called. useEffect will only be re-called ...
-        // ... if value changes (see the inputs array below). 
+        // ... if value changes (see the inputs array below).
         // This is how we prevent debouncedValue from changing if value is ...
         // ... changed within the delay period. Timeout gets cleared and restarted.
         // To put it in context, if the user is typing within our app's ...

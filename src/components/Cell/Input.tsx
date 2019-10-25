@@ -1,26 +1,26 @@
-import * as React from "react";
 import { Tooltip } from '@patternfly/react-core';
-import { useKeyPress, setCaretPositionAtEnd, focusCell  } from '../utils'; 
+import * as React from 'react';
+import { focusCell, setCaretPositionAtEnd, useKeyPress  } from '../utils';
 import './Input.css';
 
-const Input = React.memo<{ 
-  originalValue: any, 
-  path: string, 
-  id?: any, 
-  type?: string, 
+const Input = React.memo<{
+  originalValue: any,
+  path: string,
+  id?: any,
+  type?: string,
   isReadOnly: boolean,
   deactivateAndFocusCell: any,
   setEditable: any,
-  onSave: any
-}>(({ 
-  originalValue, 
-  path, 
-  id, 
-  type, 
-  isReadOnly, 
-  deactivateAndFocusCell, 
-  setEditable, 
-  onSave
+  onSave: any,
+}>(({
+  originalValue,
+  path,
+  id,
+  type,
+  isReadOnly,
+  deactivateAndFocusCell,
+  setEditable,
+  onSave,
 }) => {
   // console.log(`render Input`);
   const [value, setValue] = React.useState<any>(originalValue);
@@ -48,12 +48,12 @@ const Input = React.memo<{
 
   /**
    * Returns the current DOM element
-   * 
+   *
    * TODO: Possibly change to React refs
    */
   const thisElement = () => {
     return document.getElementById(id) as HTMLInputElement;
-  }
+  };
 
   React.useEffect(() => {
     if (!isReadOnlyState) {
@@ -69,7 +69,7 @@ const Input = React.memo<{
    */
   const handleTextInputChange = (event: any) => {
     setValue(event.currentTarget.value);
-  }
+  };
 
   /**
    * Saves the current value
@@ -81,7 +81,9 @@ const Input = React.memo<{
       //   previousValue: savedValue
       // }]));
       setSavedValue(value);
-      onSave && onSave(id, value, originalValue);
+      if (onSave) {
+        onSave(id, value, originalValue);
+      }
     }
   };
 
@@ -110,15 +112,15 @@ const Input = React.memo<{
     setReadOnlyState(true);
   };
 
-  useKeyPress('Escape', onEscape, { 
+  useKeyPress('Escape', onEscape, {
     log: 'input',
     id,
-    isActive: !isReadOnlyState
+    isActive: !isReadOnlyState,
   });
-  useKeyPress('Enter', onEnter, { 
+  useKeyPress('Enter', onEnter, {
     log: 'input',
     id,
-    isActive: !isReadOnlyState
+    isActive: !isReadOnlyState,
   });
 
   /**
@@ -140,19 +142,19 @@ const Input = React.memo<{
     const element = event ? event.target : thisElement();
     const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
     setOverflown(isOverflown);
-  }
+  };
 
   const input = (
-    <input 
+    <input
       onMouseOver={checkForOverflow}
-      className="editor-input truncate" 
-      style={{ cursor: isReadOnlyState ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }} 
-      value={value} 
-      type="text" 
+      className="editor-input truncate"
+      style={{ cursor: isReadOnlyState ? 'default' : 'text', textAlign: type === 'string' ? 'left' : 'center' }}
+      value={value}
+      type="text"
       onChange={handleTextInputChange}
       onBlur={onLoseFocus}
-      aria-label={value} 
-      id={id} 
+      aria-label={value}
+      id={id}
       readOnly={isReadOnlyState}
     />
   );
@@ -168,7 +170,7 @@ const Input = React.memo<{
 
 // @ts-ignore
 Input.whyDidYouRender = {
-  customName: 'Input'
+  customName: 'Input',
 };
 
 export { Input };

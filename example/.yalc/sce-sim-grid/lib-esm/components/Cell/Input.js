@@ -1,6 +1,6 @@
-import * as React from "react";
 import { Tooltip } from '@patternfly/react-core';
-import { useKeyPress, setCaretPositionAtEnd } from '../utils';
+import * as React from 'react';
+import { setCaretPositionAtEnd, useKeyPress } from '../utils';
 import './Input.css';
 var Input = React.memo(function (_a) {
     var originalValue = _a.originalValue, path = _a.path, id = _a.id, type = _a.type, isReadOnly = _a.isReadOnly, deactivateAndFocusCell = _a.deactivateAndFocusCell, setEditable = _a.setEditable, onSave = _a.onSave;
@@ -57,7 +57,9 @@ var Input = React.memo(function (_a) {
             //   previousValue: savedValue
             // }]));
             setSavedValue(value);
-            onSave && onSave(id, value, originalValue);
+            if (onSave) {
+                onSave(id, value, originalValue);
+            }
         }
     };
     /**
@@ -86,12 +88,12 @@ var Input = React.memo(function (_a) {
     useKeyPress('Escape', onEscape, {
         log: 'input',
         id: id,
-        isActive: !isReadOnlyState
+        isActive: !isReadOnlyState,
     });
     useKeyPress('Enter', onEnter, {
         log: 'input',
         id: id,
-        isActive: !isReadOnlyState
+        isActive: !isReadOnlyState,
     });
     /**
      * When the element loses focus
@@ -124,7 +126,7 @@ var Input = React.memo(function (_a) {
 });
 // @ts-ignore
 Input.whyDidYouRender = {
-    customName: 'Input'
+    customName: 'Input',
 };
 export { Input };
 //# sourceMappingURL=Input.js.map

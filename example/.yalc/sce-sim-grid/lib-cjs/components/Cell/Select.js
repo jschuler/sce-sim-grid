@@ -7,8 +7,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
+var React = __importStar(require("react"));
 require("./Input.css");
 require("./Select.css");
 var Select = React.memo(function (_a) {
@@ -49,7 +49,9 @@ var Select = React.memo(function (_a) {
         setSelected(selection);
         if (savedSelection !== selection) {
             setSavedSelection(selection);
-            onSave && onSave(id, selection, originalValue);
+            if (onSave) {
+                onSave(id, selection, originalValue);
+            }
         }
     };
     /**
@@ -59,9 +61,9 @@ var Select = React.memo(function (_a) {
     /**
      * Toggle the Select
      */
-    var onToggle = function (isExpanded) {
-        setExpanded(isExpanded);
-        onSelectToggleCallback(id, isExpanded);
+    var onToggle = function (expanded) {
+        setExpanded(expanded);
+        onSelectToggleCallback(id, expanded);
     };
     /**
      * Set the selection
@@ -98,7 +100,7 @@ var Select = React.memo(function (_a) {
 }, function (prevProps, nextProps) {
     var shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
     if (shouldRerender) {
-        console.log("prevProps " + prevProps.originalValue + ", nextProps " + nextProps.originalValue);
+        // console.log(`prevProps ${prevProps.originalValue}, nextProps ${nextProps.originalValue}`);
         return false;
     }
     return true;

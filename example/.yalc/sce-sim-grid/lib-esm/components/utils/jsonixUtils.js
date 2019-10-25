@@ -1,7 +1,7 @@
 var Jsonix = require('./jsonix').Jsonix;
 // Load the schema rules
-var SceSimRules = require('../../rules/scesim').scesim;
-var DmnRules = require('../../rules/dmn').dmn;
+var SceSimRules = require('../../schemas/scesim').scesim;
+var DmnRules = require('../../schemas/dmn').dmn;
 // Construct a Jsonix context - a factory for unmarshaller (parser) and marshaller (serializer)
 var sceSimContext = new Jsonix.Context([SceSimRules]);
 var dmnContext = new Jsonix.Context([DmnRules]);

@@ -1,20 +1,20 @@
-import * as React from 'react';
-import { Button, Toolbar, ToolbarGroup, ToolbarItem } from '@patternfly/react-core';
+import { Button, Toolbar, ToolbarGroup, ToolbarItem, } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
-import { HelpModal } from './HelpModal';
-import { Search } from './Search';
+import * as React from 'react';
 import { ChangeTracker } from './ChangeTracker';
 import './EditorToolbar.css';
+import { HelpModal } from './HelpModal';
+import { Search } from './Search';
 var EditorToolbar = React.memo(function (_a) {
+    // console.log('render EditorToolbar');
     var data = _a.data, allRowsLength = _a.allRowsLength, filteredRowsLength = _a.filteredRowsLength, filterRows = _a.filterRows, columnNames = _a.columnNames, undoRedo = _a.undoRedo, onUndo = _a.onUndo, onRedo = _a.onRedo, readOnly = _a.readOnly;
-    console.log('render EditorToolbar');
     var _b = React.useState(false), isModelOpen = _b[0], setModalOpen = _b[1];
     var _c = React.useState({
         data: data,
         allRowsLength: allRowsLength,
         filteredRowsLength: filteredRowsLength,
         columnNames: columnNames,
-        undoRedo: undoRedo
+        undoRedo: undoRedo,
     }), toolbarStateFromProps = _c[0], setToolbarStateFromProps = _c[1];
     React.useEffect(function () {
         // update state from props
@@ -23,14 +23,14 @@ var EditorToolbar = React.memo(function (_a) {
             allRowsLength: allRowsLength,
             filteredRowsLength: filteredRowsLength,
             columnNames: columnNames,
-            undoRedo: undoRedo
+            undoRedo: undoRedo,
         });
     }, [
         data,
         allRowsLength,
         filteredRowsLength,
         columnNames,
-        undoRedo
+        undoRedo,
     ]);
     var onSearchChange = function (value, selected) {
         filterRows(value, selected);
@@ -73,11 +73,13 @@ var EditorToolbar = React.memo(function (_a) {
         // filteredRows have changed, re-render
         return false;
     }
-    if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length || JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
+    if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length ||
+        JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
         // last changed cell has changed, re-render
         return false;
     }
-    if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length || JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
+    if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length ||
+        JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
         // last changed cell has changed, re-render
         return false;
     }
@@ -85,7 +87,7 @@ var EditorToolbar = React.memo(function (_a) {
 });
 // @ts-ignore
 EditorToolbar.whyDidYouRender = {
-    customName: 'EditorToolbar'
+    customName: 'EditorToolbar',
 };
 export { EditorToolbar };
 //# sourceMappingURL=EditorToolbar.js.map

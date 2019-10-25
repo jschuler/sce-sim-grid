@@ -4,4 +4,4 @@ export * from './EditorContainer';
 export * from './Sidebar';
 export * from './Spinner';
 export * from './Toolbar';
-export * from './utils'
+export * from './utils';

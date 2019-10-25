@@ -10,9 +10,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Loading spinner used when loading the app and when loading the next page for the grid infinite scrolling
  */
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
 var experimental_1 = require("@patternfly/react-core/dist/js/experimental");
+var React = __importStar(require("react"));
 var Spinner = function (_a) {
     var text = _a.text, className = _a.className, _b = _a.size, size = _b === void 0 ? 'xl' : _b;
     return (React.createElement(react_core_1.Bullseye, { className: className },

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import "./Editor.css";
+import './Editor.css';
 declare const Editor: React.NamedExoticComponent<{
     columns: any;
     filteredRows: any;

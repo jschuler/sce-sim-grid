@@ -1,21 +1,21 @@
-import * as React from "react";
-import { Modal, Button } from '@patternfly/react-core';
+import { Button, Modal } from '@patternfly/react-core';
+import * as React from 'react';
 
 const HelpModal: React.SFC<{ isOpen: boolean, onClose: any, readOnly: boolean }> = ({ isOpen, onClose, readOnly }) => {
   // console.log('render HelpModal');
-  
+
   return (
     <Modal
-      isSmall
+      isSmall={true}
       title="Help"
       isOpen={isOpen}
       onClose={onClose}
       actions={[
         <Button key="confirm" variant="primary" onClick={onClose}>
           Close
-        </Button>
+        </Button>,
       ]}
-      isFooterLeftAligned
+      isFooterLeftAligned={true}
     >
       <div className="pf-c-content">
         <p>The following keyboard interactions are available:</p>
@@ -37,7 +37,7 @@ const HelpModal: React.SFC<{ isOpen: boolean, onClose: any, readOnly: boolean }>
         </ul>
       </div>
     </Modal>
-  )
+  );
 };
 
 export { HelpModal };

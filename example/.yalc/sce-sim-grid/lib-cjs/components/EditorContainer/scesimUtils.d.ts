@@ -5,10 +5,10 @@ declare type Column = Array<({
     name?: string;
     field?: string;
     group?: string;
-    children?: {
+    children?: Array<{
         name?: string;
         field?: string;
-    }[];
+    }>;
 })>;
 export declare const getColumns: (data: Scesim, byGroup?: boolean) => {
     fieldIndices: any;

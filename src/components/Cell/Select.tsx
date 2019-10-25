@@ -1,30 +1,30 @@
-import * as React from "react";
-import { Tooltip, Select as PfSelect, SelectOption, SelectVariant, SelectOptionObject } from '@patternfly/react-core';
+import { Select as PfSelect, SelectOption, SelectOptionObject, SelectVariant, Tooltip } from '@patternfly/react-core';
+import * as React from 'react';
 import './Input.css';
 import './Select.css';
 
-const Select = React.memo<{ 
-  originalValue?: any, 
-  path?: string, 
-  id?: any, 
-  type?: string, 
+const Select = React.memo<{
+  originalValue?: any,
+  path?: string,
+  id?: any,
+  type?: string,
   isReadOnly?: boolean,
   onSelectToggleCallback?: any,
   options?: any,
   deactivateAndFocusCell?: any,
   setEditable: any,
-  onSave: any
-}>(({ 
-  originalValue, 
-  path, 
-  id, 
-  type, 
-  isReadOnly, 
-  onSelectToggleCallback, 
-  options, 
-  deactivateAndFocusCell, 
+  onSave: any,
+}>(({
+  originalValue,
+  path,
+  id,
+  type,
+  isReadOnly,
+  onSelectToggleCallback,
+  options,
+  deactivateAndFocusCell,
   setEditable,
-  onSave
+  onSave,
 }) => {
   // console.log('render Select');
   const [isExpanded, setExpanded] = React.useState<boolean>(true);
@@ -52,12 +52,12 @@ const Select = React.memo<{
 
   /**
    * Returns the current DOM element
-   * 
+   *
    * TODO: Possibly change to React refs
    */
   const thisElement = () => {
     return document.getElementById(id) as HTMLInputElement;
-  }
+  };
 
   /**
    * Saves the current value
@@ -66,23 +66,25 @@ const Select = React.memo<{
     setSelected(selection);
     if (savedSelection !== selection) {
       setSavedSelection(selection);
-      onSave && onSave(id, selection, originalValue);
+      if (onSave) {
+        onSave(id, selection, originalValue);
+      }
     }
-  }
+  };
 
   /**
    * The Select options
    */
   const selectOptions = options.map((option: string, index: number) => (
-    <SelectOption key={index} value={option} isSelected />
+    <SelectOption key={index} value={option} isSelected={true} />
   ));
 
   /**
    * Toggle the Select
    */
-  const onToggle = (isExpanded: boolean) => {
-    setExpanded(isExpanded);
-    onSelectToggleCallback(id, isExpanded);
+  const onToggle = (expanded: boolean) => {
+    setExpanded(expanded);
+    onSelectToggleCallback(id, expanded);
   };
 
   /**
@@ -96,7 +98,7 @@ const Select = React.memo<{
     // mark itself as not editable but maintain focus
     setTimeout(() => {
       deactivateAndFocusCell(id);
-    }, 1)
+    }, 1);
   };
 
   const onKeyDown = (event: any) => {
@@ -105,9 +107,9 @@ const Select = React.memo<{
       onSelectToggleCallback(false);
       setTimeout(() => {
         deactivateAndFocusCell(id);
-      }, 1)
+      }, 1);
     }
-  }
+  };
 
   /**
    * Check if the element is overflown
@@ -116,21 +118,21 @@ const Select = React.memo<{
     const element = event ? event.target : thisElement();
     const isOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
     setOverflown(isOverflown);
-  }
+  };
 
   return (
     <>
       {isReadOnly ? (
         <Tooltip content={selected} distance={0} exitDelay={0} trigger={overflown ? 'mouseenter focus' : 'manual'}>
-          <input 
+          <input
             onMouseOver={checkForOverflow}
-            className="editor-input truncate" 
-            style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }} 
-            type="text" 
+            className="editor-input truncate"
+            style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }}
+            type="text"
             value={selected}
             id={id}
             aria-label={selected}
-            readOnly
+            readOnly={true}
           />
         </Tooltip>
       ) : (
@@ -152,7 +154,7 @@ const Select = React.memo<{
 }, (prevProps, nextProps) => {
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
-    console.log(`prevProps ${prevProps.originalValue}, nextProps ${nextProps.originalValue}`);
+    // console.log(`prevProps ${prevProps.originalValue}, nextProps ${nextProps.originalValue}`);
     return false;
   }
   return true;

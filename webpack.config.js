@@ -8,7 +8,7 @@ module.exports = {
   mode: "production",
   entry: {
     'sce-sim-grid': './src/index.ts',
-    'sce-sim-grid.min': './src/index.ts'
+    // 'sce-sim-grid.min': './src/index.ts'
   },
   output: {
     path: path.resolve(__dirname, 'lib-umd'),

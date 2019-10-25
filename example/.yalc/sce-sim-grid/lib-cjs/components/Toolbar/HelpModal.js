@@ -7,13 +7,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
+var React = __importStar(require("react"));
 var HelpModal = function (_a) {
     // console.log('render HelpModal');
     var isOpen = _a.isOpen, onClose = _a.onClose, readOnly = _a.readOnly;
     return (React.createElement(react_core_1.Modal, { isSmall: true, title: "Help", isOpen: isOpen, onClose: onClose, actions: [
-            React.createElement(react_core_1.Button, { key: "confirm", variant: "primary", onClick: onClose }, "Close")
+            React.createElement(react_core_1.Button, { key: "confirm", variant: "primary", onClick: onClose }, "Close"),
         ], isFooterLeftAligned: true },
         React.createElement("div", { className: "pf-c-content" },
             React.createElement("p", null, "The following keyboard interactions are available:"),

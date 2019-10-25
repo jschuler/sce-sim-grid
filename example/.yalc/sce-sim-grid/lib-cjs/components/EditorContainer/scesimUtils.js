@@ -12,7 +12,7 @@ exports.getColumnNames = function (data) {
         var group = col.factAlias || '';
         columns.push({
             name: name,
-            group: group
+            group: group,
         });
     });
     return columns;
@@ -31,7 +31,7 @@ exports.getColumns = function (data, byGroup) {
         var type = col.expressionIdentifier.type; // OTHER | GIVEN | EXPECT
         var field = col.expressionIdentifier.name; // this relates the column to the row cell
         fieldIndices[field] = index;
-        if (type === "OTHER") {
+        if (type === 'OTHER') {
             numOther = numOther + 1;
             var name_1 = col.factAlias;
             columnDefsOther.push({ name: name_1, field: field });
@@ -40,7 +40,7 @@ exports.getColumns = function (data, byGroup) {
             var name_2 = col.expressionAlias;
             var group = col.factAlias;
             if (!byGroup) {
-                if (type === "GIVEN") {
+                if (type === 'GIVEN') {
                     numGiven = numGiven + 1;
                     columnDefsGiven.push({ name: name_2, field: field, group: group });
                 }
@@ -51,7 +51,7 @@ exports.getColumns = function (data, byGroup) {
                 }
             }
             else {
-                if (type === "GIVEN") {
+                if (type === 'GIVEN') {
                     numGiven = numGiven + 1;
                     // check if the group already exists, if so push to it, otherwise create a new group
                     if (columnDefsGiven.length === 0 || columnDefsGiven[columnDefsGiven.length - 1].group !== group) {
@@ -86,7 +86,7 @@ exports.getColumns = function (data, byGroup) {
         expect: columnDefsExpect,
         numOther: numOther,
         numGiven: numGiven,
-        numExpect: numExpect
+        numExpect: numExpect,
     };
 };
 exports.getRows = function (data, columns) {
@@ -94,8 +94,8 @@ exports.getRows = function (data, columns) {
     var dataPathRoot = 'value.simulation.scenarios.scenario';
     var rows = [];
     var scenario = data.value.simulation.scenarios.scenario;
-    scenario.forEach(function (dataRow, index) {
-        var dataPath = dataPathRoot + "[" + index + "].factMappingValues.factMappingValue";
+    scenario.forEach(function (dataRow, rowIndex) {
+        var dataPath = dataPathRoot + "[" + rowIndex + "].factMappingValues.factMappingValue";
         var totalColumnsLength = columns.numOther + columns.numGiven + columns.numExpect;
         var hasExpressionIdentifierName = true;
         // create the row with a predetermined length so we can insert the cell in the correct column order
@@ -108,14 +108,14 @@ exports.getRows = function (data, columns) {
                 if (name) {
                     row[columns.fieldIndices[name]] = {
                         value: null,
-                        path: path
+                        path: path,
                     };
                 }
                 else {
                     hasExpressionIdentifierName = false;
                     row[index] = {
                         value: null,
-                        path: path
+                        path: path,
                     };
                 }
             }
@@ -124,14 +124,14 @@ exports.getRows = function (data, columns) {
                 if (name) {
                     row[columns.fieldIndices[name]] = {
                         value: value,
-                        path: path
+                        path: path,
                     };
                 }
                 else {
                     hasExpressionIdentifierName = false;
                     row[index] = {
                         value: value,
-                        path: path
+                        path: path,
                     };
                 }
             }
@@ -168,10 +168,10 @@ exports.getDefinitions = function (data) {
     });
     var drgElement = data.value.drgElement;
     var typeDefinitions = {
-        '_title': title,
+        _title: title,
         simple: [],
         complex: [],
-        map: {}
+        map: {},
     };
     drgElement.forEach(function (element) {
         var type = element.name.localPart; // inputData | decision
@@ -186,11 +186,11 @@ exports.getDefinitions = function (data) {
             choices: choices,
             question: question,
             elements: definitions[typeRef] || {
-                value: choices
-            }
+                value: choices,
+            },
         });
         typeDefinitions.map[text] = definitions[typeRef] || {
-            value: choices
+            value: choices,
         };
     });
     return typeDefinitions;

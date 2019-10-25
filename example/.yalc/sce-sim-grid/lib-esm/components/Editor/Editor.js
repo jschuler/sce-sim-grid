@@ -6,14 +6,14 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 import * as React from 'react';
-import { useKeyPress, setCaretPositionAtEnd, focusCell } from "../utils";
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Spinner } from '../Spinner';
 import { Input, Select } from '../Cell';
-import "./Editor.css";
+import { Spinner } from '../Spinner';
+import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
+import './Editor.css';
 var Editor = React.memo(function (_a) {
+    // console.log('render Editor');
     var columnDefs = _a.columns, filteredRows = _a.filteredRows, definitions = _a.definitions, columnNames = _a.columnNames, onSave = _a.onSave, onUndo = _a.onUndo, onRedo = _a.onRedo, lastForcedUpdate = _a.lastForcedUpdate, readOnly = _a.readOnly;
-    console.log('render Editor');
     var rowsToFetch = 50;
     var _b = React.useState(''), editableCell = _b[0], setEditable = _b[1];
     var _c = React.useState(false), expandedSelect = _c[0], setExpandedSelect = _c[1];
@@ -48,13 +48,13 @@ var Editor = React.memo(function (_a) {
     }, [columnDefs, filteredRows, definitions, columnNames, lastForcedUpdate]);
     var setNumGivenColumns = function (num) {
         document
-            .getElementById("kie-grid")
-            .style.setProperty("--num-given-columns", num.toString());
+            .getElementById('kie-grid')
+            .style.setProperty('--num-given-columns', num.toString());
     };
     var setNumExpectColumns = function (num) {
         document
-            .getElementById("kie-grid")
-            .style.setProperty("--num-expect-columns", num.toString());
+            .getElementById('kie-grid')
+            .style.setProperty('--num-expect-columns', num.toString());
     };
     var activateCell = function (id) {
         if (id) {
@@ -121,7 +121,7 @@ var Editor = React.memo(function (_a) {
         if (currentId) {
             // ['row', '1', 'column', '2']
             var currentIdArr = currentId.split(' ');
-            var currentRow = Number.parseInt(currentIdArr[1]);
+            var currentRow = Number.parseInt(currentIdArr[1], 10);
             // going up means decrementing the row
             var newRow = currentRow - 1;
             if (newRow < minRow) {
@@ -150,7 +150,7 @@ var Editor = React.memo(function (_a) {
         if (currentId) {
             // ['row', '1', 'column', '2']
             var currentIdArr = currentId.split(' ');
-            var currentRow = Number.parseInt(currentIdArr[1]);
+            var currentRow = Number.parseInt(currentIdArr[1], 10);
             // going down means incrementing the row
             var newRow = currentRow + 1;
             if (newRow > maxRow) {
@@ -179,7 +179,7 @@ var Editor = React.memo(function (_a) {
         if (currentId) {
             // ['row', '1', 'column', '2']
             var currentIdArr = currentId.split(' ');
-            var currentCol = Number.parseInt(currentIdArr[3]);
+            var currentCol = Number.parseInt(currentIdArr[3], 10);
             // going left means decrementing the column
             var newCol = currentCol - 1;
             if (newCol < minCol) {
@@ -208,7 +208,7 @@ var Editor = React.memo(function (_a) {
         if (currentId) {
             // ['row', '1', 'column', '2']
             var currentIdArr = currentId.split(' ');
-            var currentCol = Number.parseInt(currentIdArr[3]);
+            var currentCol = Number.parseInt(currentIdArr[3], 10);
             // going right means incrementing the column
             var newCol = currentCol + 1;
             if (newCol > maxCol) {
@@ -278,10 +278,10 @@ var Editor = React.memo(function (_a) {
                 React.createElement("div", { className: "kie-grid__item kie-grid__expect" }, "EXPECT")),
             React.createElement("div", { className: "kie-grid__header--given" }, columnDefsState.given.map(function (given, index) { return (React.createElement("div", { key: "given instance " + index, className: "kie-grid__item kie-grid__instance", style: { gridColumn: "span " + given.children.length } }, given.group)); })),
             React.createElement("div", { className: "kie-grid__header--expect" }, columnDefsState.expect.map(function (expect, index) { return (React.createElement("div", { key: "expect instance " + index, className: "kie-grid__item kie-grid__instance", style: { gridColumn: "span " + expect.children.length } }, expect.group)); })),
-            React.createElement("div", { className: "kie-grid__header--given" }, columnDefsState.given.map(function (given, index) {
+            React.createElement("div", { className: "kie-grid__header--given" }, columnDefsState.given.map(function (given) {
                 return given.children.map(function (givenChild, index) { return (React.createElement("div", { key: "given property " + index, className: "kie-grid__item kie-grid__property" }, givenChild.name)); });
             })),
-            React.createElement("div", { className: "kie-grid__header--expect" }, columnDefsState.expect.map(function (expect, index) {
+            React.createElement("div", { className: "kie-grid__header--expect" }, columnDefsState.expect.map(function (expect) {
                 return expect.children.map(function (expectChild, index) { return (React.createElement("div", { key: "expect property " + index, className: "kie-grid__item kie-grid__property" }, expectChild.name)); });
             })),
             React.createElement("div", { className: "kie-grid__body" },
@@ -312,7 +312,7 @@ var Editor = React.memo(function (_a) {
                     var typeArr = type.split(',');
                     if (typeArr.length > 1) {
                         // Multiple options, render Select
-                        component = (React.createElement(Select, { isReadOnly: inputId !== editableCell, id: inputId, originalValue: value, onSelectToggleCallback: onSelectToggleCallback, options: typeArr.map(function (string) { return string.trim(); }), deactivateAndFocusCell: deactivateAndFocusCell, setEditable: setEditable, onSave: onSave }));
+                        component = (React.createElement(Select, { isReadOnly: inputId !== editableCell, id: inputId, originalValue: value, onSelectToggleCallback: onSelectToggleCallback, options: typeArr.map(function (typeString) { return typeString.trim(); }), deactivateAndFocusCell: deactivateAndFocusCell, setEditable: setEditable, onSave: onSave }));
                     }
                     else {
                         component = (React.createElement(Input, { isReadOnly: inputId !== editableCell, id: inputId, originalValue: value, path: path, type: type, deactivateAndFocusCell: deactivateAndFocusCell, setEditable: setEditable, onSave: onSave }));
@@ -321,10 +321,11 @@ var Editor = React.memo(function (_a) {
                 }))); }))))));
 }, function (prevProps, nextProps) {
     if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
-        console.log('forced Editor update');
+        // console.log('forced Editor update');
         return false;
     }
-    if (prevProps.filteredRows.length !== nextProps.filteredRows.length || JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
+    if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||
+        JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
         // filteredRows have changed, re-render
         return false;
     }
@@ -332,7 +333,7 @@ var Editor = React.memo(function (_a) {
 });
 // @ts-ignore
 Editor.whyDidYouRender = {
-    customName: 'Editor'
+    customName: 'Editor',
 };
 export { Editor };
 //# sourceMappingURL=Editor.js.map

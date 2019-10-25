@@ -1,5 +1,5 @@
-import * as React from "react";
-import { Tooltip, Select as PfSelect, SelectOption, SelectVariant } from '@patternfly/react-core';
+import { Select as PfSelect, SelectOption, SelectVariant, Tooltip } from '@patternfly/react-core';
+import * as React from 'react';
 import './Input.css';
 import './Select.css';
 var Select = React.memo(function (_a) {
@@ -40,7 +40,9 @@ var Select = React.memo(function (_a) {
         setSelected(selection);
         if (savedSelection !== selection) {
             setSavedSelection(selection);
-            onSave && onSave(id, selection, originalValue);
+            if (onSave) {
+                onSave(id, selection, originalValue);
+            }
         }
     };
     /**
@@ -50,9 +52,9 @@ var Select = React.memo(function (_a) {
     /**
      * Toggle the Select
      */
-    var onToggle = function (isExpanded) {
-        setExpanded(isExpanded);
-        onSelectToggleCallback(id, isExpanded);
+    var onToggle = function (expanded) {
+        setExpanded(expanded);
+        onSelectToggleCallback(id, expanded);
     };
     /**
      * Set the selection
@@ -89,7 +91,7 @@ var Select = React.memo(function (_a) {
 }, function (prevProps, nextProps) {
     var shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
     if (shouldRerender) {
-        console.log("prevProps " + prevProps.originalValue + ", nextProps " + nextProps.originalValue);
+        // console.log(`prevProps ${prevProps.originalValue}, nextProps ${nextProps.originalValue}`);
         return false;
     }
     return true;

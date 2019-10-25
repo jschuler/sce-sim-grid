@@ -1,16 +1,15 @@
-import * as React from "react";
-import { Expandable, TextContent, Button } from '@patternfly/react-core';
-import { CopyIcon, AngleRightIcon } from '@patternfly/react-icons';
+import { Button, Expandable, TextContent } from '@patternfly/react-core';
+import { AngleRightIcon, CopyIcon } from '@patternfly/react-icons';
 import classNames from 'classnames';
-import { setCaretPositionAtEnd } from "../utils";
+import * as React from 'react';
+import { setCaretPositionAtEnd } from '../utils';
 import './Sidebar.css';
 
-const DefinitionsDrawerPanel = React.memo<{ 
-  definitions: any, 
-  dmnFilePath: string
+const DefinitionsDrawerPanel = React.memo<{
+  definitions: any,
+  dmnFilePath: string,
 }>(({ definitions, dmnFilePath }) => {
-// const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }> = ({ definitions, dmnFilePath }) => {
-  console.log('render DefinitionsDrawerPanel');
+  // console.log('render DefinitionsDrawerPanel');
 
   // DMN file path ClipboardCopy expansion
   const [isExpanded, setExpanded] = React.useState(false);
@@ -24,7 +23,7 @@ const DefinitionsDrawerPanel = React.memo<{
       if (element) {
         setCaretPositionAtEnd(element);
       }
-    }, 1)
+    }, 1);
   }, [dmnFilePath]);
 
   React.useEffect(() => {
@@ -63,25 +62,39 @@ const DefinitionsDrawerPanel = React.memo<{
   const ClipboardCopy = () => (
     <div className={classNames('pf-c-clipboard-copy', isExpanded && 'pf-m-expanded')}>
       <div className="pf-c-clipboard-copy__group">
-        <button className="pf-c-clipboard-copy__group-toggle"
-            id="dmnPathToggle" aria-labelledby="dmnPathToggle dmnFilePath" aria-controls="content-6"
-            aria-expanded="true"
-            aria-label="Show content"
-            onClick={onToggle}
-          >
-            <AngleRightIcon className="pf-c-clipboard-copy__group-toggle-icon" />
+        <button
+          className="pf-c-clipboard-copy__group-toggle"
+          id="dmnPathToggle"
+          aria-labelledby="dmnPathToggle dmnFilePath"
+          aria-controls="content-6"
+          aria-expanded="true"
+          aria-label="Show content"
+          onClick={onToggle}
+        >
+          <AngleRightIcon
+            className="pf-c-clipboard-copy__group-toggle-icon"
+          />
         </button>
-        <input className="pf-c-form-control" readOnly type="text" value={dmnFilePathState} id="dmnFilePath" aria-label="Copyable input"></input>
-        <button className="pf-c-clipboard-copy__group-copy"
+        <input className="pf-c-form-control" readOnly={true} type="text" value={dmnFilePathState} id="dmnFilePath" aria-label="Copyable input"/>
+        <button
+          className="pf-c-clipboard-copy__group-copy"
           aria-label="Copy to clipboard"
-            id="dmnPathCopy" 
-            aria-labelledby="dmnPathCopy dmnFilePath"
-            onClick={onCopy}
-          >
+          id="dmnPathCopy"
+          aria-labelledby="dmnPathCopy dmnFilePath"
+          onClick={onCopy}
+        >
           <CopyIcon />
         </button>
       </div>
-      {isExpanded && <div className="pf-c-clipboard-copy__expandable-content" id="dmnPathContent" style={{ color: 'rgb(33, 36, 39)' }}>{dmnFilePathState}</div>}
+      {isExpanded && (
+        <div
+          className="pf-c-clipboard-copy__expandable-content"
+          id="dmnPathContent"
+          style={{ color: 'rgb(33, 36, 39)' }}
+        >
+          {dmnFilePathState}
+        </div>
+      )}
     </div>
   );
   return (
@@ -104,7 +117,7 @@ const DefinitionsDrawerPanel = React.memo<{
             ))}
           </Expandable>
         ))}
-        
+
         <h3>Simple Types</h3>
         {definitionsState.simple.map((item: any) => (
           <Expandable key={item.typeRef} toggleText={item.text}>
@@ -118,7 +131,7 @@ const DefinitionsDrawerPanel = React.memo<{
         ))}
       </TextContent>
     </div>
-  )
+  );
 }, (prevProps, nextProps) => {
   if (JSON.stringify(prevProps.definitions) !== JSON.stringify(nextProps.definitions)) {
     // definitions have changed, re-render

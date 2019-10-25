@@ -1,20 +1,20 @@
-import * as React from "react";
 import { Button } from '@patternfly/react-core';
 import { BarsIcon } from '@patternfly/react-icons';
+import classNames from 'classnames';
+import * as React from 'react';
 import { Editor } from '../Editor';
 import { DefinitionsDrawerPanel } from '../Sidebar';
-import { getDefinitions, getColumns, getRows, getColumnNames, getDmnFilePath } from "./scesimUtils";
-import { getRowColumnFromId } from '../utils';
 import { EditorToolbar } from '../Toolbar';
-import classNames from 'classnames';
+import { getRowColumnFromId } from '../utils';
+import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getRows } from './scesimUtils';
 
-const EditorContainer = React.memo<{ 
-  data: any, 
-  model: any, 
-  showSidePanel?: boolean, 
-  readOnly?: boolean 
+const EditorContainer = React.memo<{
+  data: any,
+  model: any,
+  showSidePanel?: boolean,
+  readOnly?: boolean,
 }>(({ data, model, showSidePanel = true, readOnly = false }) => {
-  console.log('render EditorContainer');
+  // console.log('render EditorContainer');
 
   const increaseRows = (rows: any) => {
     // increase rows for performance testing / infinite sroll testing etc
@@ -29,7 +29,7 @@ const EditorContainer = React.memo<{
       }
     }
     return rows;
-  }
+  };
 
   const initialDefinitions = getDefinitions(model);
   const initialColumns = getColumns(data, true);
@@ -37,10 +37,10 @@ const EditorContainer = React.memo<{
   initialRows = increaseRows(initialRows);
   const initialColumnNames = getColumnNames(data);
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
-  const [undoRedo, setUndoRedo] = React.useState<any>({ 
-    undoList: [], 
+  const [undoRedo, setUndoRedo] = React.useState<any>({
+    undoList: [],
     redoList: [],
-    skipUpdate: false
+    skipUpdate: false,
   });
   const [allRows, setAllRows] = React.useState(initialRows);
   const [filteredRows, setFilteredRows] = React.useState(initialRows);
@@ -48,7 +48,7 @@ const EditorContainer = React.memo<{
   const [dmnFilePath, setDmnFilePath] = React.useState(getDmnFilePath(data));
   const [columns, setColumns] = React.useState(initialColumns);
   const [columnNames, setColumnNames] = React.useState(initialColumnNames);
-  let initialItemToColumnIndexMap: any = [];
+  const initialItemToColumnIndexMap: any = [];
   initialColumnNames.forEach((item: any, index: number) => {
     const value = `${item.group} ${item.name}`;
     initialItemToColumnIndexMap[value] = index;
@@ -76,12 +76,12 @@ const EditorContainer = React.memo<{
       setUndoRedo({
         undoList: [],
         redoList: [],
-        skipUpdate: false
+        skipUpdate: false,
       });
-      let itemToColumnIndexMap: any = [];
+      const indexMap: any = [];
       initialColumnNames.forEach((item: any, index: number) => {
         const value = `${item.group} ${item.name}`;
-        itemToColumnIndexMap[value] = index;
+        indexMap[value] = index;
       });
       setItemToColumnIndexMap(initialColumnNames);
     }
@@ -101,9 +101,9 @@ const EditorContainer = React.memo<{
    */
   const toggleDrawer = () => {
     setDrawerExpanded(!isDrawerExpanded);
-  }
+  };
 
-  /** 
+  /**
    * Callback function for Editor inputs. When they're saved we add it to the list of changes for change-tracking.
    */
   const addToChanges = (id: string, value: string, previousValue: string) => {
@@ -115,9 +115,9 @@ const EditorContainer = React.memo<{
     setUndoRedo((previousState: any) => ({
       undoList: [...previousState.undoList, { id, value, previousValue }],
       redoList: [],
-      skipUpdate: true
+      skipUpdate: true,
     }));
-  }
+  };
 
   /**
    * Reverts the last Input change
@@ -130,7 +130,7 @@ const EditorContainer = React.memo<{
       setUndoRedo((previousState: any) => ({
         undoList: clonedChanges,
         redoList: [...previousState.redoList, lastChange],
-        skipUpdate: false
+        skipUpdate: false,
       }));
 
       const { id, previousValue } = lastChange;
@@ -141,7 +141,7 @@ const EditorContainer = React.memo<{
       // setAllRows(clonedAllRows);
       // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
-  }
+  };
 
   /**
    * Pop it from the redo stack and push it onto undo stack
@@ -154,9 +154,9 @@ const EditorContainer = React.memo<{
       setUndoRedo((previousState: any) => ({
         undoList: [...previousState.undoList, lastRedo],
         redoList: clonedRedoList,
-        skipUpdate: false
+        skipUpdate: false,
       }));
-      
+
       const { id, value } = lastRedo;
       const { row, column } = getRowColumnFromId(id);
       allRows[row][column].value = value;
@@ -165,7 +165,7 @@ const EditorContainer = React.memo<{
       // setAllRows(clonedAllRows);
       // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
-  }
+  };
 
   /**
    * Filter the rows based on search and filter selection
@@ -181,11 +181,11 @@ const EditorContainer = React.memo<{
       return setFilteredRows(rows);
     }
     const searchRE = new RegExp(value, 'i');
-    const filteredRows = rows.filter((row: any) => {
+    const rowsAfterFilter = rows.filter((row: any) => {
       let found = false;
       if (selected.length === 0) {
         // search all columns
-        for (let col of row) {
+        for (const col of row) {
           if (col && searchRE.test(col.value)) {
             found = true;
             break;
@@ -193,7 +193,7 @@ const EditorContainer = React.memo<{
         }
       } else {
         // search only the selected columns
-        for (let sel of selected) {
+        for (const sel of selected) {
           const columnIndex = itemToColumnIndexMap[sel];
           if (row[columnIndex] && searchRE.test(row[columnIndex].value)) {
             found = true;
@@ -203,8 +203,8 @@ const EditorContainer = React.memo<{
       }
       return found;
     });
-    setFilteredRows(filteredRows);
-  }
+    setFilteredRows(rowsAfterFilter);
+  };
 
   return (
     <div className="pf-m-redhat-font">
@@ -228,12 +228,12 @@ const EditorContainer = React.memo<{
           </div>
         </div>
           <div className="pf-c-page__header-tools">
-            <EditorToolbar 
+            <EditorToolbar
               data={data}
-              allRowsLength={allRows.length} 
-              filteredRowsLength={filteredRows.length} 
-              filterRows={filterRows} 
-              columnNames={columnNames} 
+              allRowsLength={allRows.length}
+              filteredRowsLength={filteredRows.length}
+              filterRows={filterRows}
+              columnNames={columnNames}
               readOnly={readOnly}
               undoRedo={undoRedo}
               onUndo={onUndo}
@@ -241,21 +241,21 @@ const EditorContainer = React.memo<{
             />
           </div>
         </header>
-        {showSidePanel && <div className={classNames("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
+        {showSidePanel && <div className={classNames('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
           <div className="pf-c-page__sidebar-body">
-            <DefinitionsDrawerPanel 
-              definitions={definitions} 
-              dmnFilePath={dmnFilePath} 
+            <DefinitionsDrawerPanel
+              definitions={definitions}
+              dmnFilePath={dmnFilePath}
             />
           </div>
         </div>}
         <main role="main" className="pf-c-page__main" id="sce-sim-grid__main" tabIndex={-1}>
           <section className="pf-c-page__main-section pf-m-light">
-            <Editor 
-              columns={columns} 
-              filteredRows={filteredRows} 
-              definitions={definitions} 
-              columnNames={columnNames} 
+            <Editor
+              columns={columns}
+              filteredRows={filteredRows}
+              definitions={definitions}
+              columnNames={columnNames}
               onSave={addToChanges}
               onUndo={onUndo}
               onRedo={onRedo}
@@ -266,7 +266,7 @@ const EditorContainer = React.memo<{
         </main>
       </div>
     </div>
-  )
+  );
 }, (prevProps, nextProps) => {
   if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) {
     // data has changed, re-render
@@ -281,7 +281,7 @@ const EditorContainer = React.memo<{
 
 // @ts-ignore
 EditorContainer.whyDidYouRender = {
-  customName: 'EditorContainer'
+  customName: 'EditorContainer',
 };
 
 export { EditorContainer };

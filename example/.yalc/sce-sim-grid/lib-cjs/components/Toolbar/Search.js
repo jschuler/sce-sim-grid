@@ -14,12 +14,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
+var React = __importStar(require("react"));
 var utils_1 = require("../utils");
 var Search = React.memo(function (_a) {
+    // console.log('render Search');
     var data = _a.data, columnNames = _a.columnNames, onChange = _a.onChange;
-    console.log('render Search');
     var _b = React.useState(false), isExpanded = _b[0], setExpanded = _b[1];
     var _c = React.useState([]), selected = _c[0], setSelected = _c[1];
     var _d = React.useState(''), searchValue = _d[0], setSearchValue = _d[1];
@@ -79,7 +79,7 @@ var Search = React.memo(function (_a) {
             var value = item.group + " " + item.name;
             items.push(React.createElement(react_core_1.SelectOption, { key: index, index: index, value: value }));
         });
-        return (React.createElement(react_core_1.Select, { variant: 'checkbox', "aria-label": "Select Input", onToggle: onSelectToggle, onSelect: onSelect, selections: selected, isExpanded: isExpanded, placeholderText: "Filter on column", ariaLabelledBy: "Filter on column" }, items));
+        return (React.createElement(react_core_1.Select, { variant: "checkbox", "aria-label": "Select Input", onToggle: onSelectToggle, onSelect: onSelect, selections: selected, isExpanded: isExpanded, placeholderText: "Filter on column", ariaLabelledBy: "Filter on column" }, items));
     };
     return (React.createElement(React.Fragment, null,
         React.createElement(react_core_1.ToolbarItem, { className: "pf-u-mr-md" }, buildSearchBox()),
@@ -98,6 +98,6 @@ var Search = React.memo(function (_a) {
 exports.Search = Search;
 // @ts-ignore
 Search.whyDidYouRender = {
-    customName: 'Search'
+    customName: 'Search',
 };
 //# sourceMappingURL=Search.js.map

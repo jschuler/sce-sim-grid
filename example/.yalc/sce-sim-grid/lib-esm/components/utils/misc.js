@@ -16,7 +16,9 @@ export var focusCell = function (id, focusTimeout, scrollTo) {
     if (scrollTo === void 0) { scrollTo = false; }
     var element = document.getElementById(id);
     if (element) {
-        scrollTo && element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        if (scrollTo) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        }
         setTimeout(function () {
             element.focus();
         }, focusTimeout);
@@ -24,11 +26,11 @@ export var focusCell = function (id, focusTimeout, scrollTo) {
 };
 export var getRowColumnFromId = function (id) {
     var currentIdArr = id.split(' ');
-    var row = Number.parseInt(currentIdArr[1]);
-    var column = Number.parseInt(currentIdArr[3]);
+    var row = Number.parseInt(currentIdArr[1], 10);
+    var column = Number.parseInt(currentIdArr[3], 10);
     return {
         row: row,
-        column: column
+        column: column,
     };
 };
 //# sourceMappingURL=misc.js.map

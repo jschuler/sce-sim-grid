@@ -6,7 +6,7 @@ export const setCaretPosition = (element: any, caretPos: number) => {
     return true;
   }
   return false;
-}
+};
 
 export const setCaretPositionAtEnd = (element: HTMLInputElement) => {
   const end = element.value.length;
@@ -16,19 +16,21 @@ export const setCaretPositionAtEnd = (element: HTMLInputElement) => {
 export const focusCell = (id: string, focusTimeout: number = 1, scrollTo: boolean = false) => {
   const element = document.getElementById(id);
   if (element) {
-    scrollTo && element.scrollIntoView({behavior: 'smooth', block: 'end', inline: 'nearest'});
+    if (scrollTo) {
+      element.scrollIntoView({behavior: 'smooth', block: 'end', inline: 'nearest'});
+    }
     setTimeout(() => {
       element.focus();
-    }, focusTimeout)
+    }, focusTimeout);
   }
-}
+};
 
 export const getRowColumnFromId = (id: string) => {
   const currentIdArr: string[] = id.split(' ');
-  const row = Number.parseInt(currentIdArr[1]);
-  const column = Number.parseInt(currentIdArr[3]);
+  const row = Number.parseInt(currentIdArr[1], 10);
+  const column = Number.parseInt(currentIdArr[3], 10);
   return {
     row,
-    column
-  }
-}
+    column,
+  };
+};

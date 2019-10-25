@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import './Input.css';
 declare const Input: React.NamedExoticComponent<{
     originalValue: any;

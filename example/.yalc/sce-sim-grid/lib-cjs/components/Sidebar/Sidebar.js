@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -6,20 +9,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
 var react_icons_1 = require("@patternfly/react-icons");
 var classnames_1 = __importDefault(require("classnames"));
+var React = __importStar(require("react"));
 var utils_1 = require("../utils");
 require("./Sidebar.css");
 var DefinitionsDrawerPanel = React.memo(function (_a) {
+    // console.log('render DefinitionsDrawerPanel');
     var definitions = _a.definitions, dmnFilePath = _a.dmnFilePath;
-    // const DefinitionsDrawerPanel: React.FC<{ definitions: any, dmnFilePath: string }> = ({ definitions, dmnFilePath }) => {
-    console.log('render DefinitionsDrawerPanel');
     // DMN file path ClipboardCopy expansion
     var _b = React.useState(false), isExpanded = _b[0], setExpanded = _b[1];
     var _c = React.useState(definitions), definitionsState = _c[0], setDefinitionsState = _c[1];
@@ -70,7 +69,7 @@ var DefinitionsDrawerPanel = React.memo(function (_a) {
             React.createElement("input", { className: "pf-c-form-control", readOnly: true, type: "text", value: dmnFilePathState, id: "dmnFilePath", "aria-label": "Copyable input" }),
             React.createElement("button", { className: "pf-c-clipboard-copy__group-copy", "aria-label": "Copy to clipboard", id: "dmnPathCopy", "aria-labelledby": "dmnPathCopy dmnFilePath", onClick: onCopy },
                 React.createElement(react_icons_1.CopyIcon, null))),
-        isExpanded && React.createElement("div", { className: "pf-c-clipboard-copy__expandable-content", id: "dmnPathContent", style: { color: 'rgb(33, 36, 39)' } }, dmnFilePathState))); };
+        isExpanded && (React.createElement("div", { className: "pf-c-clipboard-copy__expandable-content", id: "dmnPathContent", style: { color: 'rgb(33, 36, 39)' } }, dmnFilePathState)))); };
     return (React.createElement("div", null,
         React.createElement(react_core_1.TextContent, { className: "pf-u-m-lg" },
             React.createElement("div", { className: "pf-u-mb-xl" },

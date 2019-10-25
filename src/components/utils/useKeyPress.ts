@@ -1,6 +1,6 @@
  import { useEffect } from 'react';
 
-export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
+ export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
   useEffect(() => {
     const ref = (options && options.hasOwnProperty('ref')) ? options.ref : null;
     const id = (options && options.hasOwnProperty('id')) ? options.id : null;
@@ -8,7 +8,7 @@ export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
     const withShift = (options && options.hasOwnProperty('withShift')) ? options.withShift : false;
     const isActive = (options && options.hasOwnProperty('isActive')) ? options.isActive : true;
     // const log = (options && options.hasOwnProperty('log')) ? options.log : '';
-    
+
     if (isActive === false) {
       return;
     }
@@ -22,8 +22,8 @@ export const useKeyPress = (targetKey: any, fn: any, options?: any) => {
         return;
       }
       if (
-        (typeof targetKey === 'string' && key === targetKey) || 
-        (typeof targetKey === 'number' && keyCode === targetKey) || 
+        (typeof targetKey === 'string' && key === targetKey) ||
+        (typeof targetKey === 'number' && keyCode === targetKey) ||
         (targetKey.test && targetKey.test(key))) {
           if (withModifier && !withShift) {
             if ((event.ctrlKey || event.metaKey) && !event.shiftKey) {

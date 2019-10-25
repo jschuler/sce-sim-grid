@@ -19,8 +19,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
-/.yalc
-/example/.yalc
+.yalc
 
 npm-debug.log*
 yarn-debug.log*

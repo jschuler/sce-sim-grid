@@ -6,6 +6,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -13,22 +16,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __importStar(require("react"));
 var react_core_1 = require("@patternfly/react-core");
 var react_icons_1 = require("@patternfly/react-icons");
+var classnames_1 = __importDefault(require("classnames"));
+var React = __importStar(require("react"));
 var Editor_1 = require("../Editor");
 var Sidebar_1 = require("../Sidebar");
-var scesimUtils_1 = require("./scesimUtils");
-var utils_1 = require("../utils");
 var Toolbar_1 = require("../Toolbar");
-var classnames_1 = __importDefault(require("classnames"));
+var utils_1 = require("../utils");
+var scesimUtils_1 = require("./scesimUtils");
 var EditorContainer = React.memo(function (_a) {
+    // console.log('render EditorContainer');
     var data = _a.data, model = _a.model, _b = _a.showSidePanel, showSidePanel = _b === void 0 ? true : _b, _c = _a.readOnly, readOnly = _c === void 0 ? false : _c;
-    console.log('render EditorContainer');
     var increaseRows = function (rows) {
         // increase rows for performance testing / infinite sroll testing etc
         var enabled = false;
@@ -52,7 +52,7 @@ var EditorContainer = React.memo(function (_a) {
     var _e = React.useState({
         undoList: [],
         redoList: [],
-        skipUpdate: false
+        skipUpdate: false,
     }), undoRedo = _e[0], setUndoRedo = _e[1];
     var _f = React.useState(initialRows), allRows = _f[0], setAllRows = _f[1];
     var _g = React.useState(initialRows), filteredRows = _g[0], setFilteredRows = _g[1];
@@ -87,12 +87,12 @@ var EditorContainer = React.memo(function (_a) {
             setUndoRedo({
                 undoList: [],
                 redoList: [],
-                skipUpdate: false
+                skipUpdate: false,
             });
-            var itemToColumnIndexMap_1 = [];
+            var indexMap_1 = [];
             initialColumnNames.forEach(function (item, index) {
                 var value = item.group + " " + item.name;
-                itemToColumnIndexMap_1[value] = index;
+                indexMap_1[value] = index;
             });
             setItemToColumnIndexMap(initialColumnNames);
         }
@@ -123,7 +123,7 @@ var EditorContainer = React.memo(function (_a) {
         setUndoRedo(function (previousState) { return ({
             undoList: __spreadArrays(previousState.undoList, [{ id: id, value: value, previousValue: previousValue }]),
             redoList: [],
-            skipUpdate: true
+            skipUpdate: true,
         }); });
     };
     /**
@@ -137,7 +137,7 @@ var EditorContainer = React.memo(function (_a) {
             setUndoRedo(function (previousState) { return ({
                 undoList: clonedChanges_1,
                 redoList: __spreadArrays(previousState.redoList, [lastChange_1]),
-                skipUpdate: false
+                skipUpdate: false,
             }); });
             var id = lastChange_1.id, previousValue = lastChange_1.previousValue;
             var _a = utils_1.getRowColumnFromId(id), row = _a.row, column = _a.column;
@@ -159,7 +159,7 @@ var EditorContainer = React.memo(function (_a) {
             setUndoRedo(function (previousState) { return ({
                 undoList: __spreadArrays(previousState.undoList, [lastRedo_1]),
                 redoList: clonedRedoList_1,
-                skipUpdate: false
+                skipUpdate: false,
             }); });
             var id = lastRedo_1.id, value = lastRedo_1.value;
             var _a = utils_1.getRowColumnFromId(id), row = _a.row, column = _a.column;
@@ -184,7 +184,7 @@ var EditorContainer = React.memo(function (_a) {
             return setFilteredRows(rows);
         }
         var searchRE = new RegExp(value, 'i');
-        var filteredRows = rows.filter(function (row) {
+        var rowsAfterFilter = rows.filter(function (row) {
             var found = false;
             if (selected.length === 0) {
                 // search all columns
@@ -209,7 +209,7 @@ var EditorContainer = React.memo(function (_a) {
             }
             return found;
         });
-        setFilteredRows(filteredRows);
+        setFilteredRows(rowsAfterFilter);
     };
     return (React.createElement("div", { className: "pf-m-redhat-font" },
         React.createElement("div", { className: "pf-c-page" },
@@ -221,7 +221,7 @@ var EditorContainer = React.memo(function (_a) {
                     React.createElement("div", { className: "pf-c-page__header-brand-link" }, definitions._title)),
                 React.createElement("div", { className: "pf-c-page__header-tools" },
                     React.createElement(Toolbar_1.EditorToolbar, { data: data, allRowsLength: allRows.length, filteredRowsLength: filteredRows.length, filterRows: filterRows, columnNames: columnNames, readOnly: readOnly, undoRedo: undoRedo, onUndo: onUndo, onRedo: onRedo }))),
-            showSidePanel && React.createElement("div", { className: classnames_1.default("pf-c-page__sidebar pf-m-dark", isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed') },
+            showSidePanel && React.createElement("div", { className: classnames_1.default('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed') },
                 React.createElement("div", { className: "pf-c-page__sidebar-body" },
                     React.createElement(Sidebar_1.DefinitionsDrawerPanel, { definitions: definitions, dmnFilePath: dmnFilePath }))),
             React.createElement("main", { role: "main", className: "pf-c-page__main", id: "sce-sim-grid__main", tabIndex: -1 },
@@ -241,6 +241,6 @@ var EditorContainer = React.memo(function (_a) {
 exports.EditorContainer = EditorContainer;
 // @ts-ignore
 EditorContainer.whyDidYouRender = {
-    customName: 'EditorContainer'
+    customName: 'EditorContainer',
 };
 //# sourceMappingURL=EditorContainer.js.map

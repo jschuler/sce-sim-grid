@@ -1,32 +1,32 @@
 import * as React from 'react';
-import { useKeyPress, setCaretPositionAtEnd, focusCell } from "../utils";
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Spinner } from '../Spinner';
 import { Input, Select } from '../Cell';
-import "./Editor.css";
+import { Spinner } from '../Spinner';
+import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
+import './Editor.css';
 
-const Editor = React.memo<{ 
-  columns: any, 
-  filteredRows : any, 
-  definitions: any, 
+const Editor = React.memo<{
+  columns: any,
+  filteredRows: any,
+  definitions: any,
   columnNames: any,
   onSave: any,
   onUndo: any,
   onRedo: any,
   lastForcedUpdate: string,
-  readOnly: boolean
-}>(({ 
-  columns: columnDefs, 
-  filteredRows, 
-  definitions, 
+  readOnly: boolean,
+}>(({
+  columns: columnDefs,
+  filteredRows,
+  definitions,
   columnNames,
   onSave,
   onUndo,
   onRedo,
   lastForcedUpdate,
-  readOnly
+  readOnly,
 }) => {
-  console.log('render Editor');
+  // console.log('render Editor');
 
   const rowsToFetch = 50;
 
@@ -47,7 +47,7 @@ const Editor = React.memo<{
     setTimeout(() => {
       setNumGivenColumns(columnDefs.numGiven);
       setNumExpectColumns(columnDefs.numExpect);
-    }, 1)
+    }, 1);
   }, [columnDefs]);
 
   React.useEffect(() => {
@@ -68,35 +68,35 @@ const Editor = React.memo<{
 
   const setNumGivenColumns = (num: number) => {
     document
-      .getElementById("kie-grid")!
-      .style.setProperty("--num-given-columns", num.toString());
+      .getElementById('kie-grid')!
+      .style.setProperty('--num-given-columns', num.toString());
   };
 
   const setNumExpectColumns = (num: number) => {
     document
-      .getElementById("kie-grid")!
-      .style.setProperty("--num-expect-columns", num.toString());
+      .getElementById('kie-grid')!
+      .style.setProperty('--num-expect-columns', num.toString());
   };
 
   const activateCell = (id: string) => {
     if (id) {
       setEditable(id);
     }
-  }
+  };
 
   const deactivateCell = () => {
     setEditable('');
-  }
+  };
 
   const activateAndFocusCell = (id: string) => {
     activateCell(id);
     focusCell(id);
-  }
+  };
 
   const deactivateAndFocusCell = (id: string) => {
     deactivateCell(); // expensive, causes re-renders?
     focusCell(id);
-  }
+  };
 
   const onCellClick = (event: any) => {
     const { id } = event.target;
@@ -122,7 +122,7 @@ const Editor = React.memo<{
     if (id) {
       activateAndFocusCell(id);
     }
-  }
+  };
 
   /**
    * Enter editing mode
@@ -150,7 +150,7 @@ const Editor = React.memo<{
     if (currentId) {
       // ['row', '1', 'column', '2']
       const currentIdArr: string[] = currentId.split(' ');
-      const currentRow = Number.parseInt(currentIdArr[1]);
+      const currentRow = Number.parseInt(currentIdArr[1], 10);
       // going up means decrementing the row
       const newRow = currentRow - 1;
       if (newRow < minRow) {
@@ -179,7 +179,7 @@ const Editor = React.memo<{
     if (currentId) {
       // ['row', '1', 'column', '2']
       const currentIdArr: string[] = currentId.split(' ');
-      const currentRow = Number.parseInt(currentIdArr[1]);
+      const currentRow = Number.parseInt(currentIdArr[1], 10);
       // going down means incrementing the row
       const newRow = currentRow + 1;
       if (newRow > maxRow) {
@@ -208,7 +208,7 @@ const Editor = React.memo<{
     if (currentId) {
       // ['row', '1', 'column', '2']
       const currentIdArr: string[] = currentId.split(' ');
-      const currentCol = Number.parseInt(currentIdArr[3]);
+      const currentCol = Number.parseInt(currentIdArr[3], 10);
       // going left means decrementing the column
       const newCol = currentCol - 1;
       if (newCol < minCol) {
@@ -237,7 +237,7 @@ const Editor = React.memo<{
     if (currentId) {
       // ['row', '1', 'column', '2']
       const currentIdArr: string[] = currentId.split(' ');
-      const currentCol = Number.parseInt(currentIdArr[3]);
+      const currentCol = Number.parseInt(currentIdArr[3], 10);
       // going right means incrementing the column
       const newCol = currentCol + 1;
       if (newCol > maxCol) {
@@ -291,7 +291,7 @@ const Editor = React.memo<{
       setCurrentPage(currentPage + 1);
     }
   };
-  
+
   // console.log(fetchedRows);
   // console.log(columnNamesState);
   return !fetchedRows ? null : (
@@ -299,11 +299,11 @@ const Editor = React.memo<{
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
         {columnDefsState.other.map((other: { name: string }, index: number) => {
           if (index === 0) {
-            return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>
+            return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>;
           } else {
             return (
               <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
-            )
+            );
           }
         })}
         {/* The GIVEN and EXPECT groups are always there so this can be hardcoded */}
@@ -340,14 +340,14 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--given">
-          {columnDefsState.given.map((given: any, index: number) => {
+          {columnDefsState.given.map((given: any) => {
             return given.children.map((givenChild: any, index: number) => (
               <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
             ));
           })}
         </div>
         <div className="kie-grid__header--expect">
-          {columnDefsState.expect.map((expect: any, index: number) => {
+          {columnDefsState.expect.map((expect: any) => {
             return expect.children.map((expectChild: any, index: number) => (
               <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
             ));
@@ -390,12 +390,12 @@ const Editor = React.memo<{
                     if (typeArr.length > 1) {
                       // Multiple options, render Select
                       component = (
-                        <Select 
-                          isReadOnly={inputId !== editableCell} 
-                          id={inputId} 
-                          originalValue={value}                          
-                          onSelectToggleCallback={onSelectToggleCallback} 
-                          options={typeArr.map(string => string.trim())} 
+                        <Select
+                          isReadOnly={inputId !== editableCell}
+                          id={inputId}
+                          originalValue={value}
+                          onSelectToggleCallback={onSelectToggleCallback}
+                          options={typeArr.map((typeString) => typeString.trim())}
                           deactivateAndFocusCell={deactivateAndFocusCell}
                           setEditable={setEditable}
                           onSave={onSave}
@@ -404,11 +404,11 @@ const Editor = React.memo<{
                     } else {
                       component = (
                         <Input
-                          isReadOnly={inputId !== editableCell} 
-                          id={inputId} 
-                          originalValue={value} 
-                          path={path} 
-                          type={type} 
+                          isReadOnly={inputId !== editableCell}
+                          id={inputId}
+                          originalValue={value}
+                          path={path}
+                          type={type}
                           deactivateAndFocusCell={deactivateAndFocusCell}
                           setEditable={setEditable}
                           onSave={onSave}
@@ -419,7 +419,7 @@ const Editor = React.memo<{
                       <div className="kie-grid__item" key={inputId} onClick={onCellClick} onDoubleClick={onCellDoubleClick}>
                         {cellIndex === 0 ? value : component}
                       </div>
-                    )
+                    );
                   })}
                 </div>
               ))}
@@ -430,10 +430,11 @@ const Editor = React.memo<{
   );
 }, (prevProps, nextProps) => {
   if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
-    console.log('forced Editor update');
+    // console.log('forced Editor update');
     return false;
   }
-  if (prevProps.filteredRows.length !== nextProps.filteredRows.length || JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
+  if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||
+    JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
     // filteredRows have changed, re-render
     return false;
   }
@@ -442,7 +443,7 @@ const Editor = React.memo<{
 
 // @ts-ignore
 Editor.whyDidYouRender = {
-  customName: 'Editor'
+  customName: 'Editor',
 };
 
 export { Editor };
