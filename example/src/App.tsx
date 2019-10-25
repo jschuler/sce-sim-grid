@@ -78,7 +78,7 @@ const App: React.FC = () => {
     <div className="App">
       {isLoading ? <Spinner text="Loading scenarios" /> : (
         <>
-          <div>
+          {/* <div>
             <Select
               className="data-select"
               toggleId="toggle data"
@@ -92,7 +92,7 @@ const App: React.FC = () => {
             >
               {selectOptions}
             </Select>
-          </div>
+          </div> */}
           <div className={classNames('editor-container', isTransitionDone && 'show')}>
             <EditorContainer data={data} model={model} showSidePanel={true} readOnly={false} />
           </div>
