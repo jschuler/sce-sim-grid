@@ -1,5 +1,4 @@
-import "@patternfly/patternfly/patternfly.min.css";
-import "@patternfly/patternfly/patternfly-addons.css";
+import '@patternfly/react-core/dist/styles/base.css';
 import React, { useState, useEffect } from "react";
 import { EditorContainer, Spinner, getJsonFromSceSim, getJsonFromDmn } from 'sce-sim-grid';
 import classNames from 'classnames';

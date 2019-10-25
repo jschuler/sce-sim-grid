@@ -1,3 +1,5 @@
+import "@patternfly/patternfly/patternfly.css";
+import "@patternfly/patternfly/patternfly-addons.css";
 import { Button } from '@patternfly/react-core';
 import { BarsIcon } from '@patternfly/react-icons';
 import classNames from 'classnames';

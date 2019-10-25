@@ -17,6 +17,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("@patternfly/patternfly/patternfly.css");
+require("@patternfly/patternfly/patternfly-addons.css");
 var react_core_1 = require("@patternfly/react-core");
 var react_icons_1 = require("@patternfly/react-icons");
 var classnames_1 = __importDefault(require("classnames"));

@@ -5,6 +5,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
+import "@patternfly/patternfly/patternfly.css";
+import "@patternfly/patternfly/patternfly-addons.css";
 import { Button } from '@patternfly/react-core';
 import { BarsIcon } from '@patternfly/react-icons';
 import classNames from 'classnames';
