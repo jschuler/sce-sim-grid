@@ -21,6 +21,7 @@
     "build:babel": "yarn clean && yarn build:types && yarn build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "rm -rf lib-es6-babel && babel src --out-dir lib-es6-babel --source-maps --copy-files --extensions \".js,.ts,.tsx\" --ignore __tests__,spec.js,test.js,__snapshots__",
+    "start": "cd example && yalc update && yarn start",
     "test": "jest",
     "test:ts": "npx tsc",
     "watch": "npx tsc -w",
