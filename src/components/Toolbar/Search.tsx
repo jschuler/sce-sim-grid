@@ -1,8 +1,9 @@
 import {
   Select,
+  SelectGroup,
   SelectOption,
   TextInput,
-  ToolbarItem,
+  ToolbarItem
 } from '@patternfly/react-core';
 import * as React from 'react';
 import { useDebounce } from '../utils';
@@ -55,12 +56,14 @@ const Search = React.memo<{
   /**
    * Updates selection on filter select change
    */
-  const onSelect = (event: any, selection: any) => {
-    let selections;
-    if (selection.indexOf(selected) > -1) {
-      selections = selected.filter((item: any) => item !== selection);
+  const onSelect = (event: any, currentSelection: any) => {
+    let selections: string[];
+    if (selected.indexOf(currentSelection) > -1) {
+      // was previously selected, now deselect
+      selections = selected.filter((item: any) => item !== currentSelection);
     } else {
-      selections = [...selected, selection];
+      // select new
+      selections = [...selected, currentSelection];
     }
     setSelected(selections);
   };
@@ -86,12 +89,19 @@ const Search = React.memo<{
    * Builds the filter select
    */
   const buildSelect = () => {
-    const items: any[] = [];
+    let otherItems: any[] = [];
+    let givenItems: any[] = [];
+    let expectItems: any[] = [];
     columnNames.forEach((item: any, index: number) => {
-      const value = `${item.group} ${item.name}`;
-      items.push(
-        <SelectOption key={index} index={index} value={value} />,
-      );
+      const value = item.name ? `${item.group} | ${item.name}` : item.group;
+      if (item.type === 'OTHER') {
+        otherItems.push(<SelectOption key={index} index={index} value={value} />);
+      } else if (item.type === 'GIVEN') {
+        givenItems.push(<SelectOption key={index} index={index} value={value} />);
+      } else {
+        // EXPECT
+        expectItems.push(<SelectOption key={index} index={index} value={value} />);
+      }
     });
     return (
       <Select
@@ -103,8 +113,11 @@ const Search = React.memo<{
         isExpanded={isExpanded}
         placeholderText="Filter on column"
         ariaLabelledBy="Filter on column"
+        isGrouped
       >
-        {items}
+        <SelectGroup label="Other">{otherItems}</SelectGroup>
+        <SelectGroup label="Given">{givenItems}</SelectGroup>
+        <SelectGroup label="Expect">{expectItems}</SelectGroup>
       </Select>
     );
   };

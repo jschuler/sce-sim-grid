@@ -11,8 +11,6 @@ const Editor = React.memo<{
   definitions: any,
   columnNames: any,
   onSave: any,
-  onUndo: any,
-  onRedo: any,
   lastForcedUpdate: string,
   readOnly: boolean,
 }>(({
@@ -21,8 +19,6 @@ const Editor = React.memo<{
   definitions,
   columnNames,
   onSave,
-  onUndo,
-  onRedo,
   lastForcedUpdate,
   readOnly,
 }) => {
@@ -268,10 +264,6 @@ const Editor = React.memo<{
 
   // Command + C / CTRL + C copies the focused cell content
   useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
-  // Command + Z / CTRL + Z undo the last change
-  useKeyPress(/z/i, onUndo, { log: 'editor', withModifier: true, isActive: !readOnly });
-  // Command + Shift + Z / CTRL + Shift + Z undo the last change
-  useKeyPress(/z/i, onRedo, { log: 'editor', withModifier: true, withShift: true, isActive: !readOnly });
   useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!editableCell && !readOnly) });
   useKeyPress(38, onUpKeyPress, { log: 'editor' });
   useKeyPress(40, onDownKeyPress, { log: 'editor' });
@@ -378,7 +370,7 @@ const Editor = React.memo<{
                     } else if (index > 1) {
                       columnGroup = columnNamesState[index].group;
                       columnName = columnNamesState[index].name;
-                      type = (definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
+                      type = (definitionsState && definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
                     }
                     const cellIndex = index;
                     const value = cell && cell.value ? cell.value : '';
@@ -430,14 +422,16 @@ const Editor = React.memo<{
   );
 }, (prevProps, nextProps) => {
   if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
-    // console.log('forced Editor update');
+    // console.log('re-render Editor');
     return false;
   }
   if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||
     JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
     // filteredRows have changed, re-render
+    // console.log('re-render Editor');
     return false;
   }
+  // console.log('not re-rendering Editor');
   return true;
 });
 

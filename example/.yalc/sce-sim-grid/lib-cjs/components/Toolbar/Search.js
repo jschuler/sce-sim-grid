@@ -54,13 +54,15 @@ var Search = React.memo(function (_a) {
     /**
      * Updates selection on filter select change
      */
-    var onSelect = function (event, selection) {
+    var onSelect = function (event, currentSelection) {
         var selections;
-        if (selection.indexOf(selected) > -1) {
-            selections = selected.filter(function (item) { return item !== selection; });
+        if (selected.indexOf(currentSelection) > -1) {
+            // was previously selected, now deselect
+            selections = selected.filter(function (item) { return item !== currentSelection; });
         }
         else {
-            selections = __spreadArrays(selected, [selection]);
+            // select new
+            selections = __spreadArrays(selected, [currentSelection]);
         }
         setSelected(selections);
     };
@@ -74,12 +76,26 @@ var Search = React.memo(function (_a) {
      * Builds the filter select
      */
     var buildSelect = function () {
-        var items = [];
+        var otherItems = [];
+        var givenItems = [];
+        var expectItems = [];
         columnNames.forEach(function (item, index) {
-            var value = item.group + " " + item.name;
-            items.push(React.createElement(react_core_1.SelectOption, { key: index, index: index, value: value }));
+            var value = item.name ? item.group + " | " + item.name : item.group;
+            if (item.type === 'OTHER') {
+                otherItems.push(React.createElement(react_core_1.SelectOption, { key: index, index: index, value: value }));
+            }
+            else if (item.type === 'GIVEN') {
+                givenItems.push(React.createElement(react_core_1.SelectOption, { key: index, index: index, value: value }));
+            }
+            else {
+                // EXPECT
+                expectItems.push(React.createElement(react_core_1.SelectOption, { key: index, index: index, value: value }));
+            }
         });
-        return (React.createElement(react_core_1.Select, { variant: "checkbox", "aria-label": "Select Input", onToggle: onSelectToggle, onSelect: onSelect, selections: selected, isExpanded: isExpanded, placeholderText: "Filter on column", ariaLabelledBy: "Filter on column" }, items));
+        return (React.createElement(react_core_1.Select, { variant: "checkbox", "aria-label": "Select Input", onToggle: onSelectToggle, onSelect: onSelect, selections: selected, isExpanded: isExpanded, placeholderText: "Filter on column", ariaLabelledBy: "Filter on column", isGrouped: true },
+            React.createElement(react_core_1.SelectGroup, { label: "Other" }, otherItems),
+            React.createElement(react_core_1.SelectGroup, { label: "Given" }, givenItems),
+            React.createElement(react_core_1.SelectGroup, { label: "Expect" }, expectItems)));
     };
     return (React.createElement(React.Fragment, null,
         React.createElement(react_core_1.ToolbarItem, { className: "pf-u-mr-md" }, buildSearchBox()),

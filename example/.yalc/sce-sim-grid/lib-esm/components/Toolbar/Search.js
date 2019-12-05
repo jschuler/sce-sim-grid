@@ -5,7 +5,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-import { Select, SelectOption, TextInput, ToolbarItem, } from '@patternfly/react-core';
+import { Select, SelectGroup, SelectOption, TextInput, ToolbarItem } from '@patternfly/react-core';
 import * as React from 'react';
 import { useDebounce } from '../utils';
 var Search = React.memo(function (_a) {
@@ -45,13 +45,15 @@ var Search = React.memo(function (_a) {
     /**
      * Updates selection on filter select change
      */
-    var onSelect = function (event, selection) {
+    var onSelect = function (event, currentSelection) {
         var selections;
-        if (selection.indexOf(selected) > -1) {
-            selections = selected.filter(function (item) { return item !== selection; });
+        if (selected.indexOf(currentSelection) > -1) {
+            // was previously selected, now deselect
+            selections = selected.filter(function (item) { return item !== currentSelection; });
         }
         else {
-            selections = __spreadArrays(selected, [selection]);
+            // select new
+            selections = __spreadArrays(selected, [currentSelection]);
         }
         setSelected(selections);
     };
@@ -65,12 +67,26 @@ var Search = React.memo(function (_a) {
      * Builds the filter select
      */
     var buildSelect = function () {
-        var items = [];
+        var otherItems = [];
+        var givenItems = [];
+        var expectItems = [];
         columnNames.forEach(function (item, index) {
-            var value = item.group + " " + item.name;
-            items.push(React.createElement(SelectOption, { key: index, index: index, value: value }));
+            var value = item.name ? item.group + " | " + item.name : item.group;
+            if (item.type === 'OTHER') {
+                otherItems.push(React.createElement(SelectOption, { key: index, index: index, value: value }));
+            }
+            else if (item.type === 'GIVEN') {
+                givenItems.push(React.createElement(SelectOption, { key: index, index: index, value: value }));
+            }
+            else {
+                // EXPECT
+                expectItems.push(React.createElement(SelectOption, { key: index, index: index, value: value }));
+            }
         });
-        return (React.createElement(Select, { variant: "checkbox", "aria-label": "Select Input", onToggle: onSelectToggle, onSelect: onSelect, selections: selected, isExpanded: isExpanded, placeholderText: "Filter on column", ariaLabelledBy: "Filter on column" }, items));
+        return (React.createElement(Select, { variant: "checkbox", "aria-label": "Select Input", onToggle: onSelectToggle, onSelect: onSelect, selections: selected, isExpanded: isExpanded, placeholderText: "Filter on column", ariaLabelledBy: "Filter on column", isGrouped: true },
+            React.createElement(SelectGroup, { label: "Other" }, otherItems),
+            React.createElement(SelectGroup, { label: "Given" }, givenItems),
+            React.createElement(SelectGroup, { label: "Expect" }, expectItems)));
     };
     return (React.createElement(React.Fragment, null,
         React.createElement(ToolbarItem, { className: "pf-u-mr-md" }, buildSearchBox()),

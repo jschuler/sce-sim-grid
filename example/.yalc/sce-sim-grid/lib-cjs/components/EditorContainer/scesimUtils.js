@@ -4,15 +4,21 @@ exports.getDmnFilePath = function (data) {
     var dmnFilePath = data.value.simulation.simulationDescriptor.dmnFilePath;
     return dmnFilePath;
 };
+exports.getDmnName = function (data) {
+    var dmnName = data.value.simulation.simulationDescriptor.dmnName;
+    return dmnName;
+};
 exports.getColumnNames = function (data) {
     var columns = [];
     var factMapping = data.value.simulation.simulationDescriptor.factMappings.factMapping;
     factMapping.forEach(function (col) {
         var name = col.expressionAlias || '';
         var group = col.factAlias || '';
+        var type = col.expressionIdentifier.type;
         columns.push({
             name: name,
             group: group,
+            type: type
         });
     });
     return columns;

@@ -1,5 +1,6 @@
 import { Scesim } from '../../types/SceSim';
 export declare const getDmnFilePath: (data: Scesim) => string;
+export declare const getDmnName: (data: Scesim) => string;
 export declare const getColumnNames: (data: Scesim) => any[];
 declare type Column = Array<({
     name?: string;

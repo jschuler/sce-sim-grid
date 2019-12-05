@@ -25,7 +25,7 @@ var utils_1 = require("../utils");
 require("./Editor.css");
 var Editor = React.memo(function (_a) {
     // console.log('render Editor');
-    var columnDefs = _a.columns, filteredRows = _a.filteredRows, definitions = _a.definitions, columnNames = _a.columnNames, onSave = _a.onSave, onUndo = _a.onUndo, onRedo = _a.onRedo, lastForcedUpdate = _a.lastForcedUpdate, readOnly = _a.readOnly;
+    var columnDefs = _a.columns, filteredRows = _a.filteredRows, definitions = _a.definitions, columnNames = _a.columnNames, onSave = _a.onSave, lastForcedUpdate = _a.lastForcedUpdate, readOnly = _a.readOnly;
     var rowsToFetch = 50;
     var _b = React.useState(''), editableCell = _b[0], setEditable = _b[1];
     var _c = React.useState(false), expandedSelect = _c[0], setExpandedSelect = _c[1];
@@ -250,10 +250,6 @@ var Editor = React.memo(function (_a) {
     };
     // Command + C / CTRL + C copies the focused cell content
     utils_1.useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
-    // Command + Z / CTRL + Z undo the last change
-    utils_1.useKeyPress(/z/i, onUndo, { log: 'editor', withModifier: true, isActive: !readOnly });
-    // Command + Shift + Z / CTRL + Shift + Z undo the last change
-    utils_1.useKeyPress(/z/i, onRedo, { log: 'editor', withModifier: true, withShift: true, isActive: !readOnly });
     utils_1.useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!editableCell && !readOnly) });
     utils_1.useKeyPress(38, onUpKeyPress, { log: 'editor' });
     utils_1.useKeyPress(40, onDownKeyPress, { log: 'editor' });
@@ -313,7 +309,7 @@ var Editor = React.memo(function (_a) {
                     else if (index > 1) {
                         columnGroup = columnNamesState[index].group;
                         columnName = columnNamesState[index].name;
-                        type = (definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
+                        type = (definitionsState && definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
                     }
                     var cellIndex = index;
                     var value = cell && cell.value ? cell.value : '';
@@ -333,14 +329,16 @@ var Editor = React.memo(function (_a) {
                 }))); }))))));
 }, function (prevProps, nextProps) {
     if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
-        // console.log('forced Editor update');
+        // console.log('re-render Editor');
         return false;
     }
     if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||
         JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
         // filteredRows have changed, re-render
+        // console.log('re-render Editor');
         return false;
     }
+    // console.log('not re-rendering Editor');
     return true;
 });
 exports.Editor = Editor;

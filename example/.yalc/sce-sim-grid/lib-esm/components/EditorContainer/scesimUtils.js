@@ -2,15 +2,21 @@ export var getDmnFilePath = function (data) {
     var dmnFilePath = data.value.simulation.simulationDescriptor.dmnFilePath;
     return dmnFilePath;
 };
+export var getDmnName = function (data) {
+    var dmnName = data.value.simulation.simulationDescriptor.dmnName;
+    return dmnName;
+};
 export var getColumnNames = function (data) {
     var columns = [];
     var factMapping = data.value.simulation.simulationDescriptor.factMappings.factMapping;
     factMapping.forEach(function (col) {
         var name = col.expressionAlias || '';
         var group = col.factAlias || '';
+        var type = col.expressionIdentifier.type;
         columns.push({
             name: name,
             group: group,
+            type: type
         });
     });
     return columns;

@@ -14,8 +14,8 @@ import * as React from 'react';
 import { Editor } from '../Editor';
 import { DefinitionsDrawerPanel } from '../Sidebar';
 import { EditorToolbar } from '../Toolbar';
-import { getRowColumnFromId } from '../utils';
-import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getRows } from './scesimUtils';
+import { getRowColumnFromId, getJsonFromSceSim, getJsonFromDmn, useKeyPress } from '../utils';
+import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getDmnName, getRows } from './scesimUtils';
 var EditorContainer = React.memo(function (_a) {
     // console.log('render EditorContainer');
     var data = _a.data, model = _a.model, _b = _a.showSidePanel, showSidePanel = _b === void 0 ? true : _b, _c = _a.readOnly, readOnly = _c === void 0 ? false : _c;
@@ -33,11 +33,10 @@ var EditorContainer = React.memo(function (_a) {
         }
         return rows;
     };
-    var initialDefinitions = getDefinitions(model);
-    var initialColumns = getColumns(data, true);
-    var initialRows = getRows(data, initialColumns);
+    var dataJson = getJsonFromSceSim(data);
+    var initialColumns = getColumns(dataJson, true);
+    var initialRows = getRows(dataJson, initialColumns);
     initialRows = increaseRows(initialRows);
-    var initialColumnNames = getColumnNames(data);
     var _d = React.useState(true), isDrawerExpanded = _d[0], setDrawerExpanded = _d[1];
     var _e = React.useState({
         undoList: [],
@@ -46,32 +45,32 @@ var EditorContainer = React.memo(function (_a) {
     }), undoRedo = _e[0], setUndoRedo = _e[1];
     var _f = React.useState(initialRows), allRows = _f[0], setAllRows = _f[1];
     var _g = React.useState(initialRows), filteredRows = _g[0], setFilteredRows = _g[1];
-    var _h = React.useState(initialDefinitions), definitions = _h[0], setDefinitions = _h[1];
-    var _j = React.useState(getDmnFilePath(data)), dmnFilePath = _j[0], setDmnFilePath = _j[1];
+    var _h = React.useState(getDmnFilePath(dataJson)), dmnFilePath = _h[0], setDmnFilePath = _h[1];
+    var _j = React.useState(getDmnName(dataJson)), dmnName = _j[0], setDmnName = _j[1];
     var _k = React.useState(initialColumns), columns = _k[0], setColumns = _k[1];
+    var initialColumnNames = getColumnNames(dataJson);
     var _l = React.useState(initialColumnNames), columnNames = _l[0], setColumnNames = _l[1];
     var initialItemToColumnIndexMap = [];
     initialColumnNames.forEach(function (item, index) {
-        var value = item.group + " " + item.name;
+        var value = item.name ? item.group + " | " + item.name : item.group;
         initialItemToColumnIndexMap[value] = index;
     });
     var _m = React.useState(initialItemToColumnIndexMap), itemToColumnIndexMap = _m[0], setItemToColumnIndexMap = _m[1];
-    var _o = React.useState(''), searchValueState = _o[0], setSearchValueState = _o[1];
-    var _p = React.useState([]), filterSelection = _p[0], setFilterSelection = _p[1];
-    var _q = React.useState((Date.now()).toString()), lastForcedUpdateState = _q[0], setLastForcedUpdateState = _q[1];
+    var _o = React.useState([]), filterSelection = _o[0], setFilterSelection = _o[1];
+    var _p = React.useState((Date.now()).toString()), lastForcedUpdateState = _p[0], setLastForcedUpdateState = _p[1];
+    // optional model
+    var initialDefinitions = model ? getDefinitions(getJsonFromDmn(model)) : null;
+    var _q = React.useState(initialDefinitions), definitions = _q[0], setDefinitions = _q[1];
     React.useEffect(function () {
         // when data or model changes, recompute rows and columns
-        var updatedDefinitions = getDefinitions(model);
-        var updatedColumns = getColumns(data, true);
-        var updatedRows = getRows(data, updatedColumns);
+        var dataJson = getJsonFromSceSim(data);
+        var updatedColumns = getColumns(dataJson, true);
+        var updatedRows = getRows(dataJson, updatedColumns);
         updatedRows = increaseRows(updatedRows);
-        if (JSON.stringify(definitions) !== JSON.stringify(updatedDefinitions)) {
-            setDefinitions(updatedDefinitions);
-        }
         if (JSON.stringify(allRows) !== JSON.stringify(updatedRows)) {
-            setDmnFilePath(getDmnFilePath(data));
+            setDmnFilePath(getDmnFilePath(dataJson));
             setColumns(updatedColumns);
-            setColumnNames(getColumnNames(data));
+            setColumnNames(getColumnNames(dataJson));
             setAllRows(updatedRows);
             setFilteredRows(updatedRows);
             setUndoRedo({
@@ -81,10 +80,15 @@ var EditorContainer = React.memo(function (_a) {
             });
             var indexMap_1 = [];
             initialColumnNames.forEach(function (item, index) {
-                var value = item.group + " " + item.name;
+                var value = item.name ? item.group + " | " + item.name : item.group;
                 indexMap_1[value] = index;
             });
             setItemToColumnIndexMap(initialColumnNames);
+        }
+        // update the optional model
+        var updatedDefinitions = model ? getDefinitions(getJsonFromDmn(model)) : null;
+        if (JSON.stringify(definitions) !== JSON.stringify(updatedDefinitions)) {
+            setDefinitions(updatedDefinitions);
         }
     }, [data, model]);
     React.useEffect(function () {
@@ -107,6 +111,7 @@ var EditorContainer = React.memo(function (_a) {
     var addToChanges = function (id, value, previousValue) {
         var _a = getRowColumnFromId(id), row = _a.row, column = _a.column;
         // const clonedAllRows = cloneDeep(allRows);
+        console.log("changing " + allRows[row][column].value + " to " + value);
         allRows[row][column].value = value;
         // setAllRows(allRows);
         // new change clears the redoList
@@ -160,6 +165,10 @@ var EditorContainer = React.memo(function (_a) {
             // filterRows(searchValueState, filterSelection, clonedAllRows);
         }
     };
+    // Command + Z / CTRL + Z undo the last change
+    useKeyPress(/z/i, onUndo, { log: 'editor-container', withModifier: true, isActive: !readOnly });
+    // Command + Shift + Z / CTRL + Shift + Z redo the last change
+    useKeyPress(/z/i, onRedo, { log: 'editor-container', withModifier: true, withShift: true, isActive: !readOnly });
     /**
      * Filter the rows based on search and filter selection
      * Callback function for EditorToolbar, called on filter/search change
@@ -208,24 +217,27 @@ var EditorContainer = React.memo(function (_a) {
                     showSidePanel && React.createElement("div", { className: "pf-c-page__header-brand-toggle" },
                         React.createElement(Button, { id: "nav-toggle", onClick: toggleDrawer, "aria-label": "Toggle drawer", "aria-controls": "page-sidebar", "aria-expanded": isDrawerExpanded ? 'true' : 'false', variant: "plain" },
                             React.createElement(BarsIcon, null))),
-                    React.createElement("div", { className: "pf-c-page__header-brand-link" }, definitions._title)),
+                    React.createElement("div", { className: "pf-c-page__header-brand-link" }, (definitions && definitions._title) || dmnName)),
                 React.createElement("div", { className: "pf-c-page__header-tools" },
                     React.createElement(EditorToolbar, { data: data, allRowsLength: allRows.length, filteredRowsLength: filteredRows.length, filterRows: filterRows, columnNames: columnNames, readOnly: readOnly, undoRedo: undoRedo, onUndo: onUndo, onRedo: onRedo }))),
-            showSidePanel && React.createElement("div", { className: classNames('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed') },
+            showSidePanel && definitions && React.createElement("div", { className: classNames('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed') },
                 React.createElement("div", { className: "pf-c-page__sidebar-body" },
                     React.createElement(DefinitionsDrawerPanel, { definitions: definitions, dmnFilePath: dmnFilePath }))),
             React.createElement("main", { role: "main", className: "pf-c-page__main", id: "sce-sim-grid__main", tabIndex: -1 },
                 React.createElement("section", { className: "pf-c-page__main-section pf-m-light" },
-                    React.createElement(Editor, { columns: columns, filteredRows: filteredRows, definitions: definitions, columnNames: columnNames, onSave: addToChanges, onUndo: onUndo, onRedo: onRedo, lastForcedUpdate: lastForcedUpdateState, readOnly: readOnly }))))));
+                    React.createElement(Editor, { columns: columns, filteredRows: filteredRows, definitions: definitions, columnNames: columnNames, onSave: addToChanges, lastForcedUpdate: lastForcedUpdateState, readOnly: readOnly }))))));
 }, function (prevProps, nextProps) {
     if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) {
         // data has changed, re-render
+        // console.log('re-render EditorContainer');
         return false;
     }
     if (JSON.stringify(prevProps.model) !== JSON.stringify(nextProps.model)) {
         // model has changed, re-render
+        // console.log('re-render EditorContainer');
         return false;
     }
+    // console.log('not re-rendering EditorContainer');
     return true;
 });
 // @ts-ignore

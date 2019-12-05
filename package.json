@@ -1,6 +1,6 @@
 {
   "name": "sce-sim-grid",
-  "version": "0.3.0",
+  "version": "0.4.0-rc2",
   "main": "lib-cjs/index.js",
   "module": "lib-esm/index.js",
   "files": [
@@ -15,6 +15,7 @@
     "build:cjs": "npx tsc && yarn copy:css:cjs",
     "build:esm": "npx tsc -m es6 --outDir lib-esm && yarn copy:css:esm",
     "build:umd": "webpack --config webpack.config.js",
+    "build:yalc": "yarn build:esm && yalc publish",
     "copy:css:cjs": "copyfiles -u 1 src/**/*.css lib-cjs",
     "copy:css:esm": "copyfiles -u 1 src/**/*.css lib-esm",
     "build:babel": "yarn clean && yarn build:types && yarn build:js",

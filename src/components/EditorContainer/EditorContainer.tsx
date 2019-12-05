@@ -7,12 +7,12 @@ import * as React from 'react';
 import { Editor } from '../Editor';
 import { DefinitionsDrawerPanel } from '../Sidebar';
 import { EditorToolbar } from '../Toolbar';
-import { getRowColumnFromId } from '../utils';
-import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getRows } from './scesimUtils';
+import { getRowColumnFromId, getJsonFromSceSim, getJsonFromDmn, useKeyPress } from '../utils';
+import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getDmnName, getRows } from './scesimUtils';
 
 const EditorContainer = React.memo<{
-  data: any,
-  model: any,
+  data: string,
+  model?: string,
   showSidePanel?: boolean,
   readOnly?: boolean,
 }>(({ data, model, showSidePanel = true, readOnly = false }) => {
@@ -33,11 +33,10 @@ const EditorContainer = React.memo<{
     return rows;
   };
 
-  const initialDefinitions = getDefinitions(model);
-  const initialColumns = getColumns(data, true);
-  let initialRows = getRows(data, initialColumns);
+  const dataJson = getJsonFromSceSim(data);
+  const initialColumns = getColumns(dataJson, true);
+  let initialRows = getRows(dataJson, initialColumns);
   initialRows = increaseRows(initialRows);
-  const initialColumnNames = getColumnNames(data);
   const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
   const [undoRedo, setUndoRedo] = React.useState<any>({
     undoList: [],
@@ -46,33 +45,37 @@ const EditorContainer = React.memo<{
   });
   const [allRows, setAllRows] = React.useState(initialRows);
   const [filteredRows, setFilteredRows] = React.useState(initialRows);
-  const [definitions, setDefinitions] = React.useState(initialDefinitions);
-  const [dmnFilePath, setDmnFilePath] = React.useState(getDmnFilePath(data));
+  const [dmnFilePath, setDmnFilePath] = React.useState(getDmnFilePath(dataJson));
+  const [dmnName, setDmnName] = React.useState(getDmnName(dataJson));
   const [columns, setColumns] = React.useState(initialColumns);
+
+  const initialColumnNames = getColumnNames(dataJson);
   const [columnNames, setColumnNames] = React.useState(initialColumnNames);
   const initialItemToColumnIndexMap: any = [];
   initialColumnNames.forEach((item: any, index: number) => {
-    const value = `${item.group} ${item.name}`;
+    const value = item.name ? `${item.group} | ${item.name}` : item.group;
     initialItemToColumnIndexMap[value] = index;
   });
   const [itemToColumnIndexMap, setItemToColumnIndexMap] = React.useState(initialItemToColumnIndexMap);
-  const [searchValueState, setSearchValueState] = React.useState('');
+  
   const [filterSelection, setFilterSelection] = React.useState<any[]>([]);
   const [lastForcedUpdateState, setLastForcedUpdateState] = React.useState((Date.now()).toString());
 
+  // optional model
+  const initialDefinitions = model ? getDefinitions(getJsonFromDmn(model)) : null;
+  const [definitions, setDefinitions] = React.useState(initialDefinitions);
+
   React.useEffect(() => {
     // when data or model changes, recompute rows and columns
-    const updatedDefinitions = getDefinitions(model);
-    const updatedColumns = getColumns(data, true);
-    let updatedRows = getRows(data, updatedColumns);
+    const dataJson = getJsonFromSceSim(data);
+    const updatedColumns = getColumns(dataJson, true);
+    let updatedRows = getRows(dataJson, updatedColumns);
     updatedRows = increaseRows(updatedRows);
-    if (JSON.stringify(definitions) !== JSON.stringify(updatedDefinitions)) {
-      setDefinitions(updatedDefinitions);
-    }
+    
     if (JSON.stringify(allRows) !== JSON.stringify(updatedRows)) {
-      setDmnFilePath(getDmnFilePath(data));
+      setDmnFilePath(getDmnFilePath(dataJson));
       setColumns(updatedColumns);
-      setColumnNames(getColumnNames(data));
+      setColumnNames(getColumnNames(dataJson));
       setAllRows(updatedRows);
       setFilteredRows(updatedRows);
       setUndoRedo({
@@ -82,10 +85,16 @@ const EditorContainer = React.memo<{
       });
       const indexMap: any = [];
       initialColumnNames.forEach((item: any, index: number) => {
-        const value = `${item.group} ${item.name}`;
+        const value = item.name ? `${item.group} | ${item.name}` : item.group;
         indexMap[value] = index;
       });
       setItemToColumnIndexMap(initialColumnNames);
+    }
+
+    // update the optional model
+    const updatedDefinitions = model ? getDefinitions(getJsonFromDmn(model)): null;
+    if (JSON.stringify(definitions) !== JSON.stringify(updatedDefinitions)) {
+      setDefinitions(updatedDefinitions);
     }
   }, [data, model]);
 
@@ -111,6 +120,7 @@ const EditorContainer = React.memo<{
   const addToChanges = (id: string, value: string, previousValue: string) => {
     const { row, column } = getRowColumnFromId(id);
     // const clonedAllRows = cloneDeep(allRows);
+    console.log(`changing ${allRows[row][column].value} to ${value}`)
     allRows[row][column].value = value;
     // setAllRows(allRows);
     // new change clears the redoList
@@ -169,6 +179,11 @@ const EditorContainer = React.memo<{
     }
   };
 
+   // Command + Z / CTRL + Z undo the last change
+   useKeyPress(/z/i, onUndo, { log: 'editor-container', withModifier: true, isActive: !readOnly });
+   // Command + Shift + Z / CTRL + Shift + Z redo the last change
+   useKeyPress(/z/i, onRedo, { log: 'editor-container', withModifier: true, withShift: true, isActive: !readOnly });
+
   /**
    * Filter the rows based on search and filter selection
    * Callback function for EditorToolbar, called on filter/search change
@@ -226,7 +241,7 @@ const EditorContainer = React.memo<{
             </Button>
           </div>}
           <div className="pf-c-page__header-brand-link">
-            {definitions._title}
+            {(definitions && definitions._title) || dmnName}
           </div>
         </div>
           <div className="pf-c-page__header-tools">
@@ -243,7 +258,7 @@ const EditorContainer = React.memo<{
             />
           </div>
         </header>
-        {showSidePanel && <div className={classNames('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
+        {showSidePanel && definitions && <div className={classNames('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
           <div className="pf-c-page__sidebar-body">
             <DefinitionsDrawerPanel
               definitions={definitions}
@@ -259,8 +274,6 @@ const EditorContainer = React.memo<{
               definitions={definitions}
               columnNames={columnNames}
               onSave={addToChanges}
-              onUndo={onUndo}
-              onRedo={onRedo}
               lastForcedUpdate={lastForcedUpdateState}
               readOnly={readOnly}
             />
@@ -272,12 +285,15 @@ const EditorContainer = React.memo<{
 }, (prevProps, nextProps) => {
   if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) {
     // data has changed, re-render
+    // console.log('re-render EditorContainer');
     return false;
   }
   if (JSON.stringify(prevProps.model) !== JSON.stringify(nextProps.model)) {
     // model has changed, re-render
+    // console.log('re-render EditorContainer');
     return false;
   }
+  // console.log('not re-rendering EditorContainer');
   return true;
 });
 

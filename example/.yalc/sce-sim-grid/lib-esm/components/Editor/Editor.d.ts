@@ -6,8 +6,6 @@ declare const Editor: React.NamedExoticComponent<{
     definitions: any;
     columnNames: any;
     onSave: any;
-    onUndo: any;
-    onRedo: any;
     lastForcedUpdate: string;
     readOnly: boolean;
 }>;

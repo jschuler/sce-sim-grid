@@ -1,19 +1,19 @@
 import '@patternfly/react-core/dist/styles/base.css';
 import React, { useState, useEffect } from "react";
-import { EditorContainer, Spinner, getJsonFromSceSim, getJsonFromDmn } from 'sce-sim-grid';
+import { EditorContainer, Spinner } from 'sce-sim-grid';
 import classNames from 'classnames';
 import { Select, SelectOption, SelectOptionObject } from '@patternfly/react-core';
 import './App.css';
 
 const App: React.FC = () => {
-  const [data, setData] = useState(null);
-  const [data1, setData1] = useState(null);
-  const [data2, setData2] = useState(null);
-  const [model, setModel] = useState(null);
+  const [data, setData] = useState('');
+  const [data1, setData1] = useState('');
+  const [data2, setData2] = useState('');
+  const [model, setModel] = useState('');
   const [isLoading, setLoading] = useState(true);
   const [isExpanded, setExpanded] = useState(false);
   const [isTransitionDone, setTransitionDone] = useState(false);
-  const [selected, setSelected] = React.useState<any>();
+  const [selected, setSelected] = useState<any>();
 
   useEffect(() => {
     Promise.all([
@@ -23,13 +23,10 @@ const App: React.FC = () => {
     ])
     .then(([res1, res2, res3]) => Promise.all([res1.text(), res2.text(), res3.text()]))
     .then(([sceSimData1, sceSimData2, dmnData]) => {
-      const sceSimJson1 = getJsonFromSceSim(sceSimData1);
-      const sceSimJson2 = getJsonFromSceSim(sceSimData2);
-      const dmnJson = getJsonFromDmn(dmnData);
-      setData1(sceSimJson1);
-      setData2(sceSimJson2);
-      setData(sceSimJson1);
-      setModel(dmnJson);
+      setData1(sceSimData1);
+      setData2(sceSimData2);
+      setData(sceSimData1);
+      setModel(dmnData);
       setLoading(false);
       setTimeout(() => {
         setTransitionDone(true);
@@ -77,7 +74,7 @@ const App: React.FC = () => {
     <div className="App">
       {isLoading ? <Spinner text="Loading scenarios" /> : (
         <>
-          {/* <div>
+          <div>
             <Select
               className="data-select"
               toggleId="toggle data"
@@ -91,7 +88,7 @@ const App: React.FC = () => {
             >
               {selectOptions}
             </Select>
-          </div> */}
+          </div>
           <div className={classNames('editor-container', isTransitionDone && 'show')}>
             <EditorContainer data={data} model={model} showSidePanel={true} readOnly={false} />
           </div>
