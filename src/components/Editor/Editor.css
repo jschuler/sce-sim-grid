@@ -63,6 +63,19 @@
   grid-column: 1 / -1
 }
 
+/* The .kie-grid--merged class turns the merged cells on */
+/* This class is for the cell that will expand to take the place of other merged cells */
+.kie-grid--merged .kie-grid__item--merge-master {
+  --mergeRows: 1; /* set this inline to control how many rows to cover */
+  grid-row: span var(--mergeRows);
+}
+
+/* This class is for the cells that will be removed as part of the merge */
+.kie-grid--merged .kie-grid__item--merge-away {
+  display: none;
+}  
+
+
 /* Filter on column dropdown right-aligned */
 .pf-c-select__menu {
   right: 0;
