@@ -7,11 +7,12 @@
 The library can be tested by navigating to the example folder and running `yarn start`.
 We use `yalc` to install this library package named `sce-sim-grid` under the example folder. This simulates as if we were pulling a distribution from npm.
 ```
-yarn add global yalc
+yarn global add yalc
 yarn build
 yalc publish
 cd example
 yalc update
+yarn install
 yarn start
 ```
 
