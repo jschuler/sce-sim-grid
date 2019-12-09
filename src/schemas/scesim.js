@@ -336,6 +336,7 @@ var scesim_Module_Factory = function () {
     scesim: scesim
   };
 };
+/* eslint no-undef: */
 if (typeof define === 'function' && define.amd) {
   define([], scesim_Module_Factory);
 }

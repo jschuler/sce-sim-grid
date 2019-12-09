@@ -1,7 +1,7 @@
 import '@patternfly/react-core/dist/styles/base.css';
 import React, { useState, useEffect } from "react";
-import { EditorContainer, Spinner } from 'sce-sim-grid';
-// import { EditorContainer, Spinner } from '../../src';
+// import { EditorContainer, Spinner } from 'sce-sim-grid';
+import { EditorContainer, Spinner } from './sym_src';
 import classNames from 'classnames';
 import { Select, SelectOption, SelectOptionObject } from '@patternfly/react-core';
 import './App.css';

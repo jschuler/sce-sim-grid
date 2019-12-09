@@ -1,5 +1,6 @@
 import * as React from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import classNames from 'classnames';
 import { Input, Select } from '../Cell';
 import { Spinner } from '../Spinner';
 import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
@@ -13,6 +14,7 @@ const Editor = React.memo<{
   onSave: any,
   lastForcedUpdate: string,
   readOnly: boolean,
+  mergeCells?: boolean
 }>(({
   columns: columnDefs,
   filteredRows,
@@ -21,6 +23,7 @@ const Editor = React.memo<{
   onSave,
   lastForcedUpdate,
   readOnly,
+  mergeCells = false
 }) => {
   // console.log('render Editor');
 
@@ -346,7 +349,7 @@ const Editor = React.memo<{
           })}
         </div>
 
-        <div className="kie-grid__body">
+        <div className={classNames('kie-grid__body', mergeCells && 'kie-grid--merged')}>
           <InfiniteScroll
             dataLength={fetchedRows.length}
             next={fetchMoreRows}
@@ -407,8 +410,17 @@ const Editor = React.memo<{
                         />
                       );
                     }
+                    const mergeRowsStyle = {
+                      gridRow: `span ${cell.coverCells || 1}`
+                    };
                     return (
-                      <div className="kie-grid__item" key={inputId} onClick={onCellClick} onDoubleClick={onCellDoubleClick}>
+                      <div 
+                        className={classNames('kie-grid__item', cell.master && 'kie-grid__item--merge-master', cell.follower && 'kie-grid__item--merge-away')} 
+                        style={mergeCells ? mergeRowsStyle : {}}
+                        key={inputId} 
+                        onClick={onCellClick} 
+                        onDoubleClick={onCellDoubleClick}
+                      >
                         {cellIndex === 0 ? value : component}
                       </div>
                     );
@@ -423,6 +435,9 @@ const Editor = React.memo<{
 }, (prevProps, nextProps) => {
   if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
     // console.log('re-render Editor');
+    return false;
+  }
+  if (prevProps.mergeCells !== nextProps.mergeCells) {
     return false;
   }
   if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||

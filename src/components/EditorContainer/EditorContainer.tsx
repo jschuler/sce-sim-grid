@@ -33,6 +33,40 @@ const EditorContainer = React.memo<{
     return rows;
   };
 
+  const computeCellMerges = (rows: any) => {
+    if (rows && rows.length > 1) {
+      let previousRow = rows[0];
+      for (let i = 1; i < rows.length; i++) {
+        for (let j = 1; j < rows[i].length; j++) {
+          if (rows[i][j].value === previousRow[j].value) {
+            let initializedMasterCell = false;
+            // current cell value matches the previous row's cell value
+            // if the previous cell is not marked as master or follower, make it master
+            if (!previousRow[j].follower && !previousRow[j].master) {
+              initializedMasterCell = true;
+              previousRow[j].master = true; 
+              previousRow[j].coverCells = 2;
+            }
+            // mark this cell a follower
+            rows[i][j].follower = true;
+            if (!initializedMasterCell) {
+              // go back up until we locate the master and increment its coverFollowers amount
+              for (var f = i - 1; f >= 0; f--) {
+                if (!rows[f][j].master) {
+                  // not the master, continue
+                  continue;
+                }
+                rows[f][j].coverCells += 1;
+              }
+            }
+          }
+        }
+        previousRow = rows[i];
+      }
+    }
+    return rows;
+  }
+
   const dataJson = getJsonFromSceSim(data);
   const initialColumns = getColumns(dataJson, true);
   let initialRows = getRows(dataJson, initialColumns);
@@ -48,6 +82,7 @@ const EditorContainer = React.memo<{
   const [dmnFilePath, setDmnFilePath] = React.useState(getDmnFilePath(dataJson));
   const [dmnName, setDmnName] = React.useState(getDmnName(dataJson));
   const [columns, setColumns] = React.useState(initialColumns);
+  const [mergeCells, setMergeCells] = React.useState(false);
 
   const initialColumnNames = getColumnNames(dataJson);
   const [columnNames, setColumnNames] = React.useState(initialColumnNames);
@@ -71,6 +106,10 @@ const EditorContainer = React.memo<{
     const updatedColumns = getColumns(dataJson, true);
     let updatedRows = getRows(dataJson, updatedColumns);
     updatedRows = increaseRows(updatedRows);
+    
+    debugger;
+    // pre-compute which cells are master cells and which are followers
+    updatedRows = computeCellMerges(updatedRows);
     
     if (JSON.stringify(allRows) !== JSON.stringify(updatedRows)) {
       setDmnFilePath(getDmnFilePath(dataJson));
@@ -122,10 +161,28 @@ const EditorContainer = React.memo<{
     // const clonedAllRows = cloneDeep(allRows);
     console.log(`changing ${allRows[row][column].value} to ${value}`)
     allRows[row][column].value = value;
+    let changedCells = [{ id, value, previousValue }];
+
+    if (mergeCells && allRows[row][column].master) {
+      // update the follower cells as well
+      for (let i = row + 1; i < allRows.length; i++) {
+        if (allRows[i][column].follower) {
+          console.log(`also changing ${allRows[i][column].value} to ${value}`)
+          allRows[i][column].value = value;
+          changedCells.push({
+            id: `row ${i} column ${column}`,
+            value,
+            previousValue
+          });
+        } else {
+          break;
+        }
+      }
+    }
     // setAllRows(allRows);
     // new change clears the redoList
     setUndoRedo((previousState: any) => ({
-      undoList: [...previousState.undoList, { id, value, previousValue }],
+      undoList: [...previousState.undoList, ...changedCells],
       redoList: [],
       skipUpdate: true,
     }));
@@ -178,6 +235,10 @@ const EditorContainer = React.memo<{
       // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
   };
+
+  const onMergeCellsToggle = (shouldMergeCells: boolean) => {
+    setMergeCells(shouldMergeCells);
+  }
 
    // Command + Z / CTRL + Z undo the last change
    useKeyPress(/z/i, onUndo, { log: 'editor-container', withModifier: true, isActive: !readOnly });
@@ -255,6 +316,7 @@ const EditorContainer = React.memo<{
               undoRedo={undoRedo}
               onUndo={onUndo}
               onRedo={onRedo}
+              onMergeCellsToggle={onMergeCellsToggle}
             />
           </div>
         </header>
@@ -276,6 +338,7 @@ const EditorContainer = React.memo<{
               onSave={addToChanges}
               lastForcedUpdate={lastForcedUpdateState}
               readOnly={readOnly}
+              mergeCells={mergeCells}
             />
           </section>
         </main>

@@ -4,7 +4,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
+import { OutlinedQuestionCircleIcon, ThIcon, ThLargeIcon } from '@patternfly/react-icons';
 import * as React from 'react';
 import { ChangeTracker } from './ChangeTracker';
 import './EditorToolbar.css';
@@ -21,10 +21,12 @@ const EditorToolbar = React.memo<{
   onUndo: any,
   onRedo: any,
   readOnly: boolean,
-}>(({ data, allRowsLength, filteredRowsLength, filterRows, columnNames, undoRedo, onUndo, onRedo, readOnly }) => {
+  onMergeCellsToggle: any
+}>(({ data, allRowsLength, filteredRowsLength, filterRows, columnNames, undoRedo, onUndo, onRedo, readOnly, onMergeCellsToggle }) => {
   // console.log('render EditorToolbar');
 
   const [isModelOpen, setModalOpen] = React.useState(false);
+  const [mergeCells, setMergeCells] = React.useState(false);
 
   const [toolbarStateFromProps, setToolbarStateFromProps] = React.useState({
     data,
@@ -68,6 +70,12 @@ const EditorToolbar = React.memo<{
   const closeModal = () => {
     setModalOpen(false);
   };
+  
+  const mergeCellsToggle = () => {
+    const toggledMergeCells = !mergeCells;
+    setMergeCells(toggledMergeCells);
+    onMergeCellsToggle(toggledMergeCells);
+  }
 
   return (
     <>
@@ -76,6 +84,11 @@ const EditorToolbar = React.memo<{
           <ChangeTracker undoRedo={toolbarStateFromProps.undoRedo} onUndo={onUndo} onRedo={onRedo} />
         </ToolbarGroup>}
         <ToolbarGroup>
+          <ToolbarItem>
+            <Button variant="plain" onClick={mergeCellsToggle}>
+              {mergeCells ? <ThLargeIcon size="md" /> : <ThIcon size="md" />}
+            </Button>
+          </ToolbarItem>
           {toolbarStateFromProps.allRowsLength === filteredRowsLength ? (
             <ToolbarItem className="pf-u-mr-md">{toolbarStateFromProps.allRowsLength} items</ToolbarItem>
           ) : (
