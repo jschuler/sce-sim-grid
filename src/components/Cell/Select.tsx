@@ -6,7 +6,8 @@ import './Select.css';
 const Select = React.memo<{
   originalValue?: any,
   path?: string,
-  id?: any,
+  cellId: string,
+  rowId: string,
   type?: string,
   isReadOnly?: boolean,
   onSelectToggleCallback?: any,
@@ -17,7 +18,8 @@ const Select = React.memo<{
 }>(({
   originalValue,
   path,
-  id,
+  cellId,
+  rowId,
   type,
   isReadOnly,
   onSelectToggleCallback,
@@ -37,7 +39,7 @@ const Select = React.memo<{
     if (!isReadOnly) {
       onToggle(true);
       setTimeout(() => {
-        const element = document.querySelector(`button[id="${id}"]`);
+        const element = document.querySelector(`button[id="${cellId}"]`);
         if (element && element.parentNode && (element.parentNode as HTMLElement).querySelector('.pf-c-select__menu-item')) {
           ((element.parentNode as HTMLElement).querySelector('.pf-c-select__menu-item') as HTMLButtonElement).focus();
         }
@@ -56,7 +58,7 @@ const Select = React.memo<{
    * TODO: Possibly change to React refs
    */
   const thisElement = () => {
-    return document.getElementById(id) as HTMLInputElement;
+    return document.getElementById(cellId) as HTMLInputElement;
   };
 
   /**
@@ -67,7 +69,7 @@ const Select = React.memo<{
     if (savedSelection !== selection) {
       setSavedSelection(selection);
       if (onSave) {
-        onSave(id, selection, originalValue);
+        onSave(cellId, selection, originalValue, rowId);
       }
     }
   };
@@ -84,7 +86,7 @@ const Select = React.memo<{
    */
   const onToggle = (expanded: boolean) => {
     setExpanded(expanded);
-    onSelectToggleCallback(id, expanded);
+    onSelectToggleCallback(cellId, expanded);
   };
 
   /**
@@ -97,7 +99,7 @@ const Select = React.memo<{
     save(selection as string);
     // mark itself as not editable but maintain focus
     setTimeout(() => {
-      deactivateAndFocusCell(id);
+      deactivateAndFocusCell(cellId);
     }, 1);
   };
 
@@ -106,7 +108,7 @@ const Select = React.memo<{
     if (key === 'Escape') {
       onSelectToggleCallback(false);
       setTimeout(() => {
-        deactivateAndFocusCell(id);
+        deactivateAndFocusCell(cellId);
       }, 1);
     }
   };
@@ -130,14 +132,14 @@ const Select = React.memo<{
             style={{ cursor: 'default', textAlign: type === 'string' ? 'left' : 'center' }}
             type="text"
             value={selected}
-            id={id}
+            id={cellId}
             aria-label={selected}
             readOnly={true}
           />
         </Tooltip>
       ) : (
         <PfSelect
-          toggleId={id}
+          toggleId={cellId}
           variant={SelectVariant.single}
           aria-label="Select Input"
           onToggle={onToggle}

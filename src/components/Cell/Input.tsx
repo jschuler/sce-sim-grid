@@ -6,7 +6,8 @@ import './Input.css';
 const Input = React.memo<{
   originalValue: any,
   path: string,
-  id?: any,
+  cellId: string,
+  rowId: string,
   type?: string,
   isReadOnly: boolean,
   deactivateAndFocusCell: any,
@@ -15,7 +16,8 @@ const Input = React.memo<{
 }>(({
   originalValue,
   path,
-  id,
+  cellId,
+  rowId,
   type,
   isReadOnly,
   deactivateAndFocusCell,
@@ -52,14 +54,15 @@ const Input = React.memo<{
    * TODO: Possibly change to React refs
    */
   const thisElement = () => {
-    return document.getElementById(id) as HTMLInputElement;
+    return document.getElementById(cellId) as HTMLInputElement;
   };
 
   React.useEffect(() => {
     if (!isReadOnlyState) {
       // set caret at the end of the input
       setTimeout(() => {
-        setCaretPositionAtEnd(thisElement());
+        const element = thisElement();
+        element && setCaretPositionAtEnd(thisElement());
       }, 1);
     }
   });
@@ -82,7 +85,7 @@ const Input = React.memo<{
       // }]));
       setSavedValue(value);
       if (onSave) {
-        onSave(id, value, originalValue);
+        onSave(cellId, value, originalValue, rowId);
       }
     }
   };
@@ -94,7 +97,7 @@ const Input = React.memo<{
     // save operation
     save();
     // mark itself as not editable but maintain focus
-    // deactivateAndFocusCell(event.target.id);
+    // deactivateAndFocusCell(event.target.cellId);
     setEditable('');
     setReadOnlyState(true);
   };
@@ -107,19 +110,19 @@ const Input = React.memo<{
       setValue(savedValue);
     }
     // mark itself as not editable but maintain focus
-    // deactivateAndFocusCell(event.target.id);
+    // deactivateAndFocusCell(event.target.cellId);
     setEditable('');
     setReadOnlyState(true);
   };
 
   useKeyPress('Escape', onEscape, {
     log: 'input',
-    id,
+    cellId,
     isActive: !isReadOnlyState,
   });
   useKeyPress('Enter', onEnter, {
     log: 'input',
-    id,
+    cellId,
     isActive: !isReadOnlyState,
   });
 
@@ -154,7 +157,7 @@ const Input = React.memo<{
       onChange={handleTextInputChange}
       onBlur={onLoseFocus}
       aria-label={value}
-      id={id}
+      id={cellId}
       readOnly={isReadOnlyState}
     />
   );
@@ -162,7 +165,7 @@ const Input = React.memo<{
 }, (prevProps, nextProps) => {
   const shouldRerender = (prevProps.isReadOnly !== nextProps.isReadOnly) || (prevProps.originalValue !== nextProps.originalValue);
   if (shouldRerender) {
-    // console.log(`re-render Input ${nextProps.id}`)
+    // console.log(`re-render Input ${nextProps.cellId}`)
     return false;
   }
   return true;

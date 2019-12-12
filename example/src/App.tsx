@@ -7,14 +7,16 @@ import { Select, SelectOption, SelectOptionObject } from '@patternfly/react-core
 import './App.css';
 
 const App: React.FC = () => {
-  const [data, setData] = useState('');
-  const [data1, setData1] = useState('');
-  const [data2, setData2] = useState('');
-  const [model, setModel] = useState('');
-  const [isLoading, setLoading] = useState(true);
-  const [isExpanded, setExpanded] = useState(false);
-  const [isTransitionDone, setTransitionDone] = useState(false);
-  const [selected, setSelected] = useState<any>();
+  const [state, setState] = useState({
+    exampleOne: '',
+    exampleTwo: '',
+    data: '',
+    model: '',
+    isLoading: true,
+    isExpanded: false,
+    isTransitionDone: false,
+    selected: '' as any
+  });
 
   useEffect(() => {
     Promise.all([
@@ -24,13 +26,19 @@ const App: React.FC = () => {
     ])
     .then(([res1, res2, res3]) => Promise.all([res1.text(), res2.text(), res3.text()]))
     .then(([sceSimData1, sceSimData2, dmnData]) => {
-      setData1(sceSimData1);
-      setData2(sceSimData2);
-      setData(sceSimData1);
-      setModel(dmnData);
-      setLoading(false);
+      setState(prevState => ({
+        ...prevState,
+        exampleOne: sceSimData1,
+        exampleTwo: sceSimData2,
+        data: sceSimData1,
+        model: dmnData,
+        isLoading: false
+      }));
       setTimeout(() => {
-        setTransitionDone(true);
+        setState(prevState => ({
+          ...prevState,
+          isTransitionDone: true
+        }));
       }, 1);
     })
     .catch(err => {
@@ -39,26 +47,37 @@ const App: React.FC = () => {
   }, []);
 
   const onToggle = (isExpanded: boolean) => {
-    setExpanded(isExpanded);
+    setState(prevState => ({
+      ...prevState,
+      isExpanded
+    }));
   };
 
   const onSelect = (event: React.MouseEvent | React.ChangeEvent, selection: string | SelectOptionObject, isPlaceholder?: boolean) => {
     if (isPlaceholder) clearSelection();
-    if (selected === selection) {
+    if (state.selected === selection) {
       onToggle(false);
     } else {
-      setSelected(selection);
       onToggle(false);
+      let selectedExample: any;
       if (selection === 'Example 1') {
-        setData(data1);
+        selectedExample = state.exampleOne;
       } else {
-        setData(data2);
+        selectedExample = state.exampleTwo;
       }
+      setState(prevState => ({
+        ...prevState,
+        selected: selection,
+        data: selectedExample
+      }));
     }
   };
 
   const clearSelection = () => {
-    setSelected(null);
+    setState(prevState => ({
+      ...prevState,
+      selected: null
+    }));
     onToggle(false);
   };
 
@@ -73,7 +92,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      {isLoading ? <Spinner text="Loading scenarios" /> : (
+      {state.isLoading ? <Spinner text="Loading scenarios" /> : (
         <>
           <div>
             <Select
@@ -83,15 +102,15 @@ const App: React.FC = () => {
               aria-label="Select Input"
               onToggle={onToggle}
               onSelect={onSelect}
-              selections={selected}
-              isExpanded={isExpanded}
+              selections={state.selected}
+              isExpanded={state.isExpanded}
               ariaLabelledBy="typeahead-select-id"
             >
               {selectOptions}
             </Select>
           </div>
-          <div className={classNames('editor-container', isTransitionDone && 'show')}>
-            <EditorContainer data={data} model={model} showSidePanel={true} readOnly={false} />
+          <div className={classNames('editor-container', state.isTransitionDone && 'show')}>
+            <EditorContainer data={state.data} model={state.model} showSidePanel={true} readOnly={false} />
           </div>
         </>
       )}

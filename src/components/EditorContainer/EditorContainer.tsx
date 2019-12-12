@@ -10,16 +10,33 @@ import { EditorToolbar } from '../Toolbar';
 import { getRowColumnFromId, getJsonFromSceSim, getJsonFromDmn, useKeyPress } from '../utils';
 import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getDmnName, getRows } from './scesimUtils';
 
-const EditorContainer = React.memo<{
+const EditorContainer: React.FC<{ 
+  /**
+   * scesim data
+   */
   data: string,
+  /**
+   * Optional DMN model
+   */
   model?: string,
+  /**
+   * Whether to display the sidebar
+   */
   showSidePanel?: boolean,
-  readOnly?: boolean,
-}>(({ data, model, showSidePanel = true, readOnly = false }) => {
+  /**
+   * True to make the editor read-only
+   */
+  readOnly?: boolean
+}> = ({ 
+  data, model, showSidePanel = true, readOnly = false
+}) => {
   // console.log('render EditorContainer');
 
+  /**
+   * Helper function to increase rows for performance testing / infinite sroll testing etc
+   * @param rows 
+   */
   const increaseRows = (rows: any) => {
-    // increase rows for performance testing / infinite sroll testing etc
     const enabled = false;
     const numRowsToAdd = 2000;
     if (enabled) {
@@ -33,35 +50,64 @@ const EditorContainer = React.memo<{
     return rows;
   };
 
-  const computeCellMerges = (rows: any) => {
+  const computeCellMerges = (rows: any, column?: number) => {
+    let i;
+    let currentMaster;
+    let currentCell;
+    let previousCell;
     if (rows && rows.length > 1) {
-      let previousRow = rows[0];
-      for (let i = 1; i < rows.length; i++) {
-        for (let j = 1; j < rows[i].length; j++) {
-          if (rows[i][j].value === previousRow[j].value) {
-            let initializedMasterCell = false;
-            // current cell value matches the previous row's cell value
-            // if the previous cell is not marked as master or follower, make it master
-            if (!previousRow[j].follower && !previousRow[j].master) {
-              initializedMasterCell = true;
-              previousRow[j].master = true; 
-              previousRow[j].coverCells = 2;
-            }
+      if (column !== undefined) {
+        // initialize the column's first cell as master
+        currentMaster = rows[0][column];
+        currentMaster.master = true;
+        currentMaster.follower = false;
+        currentMaster.coverCells = 1;
+
+        for (i = 1; i < rows.length; i++) {
+          // compareAndModifyCells(rows[i][column], rows[i - 1][column], currentMaster);
+          currentCell = rows[i][column];
+          previousCell = rows[i - 1][column];
+          if (currentCell.value === previousCell.value) {
             // mark this cell a follower
-            rows[i][j].follower = true;
-            if (!initializedMasterCell) {
-              // go back up until we locate the master and increment its coverFollowers amount
-              for (var f = i - 1; f >= 0; f--) {
-                if (!rows[f][j].master) {
-                  // not the master, continue
-                  continue;
-                }
-                rows[f][j].coverCells += 1;
-              }
+            currentCell.follower = true;
+            // increase the master cell's coverCells amount
+            currentMaster.coverCells += 1;
+          } else {
+            // this is the new master cell
+            currentMaster = currentCell;
+            currentMaster.master = true;
+            currentMaster.follower = false;
+            currentMaster.coverCells = 1;
+          }
+        }
+      } else {
+        const numColumns = rows[0].length;
+        // iterate through all the columns
+        for (i = 1; i < numColumns; i++) {
+          // initialize the column's first cell as master
+          currentMaster = rows[0][i];
+          currentMaster.master = true;
+          currentMaster.follower = false;
+          currentMaster.coverCells = 1;
+          // compare cell values along the same column
+          for (let j = 1; j < rows.length; j++) {
+            // compareAndModifyCells(rows[j][i], rows[j - 1][i], currentMaster);
+            currentCell = rows[j][i];
+            previousCell = rows[j - 1][i];
+            if (currentCell.value === previousCell.value) {
+              // mark this cell a follower
+              currentCell.follower = true;
+              // increase the master cell's coverCells amount
+              currentMaster.coverCells += 1;
+            } else {
+              // this is the new master cell
+              currentMaster = currentCell;
+              currentMaster.master = true;
+              currentMaster.follower = false;
+              currentMaster.coverCells = 1;
             }
           }
         }
-        previousRow = rows[i];
       }
     }
     return rows;
@@ -71,34 +117,47 @@ const EditorContainer = React.memo<{
   const initialColumns = getColumns(dataJson, true);
   let initialRows = getRows(dataJson, initialColumns);
   initialRows = increaseRows(initialRows);
-  const [isDrawerExpanded, setDrawerExpanded] = React.useState(true);
-  const [undoRedo, setUndoRedo] = React.useState<any>({
-    undoList: [],
-    redoList: [],
-    skipUpdate: false,
-  });
-  const [allRows, setAllRows] = React.useState(initialRows);
-  const [filteredRows, setFilteredRows] = React.useState(initialRows);
-  const [dmnFilePath, setDmnFilePath] = React.useState(getDmnFilePath(dataJson));
-  const [dmnName, setDmnName] = React.useState(getDmnName(dataJson));
-  const [columns, setColumns] = React.useState(initialColumns);
-  const [mergeCells, setMergeCells] = React.useState(false);
-
   const initialColumnNames = getColumnNames(dataJson);
-  const [columnNames, setColumnNames] = React.useState(initialColumnNames);
-  const initialItemToColumnIndexMap: any = [];
+  let initialItemToColumnIndexMap: any = {};
   initialColumnNames.forEach((item: any, index: number) => {
     const value = item.name ? `${item.group} | ${item.name}` : item.group;
     initialItemToColumnIndexMap[value] = index;
   });
-  const [itemToColumnIndexMap, setItemToColumnIndexMap] = React.useState(initialItemToColumnIndexMap);
-  
-  const [filterSelection, setFilterSelection] = React.useState<any[]>([]);
-  const [lastForcedUpdateState, setLastForcedUpdateState] = React.useState((Date.now()).toString());
-
   // optional model
   const initialDefinitions = model ? getDefinitions(getJsonFromDmn(model)) : null;
-  const [definitions, setDefinitions] = React.useState(initialDefinitions);
+
+  const [state, setState] = React.useState({
+    dataJson,
+    isDrawerExpanded: true,
+    undoRedo: {
+      undoList: [] as any[],
+      redoList: [] as any[],
+      skipUpdate: false
+    },
+    allRows: initialRows,
+    filteredRows: initialRows,
+    dmnFilePath: getDmnFilePath(dataJson),
+    dmnName: getDmnName(dataJson),
+    columns: initialColumns,
+    mergeCells: false,
+    columnNames: initialColumnNames,
+    itemToColumnIndexMap: initialItemToColumnIndexMap,
+    filterSelection: [] as any[],
+    lastForcedUpdateState: (Date.now()).toString(),
+    lastFiltersClear: (Date.now()).toString(),
+    definitions: initialDefinitions,
+    searchValue: '',
+    searchSelections: [] as any[]
+  });
+
+  const clearFilters = () => {
+    setState(prevState => ({
+      ...prevState,
+      searchValue: '',
+      searchSelections: [],
+      lastFiltersClear: (Date.now()).toString()
+    }));
+  }
 
   React.useEffect(() => {
     // when data or model changes, recompute rows and columns
@@ -106,85 +165,129 @@ const EditorContainer = React.memo<{
     const updatedColumns = getColumns(dataJson, true);
     let updatedRows = getRows(dataJson, updatedColumns);
     updatedRows = increaseRows(updatedRows);
-    
-    debugger;
+
     // pre-compute which cells are master cells and which are followers
     updatedRows = computeCellMerges(updatedRows);
     
-    if (JSON.stringify(allRows) !== JSON.stringify(updatedRows)) {
-      setDmnFilePath(getDmnFilePath(dataJson));
-      setColumns(updatedColumns);
-      setColumnNames(getColumnNames(dataJson));
-      setAllRows(updatedRows);
-      setFilteredRows(updatedRows);
-      setUndoRedo({
-        undoList: [],
-        redoList: [],
-        skipUpdate: false,
-      });
-      const indexMap: any = [];
+    if (JSON.stringify(state.allRows) !== JSON.stringify(updatedRows)) {
+      let itemToColumnIndexMap: any = {};
       initialColumnNames.forEach((item: any, index: number) => {
         const value = item.name ? `${item.group} | ${item.name}` : item.group;
-        indexMap[value] = index;
+        itemToColumnIndexMap[value] = index;
       });
-      setItemToColumnIndexMap(initialColumnNames);
-    }
 
-    // update the optional model
-    const updatedDefinitions = model ? getDefinitions(getJsonFromDmn(model)): null;
-    if (JSON.stringify(definitions) !== JSON.stringify(updatedDefinitions)) {
-      setDefinitions(updatedDefinitions);
+      // update the optional model
+      const updatedDefinitions = model ? getDefinitions(getJsonFromDmn(model)): null;
+
+      setState(prevState => ({
+        ...prevState,
+        dmnFilePath: getDmnFilePath(dataJson),
+        columns: updatedColumns,
+        columnNames: getColumnNames(dataJson),
+        allRows: updatedRows,
+        filteredRows: updatedRows,
+        undoRedo: {
+          undoList: [],
+          redoList: [],
+          skipUpdate: false,
+        },
+        itemToColumnIndexMap,
+        definitions: JSON.stringify(state.definitions) !== JSON.stringify(updatedDefinitions) ? updatedDefinitions : state.definitions
+      }));
     }
   }, [data, model]);
-
-  React.useEffect(() => {
-    const searchValue = (document.getElementById('gridSearch') as HTMLInputElement).value;
-    filterRows(searchValue, filterSelection, allRows);
-    if (undoRedo.skipUpdate) {
-      return;
-    }
-    setLastForcedUpdateState((Date.now()).toString());
-  }, [ undoRedo ]);
 
   /**
    * Toggle the sidebar
    */
   const toggleDrawer = () => {
-    setDrawerExpanded(!isDrawerExpanded);
+    setState(prevState => ({
+      ...prevState,
+      isDrawerExpanded: !state.isDrawerExpanded
+    }));
   };
+
+  type Change = {
+    id: string, // row and column
+    rowId: string, // the first column value
+    value: any, 
+    previousValue: any,
+    withRows?: Change[]
+  };
+
+  const updateRows = (rows: any[], change: Change, isUndo = false) => {
+    return computeCellMerges(rows.map((row: any[]) => {
+      // row[0] is the row id
+      const currentRowId = row[0].value;
+      let updatedRow = row;
+      if (change.rowId === currentRowId) {
+        const { column } = getRowColumnFromId(change.id);
+        updatedRow[column].value = isUndo ? change.previousValue : change.value;
+      } else if (change.withRows) {
+        // the current row should also be updated
+        const foundChange = change.withRows.find(subChange => subChange.rowId === currentRowId);
+        if (foundChange) {
+          const { column } = getRowColumnFromId(foundChange.id);
+          updatedRow[column].value = isUndo ? foundChange.previousValue : foundChange.value;
+        }
+      }
+      return updatedRow;
+    }), getRowColumnFromId(change.id).column);
+  }
 
   /**
    * Callback function for Editor inputs. When they're saved we add it to the list of changes for change-tracking.
    */
-  const addToChanges = (id: string, value: string, previousValue: string) => {
-    const { row, column } = getRowColumnFromId(id);
-    // const clonedAllRows = cloneDeep(allRows);
-    console.log(`changing ${allRows[row][column].value} to ${value}`)
-    allRows[row][column].value = value;
-    let changedCells = [{ id, value, previousValue }];
+  const addToChanges = (cellId: string, value: string, previousValue: string, rowId: string) => {
+    const { column } = getRowColumnFromId(cellId);
 
-    if (mergeCells && allRows[row][column].master) {
-      // update the follower cells as well
-      for (let i = row + 1; i < allRows.length; i++) {
-        if (allRows[i][column].follower) {
-          console.log(`also changing ${allRows[i][column].value} to ${value}`)
-          allRows[i][column].value = value;
-          changedCells.push({
-            id: `row ${i} column ${column}`,
-            value,
-            previousValue
-          });
-        } else {
-          break;
+    let change: Change = { 
+      id: cellId, 
+      rowId: rowId,
+      value, 
+      previousValue
+    };
+
+    debugger;
+    
+
+    const computedAndFilteredRows = computeCellMerges(filterRows(state.allRows));
+
+    if (state.mergeCells) {
+      for (let index = 0; index < computedAndFilteredRows.length; index++) {
+        if (computedAndFilteredRows[index][0].value === rowId) {
+          console.log(`changing ${computedAndFilteredRows[index][column].value} to ${value}`);
+          if (computedAndFilteredRows[index][column].master) {
+            // update the follower cells as well
+            let relatedChanges: Change[] = [];
+            for (let i = index + 1; i < computedAndFilteredRows.length; i++) {
+              if (computedAndFilteredRows[i][column].follower) {
+                console.log(`also changing ${computedAndFilteredRows[i][column].value} to ${value}`);
+                relatedChanges.push({
+                  id: `row ${i} column ${column}`,
+                  rowId: computedAndFilteredRows[i][0].value,
+                  value,
+                  previousValue
+                });
+              } else {
+                break;
+              }
+            }
+            change['withRows'] = relatedChanges;
+          }
         }
       }
     }
-    // setAllRows(allRows);
+
     // new change clears the redoList
-    setUndoRedo((previousState: any) => ({
-      undoList: [...previousState.undoList, ...changedCells],
-      redoList: [],
-      skipUpdate: true,
+    setState(prevState => ({
+      ...prevState,
+      undoRedo: {
+        undoList: [...prevState.undoRedo.undoList, change],
+        redoList: [],
+        skipUpdate: true
+      },
+      allRows: updateRows(prevState.allRows, change)
     }));
   };
 
@@ -193,22 +296,18 @@ const EditorContainer = React.memo<{
    * Pop the undo stack and push it onto redo stack
    */
   const onUndo = () => {
-    if (undoRedo.undoList.length > 0) {
-      const clonedChanges = [...undoRedo.undoList];
+    if (state.undoRedo.undoList.length > 0) {
+      const clonedChanges = [...state.undoRedo.undoList];
       const lastChange = clonedChanges.pop();
-      setUndoRedo((previousState: any) => ({
-        undoList: clonedChanges,
-        redoList: [...previousState.redoList, lastChange],
-        skipUpdate: false,
+      setState(prevState => ({
+        ...prevState,
+        undoRedo: {
+          undoList: clonedChanges,
+          redoList: [...prevState.undoRedo.redoList, lastChange],
+          skipUpdate: false
+        },
+        allRows: updateRows(prevState.allRows, lastChange, true)
       }));
-
-      const { id, previousValue } = lastChange;
-      const { row, column } = getRowColumnFromId(id);
-      allRows[row][column].value = previousValue;
-      // let clonedAllRows = cloneDeep(allRows);
-      // clonedAllRows[row][column].value = previousValue;
-      // setAllRows(clonedAllRows);
-      // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
   };
 
@@ -217,51 +316,69 @@ const EditorContainer = React.memo<{
    * a new change clears the redo stack
    */
   const onRedo = () => {
-    if (undoRedo.redoList.length > 0) {
-      const clonedRedoList = [...undoRedo.redoList];
+    if (state.undoRedo.redoList.length > 0) {
+      const clonedRedoList = [...state.undoRedo.redoList];
       const lastRedo = clonedRedoList.pop();
-      setUndoRedo((previousState: any) => ({
-        undoList: [...previousState.undoList, lastRedo],
-        redoList: clonedRedoList,
-        skipUpdate: false,
+      setState(prevState => ({
+        ...prevState,
+        undoRedo: {
+          undoList: [...prevState.undoRedo.undoList, lastRedo],
+          redoList: clonedRedoList,
+          skipUpdate: false
+        },
+        allRows: updateRows(prevState.allRows, lastRedo)
       }));
-
-      const { id, value } = lastRedo;
-      const { row, column } = getRowColumnFromId(id);
-      allRows[row][column].value = value;
-      // const clonedAllRows = cloneDeep(allRows);
-      // clonedAllRows[row][column].value = value;
-      // setAllRows(clonedAllRows);
-      // filterRows(searchValueState, filterSelection, clonedAllRows);
     }
   };
 
   const onMergeCellsToggle = (shouldMergeCells: boolean) => {
-    setMergeCells(shouldMergeCells);
+    setState(prevState => ({
+      ...prevState,
+      mergeCells: shouldMergeCells
+    }));
   }
 
-   // Command + Z / CTRL + Z undo the last change
-   useKeyPress(/z/i, onUndo, { log: 'editor-container', withModifier: true, isActive: !readOnly });
-   // Command + Shift + Z / CTRL + Shift + Z redo the last change
-   useKeyPress(/z/i, onRedo, { log: 'editor-container', withModifier: true, withShift: true, isActive: !readOnly });
+  // disable the native browser implementation of undo / redo
+  let ctrlDown = false;
+  const zKey = 90;
+  const yKey = 89;
+  document.body.onkeydown = function(e) {
+    if (e.ctrlKey || e.metaKey) {
+      ctrlDown = true;
+    }
+    if ((ctrlDown && e.keyCode === zKey) || (ctrlDown && e.keyCode === yKey)) {
+      e.preventDefault();
+      return false;
+    }
+  }
+  
+  // Command + Z / CTRL + Z undo the last change
+  useKeyPress(/z/i, onUndo, { log: 'editor-container', withModifier: true, isActive: !readOnly });
+  // Command + Shift + Z redo the last change (Mac)
+  useKeyPress(/z/i, onRedo, { log: 'editor-container', withModifier: true, withShift: true, isActive: !readOnly });
+  // CTRL + Y redo the last change (Windows)
+  useKeyPress(/y/i, onRedo, { log: 'editor-container', withModifier: true, withShift: false, isActive: !readOnly });
+
+  const setSearchState = (value: string, selected: any[]) => {
+    setState(prevState => ({
+      ...prevState,
+      searchValue: value,
+      searchSelections: selected
+    }));
+  }
 
   /**
    * Filter the rows based on search and filter selection
-   * Callback function for EditorToolbar, called on filter/search change
    */
-  const filterRows = (value: string, selected: any[], rowsToFilter?: any[]) => {
-    const rows = rowsToFilter || allRows;
-    if (JSON.stringify(filterSelection) !== JSON.stringify(selected)) {
-      setFilterSelection(selected);
-    }
-    if (!value) {
+  const filterRows = (rows: any[]) => {
+    if (!state.searchValue) {
       // no search term, show all rows
-      return setFilteredRows(rows);
+      return rows;
     }
-    const searchRE = new RegExp(value, 'i');
+    const searchRE = new RegExp(state.searchValue, 'i');
     const rowsAfterFilter = rows.filter((row: any) => {
       let found = false;
-      if (selected.length === 0) {
+      if (state.searchSelections.length === 0) {
         // search all columns
         for (const col of row) {
           if (col && searchRE.test(col.value)) {
@@ -271,8 +388,8 @@ const EditorContainer = React.memo<{
         }
       } else {
         // search only the selected columns
-        for (const sel of selected) {
-          const columnIndex = itemToColumnIndexMap[sel];
+        for (const sel of state.searchSelections) {
+          const columnIndex = state.itemToColumnIndexMap[sel];
           if (row[columnIndex] && searchRE.test(row[columnIndex].value)) {
             found = true;
             break;
@@ -281,7 +398,7 @@ const EditorContainer = React.memo<{
       }
       return found;
     });
-    setFilteredRows(rowsAfterFilter);
+    return rowsAfterFilter;
   };
 
   return (
@@ -295,70 +412,65 @@ const EditorContainer = React.memo<{
               onClick={toggleDrawer}
               aria-label="Toggle drawer"
               aria-controls="page-sidebar"
-              aria-expanded={isDrawerExpanded ? 'true' : 'false'}
+              aria-expanded={state.isDrawerExpanded ? 'true' : 'false'}
               variant="plain"
             >
               <BarsIcon />
             </Button>
           </div>}
           <div className="pf-c-page__header-brand-link">
-            {(definitions && definitions._title) || dmnName}
+            {(state.definitions && state.definitions._title) || state.dmnName}
           </div>
         </div>
           <div className="pf-c-page__header-tools">
             <EditorToolbar
               data={data}
-              allRowsLength={allRows.length}
-              filteredRowsLength={filteredRows.length}
+              rows={state.allRows}
               filterRows={filterRows}
-              columnNames={columnNames}
+              lastFiltersClear={state.lastFiltersClear}
+              setSearchState={setSearchState}
+              columnNames={state.columnNames}
               readOnly={readOnly}
-              undoRedo={undoRedo}
+              undoRedo={state.undoRedo}
               onUndo={onUndo}
               onRedo={onRedo}
+              mergeCells={state.mergeCells}
               onMergeCellsToggle={onMergeCellsToggle}
             />
           </div>
         </header>
-        {showSidePanel && definitions && <div className={classNames('pf-c-page__sidebar pf-m-dark', isDrawerExpanded && 'pf-m-expanded', !isDrawerExpanded && 'pf-m-collapsed')}>
+        {showSidePanel && state.definitions && <div className={classNames('pf-c-page__sidebar pf-m-dark', state.isDrawerExpanded && 'pf-m-expanded', !state.isDrawerExpanded && 'pf-m-collapsed')}>
           <div className="pf-c-page__sidebar-body">
             <DefinitionsDrawerPanel
-              definitions={definitions}
-              dmnFilePath={dmnFilePath}
+              definitions={state.definitions}
+              dmnFilePath={state.dmnFilePath}
             />
           </div>
         </div>}
         <main role="main" className="pf-c-page__main" id="sce-sim-grid__main" tabIndex={-1}>
           <section className="pf-c-page__main-section pf-m-light">
             <Editor
-              columns={columns}
-              filteredRows={filteredRows}
-              definitions={definitions}
-              columnNames={columnNames}
+              columns={state.columns}
+              rows={state.allRows}
+              filterRows={filterRows}
+              searchValue={state.searchValue}
+              searchSelections={state.searchSelections}
+              filteredRows={state.filteredRows}
+              definitions={state.definitions}
+              columnNames={state.columnNames}
               onSave={addToChanges}
-              lastForcedUpdate={lastForcedUpdateState}
+              lastForcedUpdate={state.lastForcedUpdateState}
               readOnly={readOnly}
-              mergeCells={mergeCells}
+              mergeCells={state.mergeCells}
+              computeCellMerges={computeCellMerges}
+              onClearFilters={clearFilters}
             />
           </section>
         </main>
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) {
-    // data has changed, re-render
-    // console.log('re-render EditorContainer');
-    return false;
-  }
-  if (JSON.stringify(prevProps.model) !== JSON.stringify(nextProps.model)) {
-    // model has changed, re-render
-    // console.log('re-render EditorContainer');
-    return false;
-  }
-  // console.log('not re-rendering EditorContainer');
-  return true;
-});
+};
 
 // @ts-ignore
 EditorContainer.whyDidYouRender = {

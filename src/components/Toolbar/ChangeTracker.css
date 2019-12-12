@@ -1,0 +1,11 @@
+.change-tracker .inline-dt {
+  border-left: 1px solid black;
+}
+
+.change-tracker .inline-dt button {
+  margin-left: 5px;
+}
+
+.change-tracker.pf-c-content dl {
+  --pf-c-content--dl--RowGap: 0.5rem;
+}

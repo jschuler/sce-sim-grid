@@ -5,40 +5,49 @@ import { Input, Select } from '../Cell';
 import { Spinner } from '../Spinner';
 import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
 import './Editor.css';
+import { Empty } from './Empty';
 
-const Editor = React.memo<{
+const Editor: React.FC<{ 
   columns: any,
+  rows: any[],
+  filterRows: any,
+  searchValue: string,
+  searchSelections: any[],
   filteredRows: any,
   definitions: any,
   columnNames: any,
   onSave: any,
   lastForcedUpdate: string,
   readOnly: boolean,
-  mergeCells?: boolean
-}>(({
+  mergeCells?: boolean,
+  onClearFilters: any,
+  computeCellMerges: any
+}> = ({ 
   columns: columnDefs,
+  rows,
+  filterRows,
+  searchValue,
+  searchSelections,
   filteredRows,
   definitions,
   columnNames,
   onSave,
   lastForcedUpdate,
   readOnly,
-  mergeCells = false
+  mergeCells = false,
+  onClearFilters,
+  computeCellMerges
 }) => {
   // console.log('render Editor');
 
   const rowsToFetch = 50;
 
-  const [editableCell, setEditable] = React.useState<string>('');
-  const [expandedSelect, setExpandedSelect] = React.useState(false);
-  const [currentPage, setCurrentPage] = React.useState(1);
-
-  // state from props
-  const [columnDefsState, setColumnDefsState] = React.useState(columnDefs);
-  const [fetchedRows, setFetchedRows] = React.useState(filteredRows.slice(0, rowsToFetch));
-  const [definitionsState, setDefinitionsState] = React.useState(definitions);
-  const [columnNamesState, setColumnNamesState] = React.useState(columnNames);
-  const [lastForcedUpdateState, setLastForcedUpdateState] = React.useState(lastForcedUpdate);
+  const [state, setState] = React.useState({
+    editableCell: '',
+    expandedSelect: false,
+    currentPage: 1,
+    // fetchedRows: rows.slice(0, rowsToFetch) as any[]
+  });
 
   const editorRef = React.useRef(null);
 
@@ -49,21 +58,29 @@ const Editor = React.memo<{
     }, 1);
   }, [columnDefs]);
 
-  React.useEffect(() => {
-    // render depends on updated value of fetchedRows
-    if (JSON.stringify(columnDefsState) !== JSON.stringify(columnDefs)) {
-      setColumnDefsState(columnDefs);
-    }
-    if (lastForcedUpdateState !== lastForcedUpdate || JSON.stringify(fetchedRows) !== JSON.stringify(filteredRows.slice(0, rowsToFetch))) {
-      setFetchedRows(filteredRows.slice(0, rowsToFetch));
-    }
-    if (JSON.stringify(definitionsState) !== JSON.stringify(definitions)) {
-      setDefinitionsState(definitions);
-    }
-    if (JSON.stringify(columnNamesState) !== JSON.stringify(columnNames)) {
-      setColumnNamesState(columnNames);
-    }
-  }, [columnDefs, filteredRows, definitions, columnNames, lastForcedUpdate]);
+  // React.useEffect(() => {
+  //   // render depends on updated value of fetchedRows
+  //   if (JSON.stringify(columnDefsState) !== JSON.stringify(columnDefs)) {
+  //     setColumnDefsState(columnDefs);
+  //   }
+  //   if (lastForcedUpdateState !== lastForcedUpdate || JSON.stringify(fetchedRows) !== JSON.stringify(rows.slice(0, rowsToFetch))) { // filteredRows
+  //     setFetchedRows(rows.slice(0, rowsToFetch)); //filteredRows
+  //   }
+  //   if (JSON.stringify(definitionsState) !== JSON.stringify(definitions)) {
+  //     setDefinitionsState(definitions);
+  //   }
+  //   if (JSON.stringify(columnNamesState) !== JSON.stringify(columnNames)) {
+  //     setColumnNamesState(columnNames);
+  //   }
+  // }, [columnDefs, rows, definitions, columnNames, lastForcedUpdate]); //filteredRows
+
+  // React.useEffect(() => {
+  //   debugger;
+  //   setState(prevState => ({
+  //     ...prevState,
+  //     fetchedRows: computeCellMerges(filterRows(rows).slice(0, rowsToFetch))
+  //   }));
+  // }, [rows, searchSelections, searchValue]); //filteredRows
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -79,12 +96,18 @@ const Editor = React.memo<{
 
   const activateCell = (id: string) => {
     if (id) {
-      setEditable(id);
+      setState(prevState => ({
+        ...prevState,
+        editableCell: id
+      }));
     }
   };
 
   const deactivateCell = () => {
-    setEditable('');
+    setState(prevState => ({
+      ...prevState,
+      editableCell: ''
+    }));
   };
 
   const activateAndFocusCell = (id: string) => {
@@ -99,11 +122,11 @@ const Editor = React.memo<{
 
   const onCellClick = (event: any) => {
     const { id } = event.target;
-    if (id === editableCell) {
+    if (id === state.editableCell) {
       // already active
       return null;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       // get out of a previous cell editing mode
       deactivateCell();
     }
@@ -135,12 +158,12 @@ const Editor = React.memo<{
   /**
    * Up arrow key
    */
-  const onUpKeyPress = (event: any) => {
-    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+  const onUpKeyPress = (event: any, previousId?: string) => {
+    const activeElement = previousId || (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
@@ -156,7 +179,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${newRow} column ${currentIdArr[3]}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // recurse
+          onUpKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -164,16 +193,16 @@ const Editor = React.memo<{
   /**
    * Down arrow key
    */
-  const onDownKeyPress = (event: any) => {
-    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+  const onDownKeyPress = (event: any, previousId?: string) => {
+    const activeElement = previousId || (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
-    const maxRow = filteredRows.length - 1;
+    const maxRow = rows.length - 1; // filteredRows
     let targetId;
     if (currentId) {
       // ['row', '1', 'column', '2']
@@ -185,7 +214,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${newRow} column ${currentIdArr[3]}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // recurse
+          onDownKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -195,10 +230,10 @@ const Editor = React.memo<{
    */
   const onLeftKeyPress = (event: any) => {
     const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
@@ -214,7 +249,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${currentIdArr[1]} column ${newCol}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // the element may be hidden due to cell merging. recurse up to find the master cell
+          onUpKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -224,10 +265,10 @@ const Editor = React.memo<{
    */
   const onRightKeyPress = (event: any) => {
     const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
@@ -243,7 +284,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${currentIdArr[1]} column ${newCol}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // the element may be hidden due to cell merging. recurse up to find the master cell
+          onUpKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -267,32 +314,48 @@ const Editor = React.memo<{
 
   // Command + C / CTRL + C copies the focused cell content
   useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
-  useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!editableCell && !readOnly) });
+  useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!state.editableCell && !readOnly) });
   useKeyPress(38, onUpKeyPress, { log: 'editor' });
   useKeyPress(40, onDownKeyPress, { log: 'editor' });
   useKeyPress(37, onLeftKeyPress, { log: 'editor' });
   useKeyPress(39, onRightKeyPress, { log: 'editor' });
 
   const onSelectToggleCallback = (id: any, isExpanded: boolean) => {
-    setExpandedSelect(isExpanded);
+    setState(prevState => ({
+      ...prevState,
+      expandedSelect: isExpanded
+    }));
   };
 
+  const setEditable = (id: string) => {
+    setState(prevState => ({
+      ...prevState,
+      editableCell: id
+    }));
+  }
+
   // rowData
-  const fetchMoreRows = (page?: number) => {
-    if (page) {
-      setFetchedRows((prevState: any) => ([...prevState, ...filteredRows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
-    } else {
-      setFetchedRows((prevState: any) => ([...prevState, ...filteredRows.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  // const fetchMoreRows = (page?: number) => {
+  //   if (page) {
+  //     setState(prevState => ({
+  //       ...prevState,
+  //       fetchedRows: [...prevState.fetchedRows, ...rows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)] // filteredRows
+  //     }));
+  //   } else {
+  //     setState(prevState => ({
+  //       ...prevState,
+  //       fetchedRows: [...prevState.fetchedRows, ...rows.slice(state.currentPage * rowsToFetch, state.currentPage * rowsToFetch + rowsToFetch)], // filteredRows
+  //       currentPage: prevState.currentPage + 1
+  //     }));
+  //   }
+  // };
 
   // console.log(fetchedRows);
   // console.log(columnNamesState);
-  return !fetchedRows ? null : (
+  return !rows ? null : ( // state.fetchedRows
     <>
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
-        {columnDefsState.other.map((other: { name: string }, index: number) => {
+        {columnDefs.other.map((other: { name: string }, index: number) => {
           if (index === 0) {
             return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>;
           } else {
@@ -311,7 +374,7 @@ const Editor = React.memo<{
 
         {/* <!-- grid instance headers need to have a grid-column span set --> */}
         <div className="kie-grid__header--given">
-          {columnDefsState.given.map((given: any, index: number) => (
+          {columnDefs.given.map((given: any, index: number) => (
             <div
               key={`given instance ${index}`}
               className="kie-grid__item kie-grid__instance"
@@ -323,7 +386,7 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--expect">
-          {columnDefsState.expect.map((expect: any, index: number) => (
+          {columnDefs.expect.map((expect: any, index: number) => (
             <div
               key={`expect instance ${index}`}
               className="kie-grid__item kie-grid__instance"
@@ -335,14 +398,14 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--given">
-          {columnDefsState.given.map((given: any) => {
+          {columnDefs.given.map((given: any) => {
             return given.children.map((givenChild: any, index: number) => (
               <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
             ));
           })}
         </div>
         <div className="kie-grid__header--expect">
-          {columnDefsState.expect.map((expect: any) => {
+          {columnDefs.expect.map((expect: any) => {
             return expect.children.map((expectChild: any, index: number) => (
               <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
             ));
@@ -350,105 +413,97 @@ const Editor = React.memo<{
         </div>
 
         <div className={classNames('kie-grid__body', mergeCells && 'kie-grid--merged')}>
-          <InfiniteScroll
-            dataLength={fetchedRows.length}
-            next={fetchMoreRows}
-            hasMore={fetchedRows.length < filteredRows.length}
-            loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
-            scrollableTarget="sce-sim-grid__main"
-          >
-              {fetchedRows.map((row: any, rowIndex: number) => (
-                <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
-                  {row.map((cell: any, index: number) => {
-                    // get the type of the column to pass on to the input for formatting / validation
-                    let type = 'string';
-                    let columnGroup = '';
-                    let columnName = '';
-                    if (index === 0) {
-                      // row index
-                      type = 'number';
-                    } else if (index === 1) {
-                      // description
-                      type = 'string';
-                    } else if (index > 1) {
-                      columnGroup = columnNamesState[index].group;
-                      columnName = columnNamesState[index].name;
-                      type = (definitionsState && definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
-                    }
-                    const cellIndex = index;
-                    const value = cell && cell.value ? cell.value : '';
-                    const path = cell && cell.path ? cell.path : '';
-                    // const cellId = `cell ${cellIndex}`;
-                    const inputId = `row ${rowIndex} column ${cellIndex}`;
-                    let component;
-                    const typeArr = type.split(',');
-                    if (typeArr.length > 1) {
-                      // Multiple options, render Select
-                      component = (
-                        <Select
-                          isReadOnly={inputId !== editableCell}
-                          id={inputId}
-                          originalValue={value}
-                          onSelectToggleCallback={onSelectToggleCallback}
-                          options={typeArr.map((typeString) => typeString.trim())}
-                          deactivateAndFocusCell={deactivateAndFocusCell}
-                          setEditable={setEditable}
-                          onSave={onSave}
-                        />
+          {(searchValue || searchSelections.length > 0) && filterRows(rows).length === 0 ? (
+            <Empty className="kie-grid__item--empty" onClear={onClearFilters} />
+          ) : (
+            // <InfiniteScroll
+            //   dataLength={state.fetchedRows.length}
+            //   next={fetchMoreRows}
+            //   hasMore={state.fetchedRows.length < rows.length} // filteredRows
+            //   loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
+            //   scrollableTarget="sce-sim-grid__main"
+            // >
+              <div>
+                {computeCellMerges(filterRows(rows)).map((row: any) => (
+                  <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
+                    {row.map((cell: any, index: number) => {
+                      // get the type of the column to pass on to the input for formatting / validation
+                      let type = 'string';
+                      let columnGroup = '';
+                      let columnName = '';
+                      if (index === 0) {
+                        // row index
+                        type = 'number';
+                      } else if (index === 1) {
+                        // description
+                        type = 'string';
+                      } else if (index > 1) {
+                        columnGroup = columnNames[index].group;
+                        columnName = columnNames[index].name;
+                        type = (definitions && definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
+                      }
+                      const cellIndex = index;
+                      const value = cell && cell.value ? cell.value : '';
+                      const path = cell && cell.path ? cell.path : '';
+                      // const cellId = `cell ${cellIndex}`;
+                      const inputId = `row ${Number.parseInt(row[0].value, 10) - 1} column ${cellIndex}`;
+                      let component;
+                      const typeArr = type.split(',');
+                      if (typeArr.length > 1) {
+                        // Multiple options, render Select
+                        component = (
+                          <Select
+                            isReadOnly={inputId !== state.editableCell}
+                            cellId={inputId}
+                            rowId={row[0].value}
+                            originalValue={value}
+                            onSelectToggleCallback={onSelectToggleCallback}
+                            options={typeArr.map((typeString) => typeString.trim())}
+                            deactivateAndFocusCell={deactivateAndFocusCell}
+                            setEditable={setEditable}
+                            onSave={onSave}
+                          />
+                        );
+                      } else {
+                        component = (
+                          <Input
+                            isReadOnly={inputId !== state.editableCell}
+                            cellId={inputId}
+                            rowId={row[0].value}
+                            originalValue={value}
+                            path={path}
+                            type={type}
+                            deactivateAndFocusCell={deactivateAndFocusCell}
+                            setEditable={setEditable}
+                            onSave={onSave}
+                          />
+                        );
+                      }
+                      const mergeRowsStyle = {
+                        gridRow: `span ${cell.coverCells || 1}`
+                      };
+                      return (
+                        <div 
+                          className={classNames('kie-grid__item', cell.master && 'kie-grid__item--merge-master', cell.follower && 'kie-grid__item--merge-away')} 
+                          style={mergeCells ? mergeRowsStyle : {}}
+                          key={inputId} 
+                          onClick={onCellClick} 
+                          onDoubleClick={onCellDoubleClick}
+                        >
+                          {cellIndex === 0 ? value : component}
+                        </div>
                       );
-                    } else {
-                      component = (
-                        <Input
-                          isReadOnly={inputId !== editableCell}
-                          id={inputId}
-                          originalValue={value}
-                          path={path}
-                          type={type}
-                          deactivateAndFocusCell={deactivateAndFocusCell}
-                          setEditable={setEditable}
-                          onSave={onSave}
-                        />
-                      );
-                    }
-                    const mergeRowsStyle = {
-                      gridRow: `span ${cell.coverCells || 1}`
-                    };
-                    return (
-                      <div 
-                        className={classNames('kie-grid__item', cell.master && 'kie-grid__item--merge-master', cell.follower && 'kie-grid__item--merge-away')} 
-                        style={mergeCells ? mergeRowsStyle : {}}
-                        key={inputId} 
-                        onClick={onCellClick} 
-                        onDoubleClick={onCellDoubleClick}
-                      >
-                        {cellIndex === 0 ? value : component}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-          </InfiniteScroll>
+                    })}
+                  </div>
+                ))}
+              </div>
+            // </InfiniteScroll>
+          )}
         </div>
       </div>
     </>
   );
-}, (prevProps, nextProps) => {
-  if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
-    // console.log('re-render Editor');
-    return false;
-  }
-  if (prevProps.mergeCells !== nextProps.mergeCells) {
-    return false;
-  }
-  if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||
-    JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
-    // filteredRows have changed, re-render
-    // console.log('re-render Editor');
-    return false;
-  }
-  // console.log('not re-rendering Editor');
-  return true;
-});
+};
 
 // @ts-ignore
 Editor.whyDidYouRender = {

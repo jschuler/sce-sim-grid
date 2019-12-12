@@ -10,118 +10,103 @@ import { ChangeTracker } from './ChangeTracker';
 import './EditorToolbar.css';
 import { HelpModal } from './HelpModal';
 import { Search } from './Search';
+import { SortBy } from './SortBy';
 
-const EditorToolbar = React.memo<{
+const EditorToolbar: React.FC<{ 
   data: any,
-  allRowsLength: any,
-  filteredRowsLength: number,
+  rows: any[],
   filterRows: any,
+  setSearchState: any,
   columnNames: any,
   undoRedo: any,
   onUndo: any,
   onRedo: any,
   readOnly: boolean,
-  onMergeCellsToggle: any
-}>(({ data, allRowsLength, filteredRowsLength, filterRows, columnNames, undoRedo, onUndo, onRedo, readOnly, onMergeCellsToggle }) => {
+  mergeCells: boolean,
+  onMergeCellsToggle: any,
+  lastFiltersClear: string,
+}> = ({ 
+  data, rows, filterRows, setSearchState, columnNames, undoRedo, onUndo, onRedo, readOnly, mergeCells, onMergeCellsToggle, lastFiltersClear
+}) => {
   // console.log('render EditorToolbar');
 
-  const [isModelOpen, setModalOpen] = React.useState(false);
-  const [mergeCells, setMergeCells] = React.useState(false);
-
-  const [toolbarStateFromProps, setToolbarStateFromProps] = React.useState({
-    data,
-    allRowsLength,
-    filteredRowsLength,
-    columnNames,
-    undoRedo,
+  const [state, setState] = React.useState({
+    isModalOpen: false,
+    mergeCells: false
   });
 
-  React.useEffect(() => {
-    // update state from props
-    setToolbarStateFromProps({
-      data,
-      allRowsLength,
-      filteredRowsLength,
-      columnNames,
-      undoRedo,
-    });
-  }, [
-    data,
-    allRowsLength,
-    filteredRowsLength,
-    columnNames,
-    undoRedo,
-  ]);
-
   const onSearchChange = (value: string, selected: any[]) => {
-    filterRows(value, selected);
+    setSearchState(value, selected);
   };
 
   /**
    * Opens the Help modal
    */
   const openModal = () => {
-    setModalOpen(true);
+    setState(prevState => ({
+      ...prevState,
+      isModalOpen: true
+    }));
   };
 
   /**
    * Closes the Help modal
    */
   const closeModal = () => {
-    setModalOpen(false);
+    setState(prevState => ({
+      ...prevState,
+      isModalOpen: false
+    }));
   };
   
   const mergeCellsToggle = () => {
-    const toggledMergeCells = !mergeCells;
-    setMergeCells(toggledMergeCells);
+    const toggledMergeCells = !state.mergeCells;
+    setState(prevState => ({
+      ...prevState,
+      mergeCells: toggledMergeCells
+    }));
     onMergeCellsToggle(toggledMergeCells);
   }
 
   return (
     <>
       <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-        {!readOnly && <ToolbarGroup>
-          <ChangeTracker undoRedo={toolbarStateFromProps.undoRedo} onUndo={onUndo} onRedo={onRedo} />
-        </ToolbarGroup>}
         <ToolbarGroup>
           <ToolbarItem>
             <Button variant="plain" onClick={mergeCellsToggle}>
-              {mergeCells ? <ThLargeIcon size="md" /> : <ThIcon size="md" />}
+              {state.mergeCells ? <ThLargeIcon size="md" /> : <ThIcon size="md" />}
             </Button>
           </ToolbarItem>
-          {toolbarStateFromProps.allRowsLength === filteredRowsLength ? (
-            <ToolbarItem className="pf-u-mr-md">{toolbarStateFromProps.allRowsLength} items</ToolbarItem>
+        </ToolbarGroup>
+        {!readOnly && <ToolbarGroup>
+          <ChangeTracker undoRedo={undoRedo} onUndo={onUndo} onRedo={onRedo} />
+        </ToolbarGroup>}
+        <ToolbarGroup>
+          <ToolbarItem>
+            <SortBy 
+              rows={rows} 
+              columnNames={columnNames} 
+            />
+          </ToolbarItem>
+          {rows.length === filterRows(rows).length ? (
+            <ToolbarItem className="pf-u-mr-md">{rows.length} items</ToolbarItem>
           ) : (
-            <ToolbarItem className="pf-u-mr-md">{filteredRowsLength} of {toolbarStateFromProps.allRowsLength} items</ToolbarItem>
+            <ToolbarItem className="pf-u-mr-md">{filterRows(rows).length} of {rows.length} items</ToolbarItem>
           )}
-          <Search data={data} columnNames={toolbarStateFromProps.columnNames} onChange={onSearchChange} />
+          <Search 
+            data={data} 
+            rows={rows} 
+            columnNames={columnNames} 
+            onChange={onSearchChange} 
+            lastFiltersClear={lastFiltersClear}
+          />
           <ToolbarItem><Button variant="plain" onClick={openModal}><OutlinedQuestionCircleIcon size="md" /></Button></ToolbarItem>
         </ToolbarGroup>
       </Toolbar>
-      <HelpModal isOpen={isModelOpen} onClose={closeModal} readOnly={readOnly} />
+      <HelpModal isOpen={state.isModalOpen} onClose={closeModal} readOnly={readOnly} />
     </>
   );
-}, (prevProps, nextProps) => {
-  if (prevProps.allRowsLength !== nextProps.allRowsLength) {
-    // filteredRows have changed, re-render
-    return false;
-  }
-  if (prevProps.filteredRowsLength !== nextProps.filteredRowsLength) {
-    // filteredRows have changed, re-render
-    return false;
-  }
-  if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length ||
-    JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
-    // last changed cell has changed, re-render
-    return false;
-  }
-  if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length ||
-    JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
-    // last changed cell has changed, re-render
-    return false;
-  }
-  return true;
-});
+};
 
 // @ts-ignore
 EditorToolbar.whyDidYouRender = {
