@@ -82,12 +82,12 @@ const EditorToolbar: React.FC<{
           <ChangeTracker undoRedo={undoRedo} onUndo={onUndo} onRedo={onRedo} />
         </ToolbarGroup>}
         <ToolbarGroup>
-          <ToolbarItem>
+          {/* <ToolbarItem>
             <SortBy 
               rows={rows} 
               columnNames={columnNames} 
             />
-          </ToolbarItem>
+          </ToolbarItem> */}
           {rows.length === filterRows(rows).length ? (
             <ToolbarItem className="pf-u-mr-md">{rows.length} items</ToolbarItem>
           ) : (

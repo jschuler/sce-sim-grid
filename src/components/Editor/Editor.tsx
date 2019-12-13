@@ -6,6 +6,8 @@ import { Spinner } from '../Spinner';
 import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
 import './Editor.css';
 import { Empty } from './Empty';
+import { Button } from '@patternfly/react-core';
+import { PficonSortCommonAscIcon, PficonSortCommonDescIcon } from '@patternfly/react-icons';
 
 const Editor: React.FC<{ 
   columns: any,
@@ -21,7 +23,8 @@ const Editor: React.FC<{
   readOnly: boolean,
   mergeCells?: boolean,
   onClearFilters: any,
-  computeCellMerges: any
+  computeCellMerges: any,
+  onSort: any
 }> = ({ 
   columns: columnDefs,
   rows,
@@ -36,7 +39,8 @@ const Editor: React.FC<{
   readOnly,
   mergeCells = false,
   onClearFilters,
-  computeCellMerges
+  computeCellMerges,
+  onSort
 }) => {
   // console.log('render Editor');
 
@@ -46,6 +50,8 @@ const Editor: React.FC<{
     editableCell: '',
     expandedSelect: false,
     currentPage: 1,
+    sortBy: 0,
+    sortDirection: 'asc'
     // fetchedRows: rows.slice(0, rowsToFetch) as any[]
   });
 
@@ -332,7 +338,26 @@ const Editor: React.FC<{
       ...prevState,
       editableCell: id
     }));
-  }
+  };
+
+  const onSortEditor = (columnIndex: number) => {
+    let sortDirection: string = 'asc';
+    if (state.sortBy === columnIndex) {
+      // switch sort direction
+      sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+      setState(prevState => ({
+        ...prevState,
+        sortDirection
+      }));
+    } else {
+      setState(prevState => ({
+        ...prevState,
+        sortBy: columnIndex,
+        sortDirection: 'asc'
+      }));
+    }
+    onSort(columnIndex, sortDirection);
+  };
 
   // rowData
   // const fetchMoreRows = (page?: number) => {
@@ -352,15 +377,25 @@ const Editor: React.FC<{
 
   // console.log(fetchedRows);
   // console.log(columnNamesState);
+
+  let columnIndex = 1;
   return !rows ? null : ( // state.fetchedRows
     <>
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
         {columnDefs.other.map((other: { name: string }, index: number) => {
           if (index === 0) {
-            return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>;
+            return (
+              <Button variant="plain" className="kie-grid__item kie-grid__number" key="other-number" onClick={() => onSortEditor(0)}>
+                <div>{other.name}</div>
+                <div>{state.sortBy === 0 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+              </Button>
+            );
           } else {
             return (
-              <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
+              <Button variant="plain" className="kie-grid__item kie-grid__description" key="other-description" onClick={() => onSortEditor(1)}>
+                <div>{other.name}</div>
+                <div>{state.sortBy === 1 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+              </Button>
             );
           }
         })}
@@ -399,16 +434,29 @@ const Editor: React.FC<{
 
         <div className="kie-grid__header--given">
           {columnDefs.given.map((given: any) => {
-            return given.children.map((givenChild: any, index: number) => (
-              <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
-            ));
+            return given.children.map((givenChild: any, index: number) => {
+              debugger;
+              columnIndex += 1;
+              const sortByColumnIndex = columnIndex;
+              return (
+              <Button variant="plain" className="kie-grid__item kie-grid__property" key={`given property ${index}`} onClick={() => onSortEditor(sortByColumnIndex)}>
+                <div>{givenChild.name}</div>
+                <div>{state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+              </Button>
+            )});
           })}
         </div>
         <div className="kie-grid__header--expect">
           {columnDefs.expect.map((expect: any) => {
-            return expect.children.map((expectChild: any, index: number) => (
-              <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
-            ));
+            return expect.children.map((expectChild: any, index: number) => {
+              columnIndex += 1;
+              const sortByColumnIndex = columnIndex;
+              return (
+              <Button variant="plain" className="kie-grid__item kie-grid__property" key={`expect property ${index}`} onClick={() => onSortEditor(sortByColumnIndex)}>
+                <div>{expectChild.name}</div>
+                <div>{state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+              </Button>
+            )});
           })}
         </div>
 

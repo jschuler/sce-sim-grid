@@ -15,12 +15,21 @@
   grid-auto-rows: auto;
 }
 
+.pf-c-button.pf-m-plain.kie-grid__item,
 .kie-grid__item {
   border: 1px solid var(--pf-global--BorderColor--100);
   display: flex;
   justify-content: center;
   align-items: center;
   color: black;
+}
+
+.pf-c-button.pf-m-plain.kie-grid__item {
+  border-radius: 0;
+}
+
+.pf-c-button.pf-m-plain.kie-grid__item svg {
+  margin-left: 5px;
 }
 
 .kie-grid__number {
@@ -40,12 +49,12 @@
   grid-row: grid-row-header-start;
 }
 
-.kie-grid__header--given * {
+.kie-grid__header--given .kie-grid__item {
   background-color: #def3ff;
   padding: var(--pf-global--spacer--sm);
   text-align: center;
 }
-.kie-grid__header--expect * {
+.kie-grid__header--expect .kie-grid__item {
   background-color: #bee1f4;
   padding: var(--pf-global--spacer--xs) var(--pf-global--spacer--sm);
   text-align: center;

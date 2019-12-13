@@ -123,6 +123,7 @@ const EditorContainer: React.FC<{
     const value = item.name ? `${item.group} | ${item.name}` : item.group;
     initialItemToColumnIndexMap[value] = index;
   });
+  debugger;
   // optional model
   const initialDefinitions = model ? getDefinitions(getJsonFromDmn(model)) : null;
 
@@ -401,6 +402,21 @@ const EditorContainer: React.FC<{
     return rowsAfterFilter;
   };
 
+  const onSort = (columnIndex: number, sortDirection: string) => {
+    debugger;
+    const sortedRows = state.allRows.sort((a, b) => {
+      if (sortDirection === 'asc') {
+        return (a[columnIndex].value > b[columnIndex].value) ? 1 : -1;
+      } else {
+        return (a[columnIndex].value < b[columnIndex].value) ? 1 : -1;
+      }
+    });
+    setState(prevState => ({
+      ...prevState,
+      allRows: sortedRows
+    }));
+  };
+
   return (
     <div className="pf-m-redhat-font">
       <div className="pf-c-page">
@@ -464,6 +480,7 @@ const EditorContainer: React.FC<{
               mergeCells={state.mergeCells}
               computeCellMerges={computeCellMerges}
               onClearFilters={clearFilters}
+              onSort={onSort}
             />
           </section>
         </main>

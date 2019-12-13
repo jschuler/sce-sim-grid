@@ -87,14 +87,14 @@ const App: React.FC = () => {
   ];
 
   const selectOptions = options.map((option: string, index: number) => (
-    <SelectOption key={index} value={option} isSelected />
+    <SelectOption key={index} value={option} isSelected={index === 0} />
   ));
 
   return (
     <div className="App">
       {state.isLoading ? <Spinner text="Loading scenarios" /> : (
         <>
-          <div>
+          {/* <div>
             <Select
               className="data-select"
               toggleId="toggle data"
@@ -108,7 +108,7 @@ const App: React.FC = () => {
             >
               {selectOptions}
             </Select>
-          </div>
+          </div> */}
           <div className={classNames('editor-container', state.isTransitionDone && 'show')}>
             <EditorContainer data={state.data} model={state.model} showSidePanel={true} readOnly={false} />
           </div>

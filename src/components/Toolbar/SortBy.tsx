@@ -8,7 +8,7 @@ const SortBy: React.FC<{
 
   const [state, setState] = React.useState({
     isExpanded: false,
-    selected: [] as any[]
+    selected: '#' as any
   });
 
   /**
@@ -39,20 +39,10 @@ const SortBy: React.FC<{
     let otherItems: any[] = [];
     let givenItems: any[] = [];
     let expectItems: any[] = [];
-    const options = [
-      { value: 'Choose...', disabled: false, isPlaceholder: true },
-      { value: 'Mr', disabled: false },
-      { value: 'Miss', disabled: false },
-      { value: 'Mrs', disabled: false },
-      { value: 'Ms', disabled: false },
-      { value: 'Dr', disabled: false },
-      { value: 'Other', disabled: false }
-    ];
     columnNames.forEach((item: any, index: number) => {
       const value = item.name ? `${item.group} | ${item.name}` : item.group;
       if (item.type === 'OTHER') {
-        debugger;
-        otherItems.push(<SelectOption key={index} index={index} value={value} isPlaceholder={value === '#'} />);
+        otherItems.push(<SelectOption key={index} index={index} value={value} />);
       } else if (item.type === 'GIVEN') {
         givenItems.push(<SelectOption key={index} index={index} value={value} />);
       } else {
@@ -71,15 +61,7 @@ const SortBy: React.FC<{
         isExpanded={state.isExpanded}
         ariaLabelledBy="Sort by column"
       >
-        {/* {allItems.map((c: any) => c)} */}
-        {options.map((option, index) => (
-          <SelectOption
-            isDisabled={option.disabled}
-            key={index}
-            value={option.value}
-            isPlaceholder={option.isPlaceholder}
-          />
-        ))}
+        {allItems.map((c: any) => c)}
       </Select>
     );
   };
