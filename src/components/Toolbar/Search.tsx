@@ -33,7 +33,6 @@ const Search: React.FC<{
   }, [debouncedSearchTerm]);
 
   React.useEffect(() => {
-    debugger;
     // When selections in the filter change, update the filtered rows
     if (state.searchValue) {
       onChange(state.searchValue, state.selected);

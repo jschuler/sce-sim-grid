@@ -64,7 +64,6 @@ const ChangeTracker: React.FC<{
       />
     );
     if (stateFromProps.undoRedo.undoList.length) {
-      debugger;
       return (
         <Expandable toggleText={getChangeText()} className="kie-changes pf-u-mx-sm">
           <div className="change-tracker pf-c-content">

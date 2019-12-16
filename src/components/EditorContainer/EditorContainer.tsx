@@ -123,7 +123,6 @@ const EditorContainer: React.FC<{
     const value = item.name ? `${item.group} | ${item.name}` : item.group;
     initialItemToColumnIndexMap[value] = index;
   });
-  debugger;
   // optional model
   const initialDefinitions = model ? getDefinitions(getJsonFromDmn(model)) : null;
 
@@ -135,8 +134,8 @@ const EditorContainer: React.FC<{
       redoList: [] as any[],
       skipUpdate: false
     },
-    allRows: initialRows,
-    filteredRows: initialRows,
+    allRows: initialRows as any[],
+    filteredRows: initialRows as any[],
     dmnFilePath: getDmnFilePath(dataJson),
     dmnName: getDmnName(dataJson),
     columns: initialColumns,
@@ -148,7 +147,9 @@ const EditorContainer: React.FC<{
     lastFiltersClear: (Date.now()).toString(),
     definitions: initialDefinitions,
     searchValue: '',
-    searchSelections: [] as any[]
+    searchSelections: [] as any[],
+    sortColumn: 0,
+    sortDirection: 'asc'
   });
 
   const clearFilters = () => {
@@ -236,6 +237,44 @@ const EditorContainer: React.FC<{
     }), getRowColumnFromId(change.id).column);
   }
 
+  const insertRowAt = (rowIndex: number) => {
+    debugger;
+    const insert = (arr: any[], index: number, newItem: any[]) => [
+      ...arr.slice(0, index),
+      newItem,
+      ...arr.slice(index)
+    ];
+    const lastIndex = state.allRows.length - 1;
+    const sampleRow = state.allRows[0];
+    let newRow = [] as any[];
+    for (let i = 0; i < sampleRow.length; i++) {
+      newRow.push({
+        value: '',
+        path: ''
+      });
+    };
+    if (rowIndex > lastIndex) {
+      newRow[0].value = Number(Number.parseInt(state.allRows[lastIndex][0].value) + 1).toString();
+      // insert as last row
+      setState(prevState => ({
+        ...prevState,
+        allRows: prevState.allRows.concat([newRow]) //computeCellMerges(prevState.allRows.concat([newRow]))
+      }));
+    } else {
+      // copy the row number from the row at the previous location
+      newRow[0].value = state.allRows[rowIndex][0].value;
+      let updatedRows = insert(state.allRows, rowIndex, newRow); //state.allRows.splice(rowIndex, 0, [newRow]);
+      for (let j = rowIndex + 1; j < updatedRows.length; j++) {
+        // update remaining row numbers
+        updatedRows[j][0].value = Number(Number.parseInt(updatedRows[j][0].value) + 1).toString();
+      }
+      setState(prevState => ({
+        ...prevState,
+        allRows: updatedRows
+      }));
+    }
+  }
+
   /**
    * Callback function for Editor inputs. When they're saved we add it to the list of changes for change-tracking.
    */
@@ -248,9 +287,6 @@ const EditorContainer: React.FC<{
       value, 
       previousValue
     };
-
-    debugger;
-    
 
     const computedAndFilteredRows = computeCellMerges(filterRows(state.allRows));
 
@@ -403,19 +439,24 @@ const EditorContainer: React.FC<{
   };
 
   const onSort = (columnIndex: number, sortDirection: string) => {
-    debugger;
-    const sortedRows = state.allRows.sort((a, b) => {
-      if (sortDirection === 'asc') {
-        return (a[columnIndex].value > b[columnIndex].value) ? 1 : -1;
-      } else {
-        return (a[columnIndex].value < b[columnIndex].value) ? 1 : -1;
-      }
-    });
     setState(prevState => ({
       ...prevState,
-      allRows: sortedRows
+      // allRows: sortedRows
+      sortColumn: columnIndex,
+      sortDirection
     }));
   };
+
+  const sortRows = (rows: any[]) => {
+    // non-deep rows clone on sorting so we don't mutate the original array
+    return [...rows].sort((a, b) => {
+      if (state.sortDirection === 'asc') {
+        return (a[state.sortColumn].value > b[state.sortColumn].value) ? 1 : -1;
+      } else {
+        return (a[state.sortColumn].value < b[state.sortColumn].value) ? 1 : -1;
+      }
+    });
+  }
 
   return (
     <div className="pf-m-redhat-font">
@@ -467,7 +508,7 @@ const EditorContainer: React.FC<{
           <section className="pf-c-page__main-section pf-m-light">
             <Editor
               columns={state.columns}
-              rows={state.allRows}
+              rows={sortRows(state.allRows)}
               filterRows={filterRows}
               searchValue={state.searchValue}
               searchSelections={state.searchSelections}
@@ -481,6 +522,7 @@ const EditorContainer: React.FC<{
               computeCellMerges={computeCellMerges}
               onClearFilters={clearFilters}
               onSort={onSort}
+              insertRowAt={insertRowAt}
             />
           </section>
         </main>

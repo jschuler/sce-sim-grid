@@ -9,7 +9,7 @@
     ) [description-end given-start] repeat(
       var(--num-given-columns),
       minmax(auto, 1fr)
-    ) [given-end expect-start] repeat(var(--num-expect-columns), 1fr) [expect-end grid-end];
+    ) [given-end expect-start] repeat(var(--num-expect-columns), 1fr) [expect-end action-start] 3em [action-end grid-end];
 
   grid-template-rows: [grid-row-start grid-row-header-start] auto [grid-row-instances-start] auto [grid-row-properties-start] auto [grid-row-header-end grid-row-data-start] auto [grid-row-data-end grid-row-end];
   grid-auto-rows: auto;
@@ -47,6 +47,10 @@
 .kie-grid__expect {
   grid-column: expect-start / expect-end;
   grid-row: grid-row-header-start;
+}
+.kie-grid__action {
+  grid-column: action-start / action-end;
+  grid-row: grid-row-header-start / grid-row-header-end;
 }
 
 .kie-grid__header--given .kie-grid__item {
@@ -89,4 +93,14 @@
 /* Filter on column dropdown right-aligned */
 .pf-c-select__menu {
   right: 0;
+}
+
+.kie-grid__item .sort-icon {
+  color: #d2d2d2; /*var(--pf-c-table__sort-indicator--Color);*/
+}
+.kie-grid__item:hover .sort-icon {
+  color: #151515; /*var(--pf-c-table__sort-indicator--hover--Color);*/
+}
+.kie-grid__item .active {
+  color: #06c; /*var(--pf-c-table__sort--sorted--Color);*/
 }

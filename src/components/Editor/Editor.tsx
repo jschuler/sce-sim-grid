@@ -3,11 +3,12 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import classNames from 'classnames';
 import { Input, Select } from '../Cell';
 import { Spinner } from '../Spinner';
+import { Action } from '../Cell';
 import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
 import './Editor.css';
 import { Empty } from './Empty';
 import { Button } from '@patternfly/react-core';
-import { PficonSortCommonAscIcon, PficonSortCommonDescIcon } from '@patternfly/react-icons';
+import { PficonSortCommonAscIcon, PficonSortCommonDescIcon, ArrowsAltVIcon } from '@patternfly/react-icons';
 
 const Editor: React.FC<{ 
   columns: any,
@@ -24,7 +25,8 @@ const Editor: React.FC<{
   mergeCells?: boolean,
   onClearFilters: any,
   computeCellMerges: any,
-  onSort: any
+  onSort: any,
+  insertRowAt: any
 }> = ({ 
   columns: columnDefs,
   rows,
@@ -40,7 +42,8 @@ const Editor: React.FC<{
   mergeCells = false,
   onClearFilters,
   computeCellMerges,
-  onSort
+  onSort,
+  insertRowAt
 }) => {
   // console.log('render Editor');
 
@@ -81,7 +84,6 @@ const Editor: React.FC<{
   // }, [columnDefs, rows, definitions, columnNames, lastForcedUpdate]); //filteredRows
 
   // React.useEffect(() => {
-  //   debugger;
   //   setState(prevState => ({
   //     ...prevState,
   //     fetchedRows: computeCellMerges(filterRows(rows).slice(0, rowsToFetch))
@@ -359,6 +361,16 @@ const Editor: React.FC<{
     onSort(columnIndex, sortDirection);
   };
 
+  const onInsertRowAbove = (rowIndex: number) => {
+    console.log('above');
+    insertRowAt(rowIndex);
+  }
+
+  const onInsertRowBelow = (rowIndex: number) => {
+    console.log('below');
+    insertRowAt(rowIndex + 1);
+  }
+
   // rowData
   // const fetchMoreRows = (page?: number) => {
   //   if (page) {
@@ -386,15 +398,21 @@ const Editor: React.FC<{
           if (index === 0) {
             return (
               <Button variant="plain" className="kie-grid__item kie-grid__number" key="other-number" onClick={() => onSortEditor(0)}>
-                <div>{other.name}</div>
-                <div>{state.sortBy === 0 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+                <div className={state.sortBy === 0 ? 'active': ''}>{other.name}</div>
+                <div>
+                  {state.sortBy === 0 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== 0 && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
               </Button>
             );
           } else {
             return (
               <Button variant="plain" className="kie-grid__item kie-grid__description" key="other-description" onClick={() => onSortEditor(1)}>
-                <div>{other.name}</div>
-                <div>{state.sortBy === 1 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+                <div className={state.sortBy === 1 ? 'active': ''}>{other.name}</div>
+                <div>
+                  {state.sortBy === 1 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== 1 && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
               </Button>
             );
           }
@@ -435,13 +453,15 @@ const Editor: React.FC<{
         <div className="kie-grid__header--given">
           {columnDefs.given.map((given: any) => {
             return given.children.map((givenChild: any, index: number) => {
-              debugger;
               columnIndex += 1;
               const sortByColumnIndex = columnIndex;
               return (
               <Button variant="plain" className="kie-grid__item kie-grid__property" key={`given property ${index}`} onClick={() => onSortEditor(sortByColumnIndex)}>
-                <div>{givenChild.name}</div>
-                <div>{state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+                <div className={state.sortBy === sortByColumnIndex ? 'active': ''}>{givenChild.name}</div>
+                <div>
+                  {state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== sortByColumnIndex && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
               </Button>
             )});
           })}
@@ -453,12 +473,17 @@ const Editor: React.FC<{
               const sortByColumnIndex = columnIndex;
               return (
               <Button variant="plain" className="kie-grid__item kie-grid__property" key={`expect property ${index}`} onClick={() => onSortEditor(sortByColumnIndex)}>
-                <div>{expectChild.name}</div>
-                <div>{state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon size="sm" /> : <PficonSortCommonDescIcon size="sm" />)}</div>
+                <div className={state.sortBy === sortByColumnIndex ? 'active': ''}>{expectChild.name}</div>
+                <div>
+                  {state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== sortByColumnIndex && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
               </Button>
             )});
           })}
         </div>
+
+        <div className="kie-grid__item kie-grid__action" key="action-column">Action</div>
 
         <div className={classNames('kie-grid__body', mergeCells && 'kie-grid--merged')}>
           {(searchValue || searchSelections.length > 0) && filterRows(rows).length === 0 ? (
@@ -542,6 +567,15 @@ const Editor: React.FC<{
                         </div>
                       );
                     })}
+                    <div 
+                      className="kie-grid__item"
+                    >
+                      <Action 
+                        rowIndex={Number.parseInt(row[0].value) - 1}
+                        onInsertRowAbove={onInsertRowAbove}
+                        onInsertRowBelow={onInsertRowBelow}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
