@@ -1,6 +1,6 @@
 {
   "name": "sce-sim-grid",
-  "version": "0.5.0",
+  "version": "0.5.0-rc1",
   "main": "lib-cjs/index.js",
   "module": "lib-esm/index.js",
   "files": [
