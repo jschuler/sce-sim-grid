@@ -2,10 +2,17 @@
 
 ## Demo
 
-[http://kogito.surge.sh](http://kogito.surge.sh)
-
 An example app that uses the sce-sim-grid package is under the `example` sub-directory.
 It can be launched with `yarn start`.
+It has also been uploaded to [http://kogito.surge.sh](http://kogito.surge.sh).
+
+## Build
+
+`yarn build` produces the library in three formats: lib-cjs, lib-esm, lib-umd
+
+## Publish
+
+After a build, the library can be packages with `npm pack` and then published with `npm publish`.
 
 ## Schemas
 
