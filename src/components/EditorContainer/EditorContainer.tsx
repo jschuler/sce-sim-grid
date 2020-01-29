@@ -380,6 +380,7 @@ const EditorContainer: React.FC<{
   let ctrlDown = false;
   const zKey = 90;
   const yKey = 89;
+  // @ts-ignore
   document.body.onkeydown = function(e) {
     if (e.ctrlKey || e.metaKey) {
       ctrlDown = true;
