@@ -1,68 +1,89 @@
 import {
   Select,
+  SelectGroup,
   SelectOption,
   TextInput,
-  ToolbarItem,
+  ToolbarItem
 } from '@patternfly/react-core';
 import * as React from 'react';
 import { useDebounce } from '../utils';
 
-const Search = React.memo<{
+const Search: React.FC<{ 
   data: any,
+  rows: any[],
   columnNames: any,
   onChange: any,
-}>(({ data, columnNames, onChange }) => {
+  lastFiltersClear: string
+}> = ({ 
+  data, rows, columnNames, onChange, lastFiltersClear
+}) => {
   // console.log('render Search');
 
-  const [isExpanded, setExpanded] = React.useState(false);
-  const [selected, setSelected] = React.useState<any[]>([]);
-  const [searchValue, setSearchValue] = React.useState('');
+  const [state, setState] = React.useState({
+    isExpanded: false,
+    selected: [] as any[],
+    searchValue: ''
+  });
 
-  const debouncedSearchTerm = useDebounce(searchValue, 500);
+  const debouncedSearchTerm = useDebounce(state.searchValue, 500);
 
   React.useEffect(() => {
     // this gets triggered after the debounce timer
-    onChange(debouncedSearchTerm, selected);
+    onChange(debouncedSearchTerm, state.selected);
   }, [debouncedSearchTerm]);
 
   React.useEffect(() => {
     // When selections in the filter change, update the filtered rows
-    if (searchValue) {
-      onChange(searchValue, selected);
+    if (state.searchValue) {
+      onChange(state.searchValue, state.selected);
     }
-  }, [ selected ]);
+  }, [ state.selected ]);
 
   React.useEffect(() => {
     // reset search and selection if the underlying data has changed
-    setSelected([]);
-    setSearchValue('');
-  }, [ data ]);
+    setState(prevState => ({
+      ...prevState,
+      selected: [],
+      searchValue: ''
+    }));
+  }, [ data, lastFiltersClear ]);
 
   /**
    * Update filtered rows on search change
    */
   const handleSearchChange = (value: string) => {
-    setSearchValue(value);
+    setState(prevState => ({
+      ...prevState,
+      searchValue: value
+    }));
   };
 
   /**
    * Toggles the filter select
    */
   const onSelectToggle = (isOpen: boolean) => {
-    setExpanded(isOpen);
+    setState(prevState => ({
+      ...prevState,
+      isExpanded: isOpen
+    }));
   };
 
   /**
    * Updates selection on filter select change
    */
-  const onSelect = (event: any, selection: any) => {
-    let selections;
-    if (selection.indexOf(selected) > -1) {
-      selections = selected.filter((item: any) => item !== selection);
+  const onSelect = (event: any, currentSelection: any) => {
+    let selections: string[];
+    if (state.selected.indexOf(currentSelection) > -1) {
+      // was previously selected, now deselect
+      selections = state.selected.filter((item: any) => item !== currentSelection);
     } else {
-      selections = [...selected, selection];
+      // select new
+      selections = [...state.selected, currentSelection];
     }
-    setSelected(selections);
+    setState(prevState => ({
+      ...prevState,
+      selected: selections
+    }));
   };
 
   /**
@@ -76,7 +97,7 @@ const Search = React.memo<{
         name="gridSearch"
         placeholder="Search grid"
         aria-label="Search grid"
-        value={searchValue}
+        value={state.searchValue}
         onChange={handleSearchChange}
       />
     );
@@ -86,12 +107,19 @@ const Search = React.memo<{
    * Builds the filter select
    */
   const buildSelect = () => {
-    const items: any[] = [];
+    let otherItems: any[] = [];
+    let givenItems: any[] = [];
+    let expectItems: any[] = [];
     columnNames.forEach((item: any, index: number) => {
-      const value = `${item.group} ${item.name}`;
-      items.push(
-        <SelectOption key={index} index={index} value={value} />,
-      );
+      const value = item.name ? `${item.group} | ${item.name}` : item.group;
+      if (item.type === 'OTHER') {
+        otherItems.push(<SelectOption key={index} index={index} value={value} />);
+      } else if (item.type === 'GIVEN') {
+        givenItems.push(<SelectOption key={index} index={index} value={value} />);
+      } else {
+        // EXPECT
+        expectItems.push(<SelectOption key={index} index={index} value={value} />);
+      }
     });
     return (
       <Select
@@ -99,12 +127,15 @@ const Search = React.memo<{
         aria-label="Select Input"
         onToggle={onSelectToggle}
         onSelect={onSelect}
-        selections={selected}
-        isExpanded={isExpanded}
+        selections={state.selected}
+        isExpanded={state.isExpanded}
         placeholderText="Filter on column"
         ariaLabelledBy="Filter on column"
+        isGrouped
       >
-        {items}
+        <SelectGroup label="Other">{otherItems}</SelectGroup>
+        <SelectGroup label="Given">{givenItems}</SelectGroup>
+        <SelectGroup label="Expect">{expectItems}</SelectGroup>
       </Select>
     );
   };
@@ -115,17 +146,7 @@ const Search = React.memo<{
       <ToolbarItem>{buildSelect()}</ToolbarItem>
     </>
   );
-}, (prevProps, nextProps) => {
-  if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) {
-    // data has changed, re-render
-    return false;
-  }
-  if (JSON.stringify(prevProps.columnNames) !== JSON.stringify(nextProps.columnNames)) {
-    // allRows have changed, re-render
-    return false;
-  }
-  return true;
-});
+};
 
 // @ts-ignore
 Search.whyDidYouRender = {

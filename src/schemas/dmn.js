@@ -1,3 +1,4 @@
+/* eslint-disable */
 var dmn_Module_Factory = function () {
   var dmn = {
     name: 'dmn',
@@ -1635,6 +1636,7 @@ var dmn_Module_Factory = function () {
     dmn: dmn
   };
 };
+/* eslint no-undef: */
 if (typeof define === 'function' && define.amd) {
   define([], dmn_Module_Factory);
 }

@@ -2,19 +2,17 @@
 
 ## Demo
 
-[http://kogito.surge.sh](http://kogito.surge.sh)
+An example app that uses the sce-sim-grid package is under the `example` sub-directory.
+It can be launched with `yarn start`.
+It has also been uploaded to [http://kogito.surge.sh](http://kogito.surge.sh).
 
-The library can be tested by navigating to the example folder and running `yarn start`.
-We use `yalc` to install this library package named `sce-sim-grid` under the example folder. This simulates as if we were pulling a distribution from npm.
-```
-yarn global add yalc
-yarn build
-yalc publish
-cd example
-yalc update
-yarn install
-yarn start
-```
+## Build
+
+`yarn build` produces the library in three formats: lib-cjs, lib-esm, lib-umd
+
+## Publish
+
+After a build, the library can be packages with `npm pack` and then published with `npm publish`.
 
 ## Schemas
 

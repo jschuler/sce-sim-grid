@@ -1,45 +1,65 @@
 import * as React from 'react';
-import InfiniteScroll from 'react-infinite-scroll-component';
+// import InfiniteScroll from 'react-infinite-scroll-component';
+import classNames from 'classnames';
 import { Input, Select } from '../Cell';
-import { Spinner } from '../Spinner';
+// import { Spinner } from '../Spinner';
+import { Action } from '../Cell';
 import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
 import './Editor.css';
+import { Empty } from './Empty';
+import { Pagination, Button } from '@patternfly/react-core';
+import { PficonSortCommonAscIcon, PficonSortCommonDescIcon, ArrowsAltVIcon } from '@patternfly/react-icons';
 
-const Editor = React.memo<{
+const Editor: React.FC<{ 
   columns: any,
+  rows: any[],
+  filterRows: any,
+  searchValue: string,
+  searchSelections: any[],
   filteredRows: any,
   definitions: any,
   columnNames: any,
   onSave: any,
-  onUndo: any,
-  onRedo: any,
   lastForcedUpdate: string,
   readOnly: boolean,
-}>(({
+  mergeCells?: boolean,
+  onClearFilters: any,
+  computeCellMerges: any,
+  onSort: any,
+  insertRowAt: any,
+  page: number,
+  perPage: number,
+  fetchPage: any
+}> = ({ 
   columns: columnDefs,
+  rows,
+  filterRows,
+  searchValue,
+  searchSelections,
   filteredRows,
   definitions,
   columnNames,
   onSave,
-  onUndo,
-  onRedo,
   lastForcedUpdate,
   readOnly,
+  mergeCells = false,
+  onClearFilters,
+  computeCellMerges,
+  onSort,
+  insertRowAt,
+  page,
+  perPage,
+  fetchPage
 }) => {
   // console.log('render Editor');
 
-  const rowsToFetch = 50;
-
-  const [editableCell, setEditable] = React.useState<string>('');
-  const [expandedSelect, setExpandedSelect] = React.useState(false);
-  const [currentPage, setCurrentPage] = React.useState(1);
-
-  // state from props
-  const [columnDefsState, setColumnDefsState] = React.useState(columnDefs);
-  const [fetchedRows, setFetchedRows] = React.useState(filteredRows.slice(0, rowsToFetch));
-  const [definitionsState, setDefinitionsState] = React.useState(definitions);
-  const [columnNamesState, setColumnNamesState] = React.useState(columnNames);
-  const [lastForcedUpdateState, setLastForcedUpdateState] = React.useState(lastForcedUpdate);
+  const [state, setState] = React.useState({
+    editableCell: '',
+    expandedSelect: false,
+    currentPage: 1,
+    sortBy: 0,
+    sortDirection: 'asc'
+  });
 
   const editorRef = React.useRef(null);
 
@@ -49,22 +69,6 @@ const Editor = React.memo<{
       setNumExpectColumns(columnDefs.numExpect);
     }, 1);
   }, [columnDefs]);
-
-  React.useEffect(() => {
-    // render depends on updated value of fetchedRows
-    if (JSON.stringify(columnDefsState) !== JSON.stringify(columnDefs)) {
-      setColumnDefsState(columnDefs);
-    }
-    if (lastForcedUpdateState !== lastForcedUpdate || JSON.stringify(fetchedRows) !== JSON.stringify(filteredRows.slice(0, rowsToFetch))) {
-      setFetchedRows(filteredRows.slice(0, rowsToFetch));
-    }
-    if (JSON.stringify(definitionsState) !== JSON.stringify(definitions)) {
-      setDefinitionsState(definitions);
-    }
-    if (JSON.stringify(columnNamesState) !== JSON.stringify(columnNames)) {
-      setColumnNamesState(columnNames);
-    }
-  }, [columnDefs, filteredRows, definitions, columnNames, lastForcedUpdate]);
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -80,12 +84,18 @@ const Editor = React.memo<{
 
   const activateCell = (id: string) => {
     if (id) {
-      setEditable(id);
+      setState(prevState => ({
+        ...prevState,
+        editableCell: id
+      }));
     }
   };
 
   const deactivateCell = () => {
-    setEditable('');
+    setState(prevState => ({
+      ...prevState,
+      editableCell: ''
+    }));
   };
 
   const activateAndFocusCell = (id: string) => {
@@ -100,11 +110,11 @@ const Editor = React.memo<{
 
   const onCellClick = (event: any) => {
     const { id } = event.target;
-    if (id === editableCell) {
+    if (id === state.editableCell) {
       // already active
       return null;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       // get out of a previous cell editing mode
       deactivateCell();
     }
@@ -136,12 +146,12 @@ const Editor = React.memo<{
   /**
    * Up arrow key
    */
-  const onUpKeyPress = (event: any) => {
-    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+  const onUpKeyPress = (event: any, previousId?: string) => {
+    const activeElement = previousId || (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
@@ -157,7 +167,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${newRow} column ${currentIdArr[3]}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // recurse
+          onUpKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -165,16 +181,16 @@ const Editor = React.memo<{
   /**
    * Down arrow key
    */
-  const onDownKeyPress = (event: any) => {
-    const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+  const onDownKeyPress = (event: any, previousId?: string) => {
+    const activeElement = previousId || (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
-    const maxRow = filteredRows.length - 1;
+    const maxRow = rows.length - 1; // filteredRows
     let targetId;
     if (currentId) {
       // ['row', '1', 'column', '2']
@@ -186,7 +202,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${newRow} column ${currentIdArr[3]}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // recurse
+          onDownKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -196,10 +218,10 @@ const Editor = React.memo<{
    */
   const onLeftKeyPress = (event: any) => {
     const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
@@ -215,7 +237,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${currentIdArr[1]} column ${newCol}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // the element may be hidden due to cell merging. recurse up to find the master cell
+          onUpKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -225,10 +253,10 @@ const Editor = React.memo<{
    */
   const onRightKeyPress = (event: any) => {
     const activeElement = (document && document.activeElement && document.activeElement.getAttribute('id')) || '';
-    if (expandedSelect) {
+    if (state.expandedSelect) {
       return;
     }
-    if (editableCell) {
+    if (state.editableCell) {
       return;
     }
     const currentId = activeElement;
@@ -244,7 +272,13 @@ const Editor = React.memo<{
         return;
       } else {
         targetId = `row ${currentIdArr[1]} column ${newCol}`;
-        focusCell(targetId);
+        if (document.getElementById(targetId) && document.getElementById(targetId)!.offsetHeight) {
+          // checking offsetHeight is a trick to know if the element is visible
+          focusCell(targetId);
+        } else {
+          // the element may be hidden due to cell merging. recurse up to find the master cell
+          onUpKeyPress(event, targetId);
+        }
       }
     }
   };
@@ -268,41 +302,110 @@ const Editor = React.memo<{
 
   // Command + C / CTRL + C copies the focused cell content
   useKeyPress(/c/i, onCopy, { log: 'editor', withModifier: true });
-  // Command + Z / CTRL + Z undo the last change
-  useKeyPress(/z/i, onUndo, { log: 'editor', withModifier: true, isActive: !readOnly });
-  // Command + Shift + Z / CTRL + Shift + Z undo the last change
-  useKeyPress(/z/i, onRedo, { log: 'editor', withModifier: true, withShift: true, isActive: !readOnly });
-  useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!editableCell && !readOnly) });
+  useKeyPress('Enter', onEnter, { log: 'editor', isActive: (!state.editableCell && !readOnly) });
   useKeyPress(38, onUpKeyPress, { log: 'editor' });
   useKeyPress(40, onDownKeyPress, { log: 'editor' });
   useKeyPress(37, onLeftKeyPress, { log: 'editor' });
   useKeyPress(39, onRightKeyPress, { log: 'editor' });
 
   const onSelectToggleCallback = (id: any, isExpanded: boolean) => {
-    setExpandedSelect(isExpanded);
+    setState(prevState => ({
+      ...prevState,
+      expandedSelect: isExpanded
+    }));
   };
 
-  // rowData
-  const fetchMoreRows = (page?: number) => {
-    if (page) {
-      setFetchedRows((prevState: any) => ([...prevState, ...filteredRows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)]));
+  const setEditable = (id: string) => {
+    setState(prevState => ({
+      ...prevState,
+      editableCell: id
+    }));
+  };
+
+  const onSortEditor = (columnIndex: number) => {
+    let sortDirection: string = 'asc';
+    if (state.sortBy === columnIndex) {
+      // switch sort direction
+      sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+      setState(prevState => ({
+        ...prevState,
+        sortDirection
+      }));
     } else {
-      setFetchedRows((prevState: any) => ([...prevState, ...filteredRows.slice(currentPage * rowsToFetch, currentPage * rowsToFetch + rowsToFetch)]));
-      setCurrentPage(currentPage + 1);
+      setState(prevState => ({
+        ...prevState,
+        sortBy: columnIndex,
+        sortDirection: 'asc'
+      }));
     }
+    onSort(columnIndex, sortDirection);
   };
 
-  // console.log(fetchedRows);
-  // console.log(columnNamesState);
-  return !fetchedRows ? null : (
+  const onInsertRowAbove = (rowIndex: number) => {
+    console.log('above');
+    insertRowAt(rowIndex);
+  }
+
+  const onInsertRowBelow = (rowIndex: number) => {
+    console.log('below');
+    insertRowAt(rowIndex + 1);
+  }
+
+  // const fetchMoreRows = () => {
+  //   setState(prevState => ({
+  //     ...prevState,
+  //     page: prevState.page + 1
+  //   }));
+  // };
+
+  let columnIndex = 1;
+  return !rows ? null : (
     <>
+      {rows.length > 20 && <Pagination
+        className="pf-u-pb-md"
+        itemCount={filterRows(rows).length}/* required: Total number of items. */
+        variant={'top'}/* optional: Position where pagination is rendered. */
+        isCompact={false}/* optional: Flag indicating if pagination is compact */
+        perPage={perPage}/* optional: Number of items per page. */
+        page={page}/* optional: Current page number. */
+        onSetPage={(_evt, value) => fetchPage(value, perPage)}
+        onPerPageSelect={(_evt, value) => fetchPage(1, value)}
+        perPageOptions={[
+          {
+            title: '10',
+            value: 10
+          },
+          {
+            title: '20',
+            value: 20
+          },
+          {
+            title: '50',
+            value: 50
+          }
+        ]}
+      />}
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
-        {columnDefsState.other.map((other: { name: string }, index: number) => {
+        {columnDefs.other.map((other: { name: string }, index: number) => {
           if (index === 0) {
-            return <div className="kie-grid__item kie-grid__number" key="other-number">{other.name}</div>;
+            return (
+              <Button variant="plain" className="kie-grid__item kie-grid__number" key="other-number" onClick={() => onSortEditor(0)}>
+                <div className={state.sortBy === 0 ? 'active': ''}>{other.name}</div>
+                <div>
+                  {state.sortBy === 0 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== 0 && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
+              </Button>
+            );
           } else {
             return (
-              <div className="kie-grid__item kie-grid__description" key="other-description">{other.name}</div>
+              <Button variant="plain" className="kie-grid__item kie-grid__description" key="other-description" onClick={() => onSortEditor(1)}>
+                <div className={state.sortBy === 1 ? 'active': ''}>{other.name}</div>
+                <div>
+                  {state.sortBy === 1 && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== 1 && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
+              </Button>
             );
           }
         })}
@@ -316,7 +419,7 @@ const Editor = React.memo<{
 
         {/* <!-- grid instance headers need to have a grid-column span set --> */}
         <div className="kie-grid__header--given">
-          {columnDefsState.given.map((given: any, index: number) => (
+          {columnDefs.given.map((given: any, index: number) => (
             <div
               key={`given instance ${index}`}
               className="kie-grid__item kie-grid__instance"
@@ -328,7 +431,7 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--expect">
-          {columnDefsState.expect.map((expect: any, index: number) => (
+          {columnDefs.expect.map((expect: any, index: number) => (
             <div
               key={`expect instance ${index}`}
               className="kie-grid__item kie-grid__instance"
@@ -340,106 +443,167 @@ const Editor = React.memo<{
         </div>
 
         <div className="kie-grid__header--given">
-          {columnDefsState.given.map((given: any) => {
-            return given.children.map((givenChild: any, index: number) => (
-              <div key={`given property ${index}`} className="kie-grid__item kie-grid__property">{givenChild.name}</div>
-            ));
+          {columnDefs.given.map((given: any) => {
+            return given.children.map((givenChild: any, index: number) => {
+              columnIndex += 1;
+              const sortByColumnIndex = columnIndex;
+              return (
+              <Button variant="plain" className="kie-grid__item kie-grid__property" key={`given property ${index}`} onClick={() => onSortEditor(sortByColumnIndex)}>
+                <div className={state.sortBy === sortByColumnIndex ? 'active': ''}>{givenChild.name}</div>
+                <div>
+                  {state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== sortByColumnIndex && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
+              </Button>
+            )});
           })}
         </div>
         <div className="kie-grid__header--expect">
-          {columnDefsState.expect.map((expect: any) => {
-            return expect.children.map((expectChild: any, index: number) => (
-              <div key={`expect property ${index}`} className="kie-grid__item kie-grid__property">{expectChild.name}</div>
-            ));
+          {columnDefs.expect.map((expect: any) => {
+            return expect.children.map((expectChild: any, index: number) => {
+              columnIndex += 1;
+              const sortByColumnIndex = columnIndex;
+              return (
+              <Button variant="plain" className="kie-grid__item kie-grid__property" key={`expect property ${index}`} onClick={() => onSortEditor(sortByColumnIndex)}>
+                <div className={state.sortBy === sortByColumnIndex ? 'active': ''}>{expectChild.name}</div>
+                <div>
+                  {state.sortBy === sortByColumnIndex && (state.sortDirection === 'asc' ? <PficonSortCommonAscIcon className="sort-icon active" size="sm" /> : <PficonSortCommonDescIcon className="sort-icon active" size="sm" />)}
+                  {state.sortBy !== sortByColumnIndex && <ArrowsAltVIcon className="sort-icon" size="sm" />}
+                </div>
+              </Button>
+            )});
           })}
         </div>
 
-        <div className="kie-grid__body">
-          <InfiniteScroll
-            dataLength={fetchedRows.length}
-            next={fetchMoreRows}
-            hasMore={fetchedRows.length < filteredRows.length}
-            loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
-            scrollableTarget="sce-sim-grid__main"
-          >
-              {fetchedRows.map((row: any, rowIndex: number) => (
-                <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
-                  {row.map((cell: any, index: number) => {
-                    // get the type of the column to pass on to the input for formatting / validation
-                    let type = 'string';
-                    let columnGroup = '';
-                    let columnName = '';
-                    if (index === 0) {
-                      // row index
-                      type = 'number';
-                    } else if (index === 1) {
-                      // description
-                      type = 'string';
-                    } else if (index > 1) {
-                      columnGroup = columnNamesState[index].group;
-                      columnName = columnNamesState[index].name;
-                      type = (definitionsState.map[columnNamesState[index].group] && definitionsState.map[columnGroup][columnName]) || 'string';
-                    }
-                    const cellIndex = index;
-                    const value = cell && cell.value ? cell.value : '';
-                    const path = cell && cell.path ? cell.path : '';
-                    // const cellId = `cell ${cellIndex}`;
-                    const inputId = `row ${rowIndex} column ${cellIndex}`;
-                    let component;
-                    const typeArr = type.split(',');
-                    if (typeArr.length > 1) {
-                      // Multiple options, render Select
-                      component = (
-                        <Select
-                          isReadOnly={inputId !== editableCell}
-                          id={inputId}
-                          originalValue={value}
-                          onSelectToggleCallback={onSelectToggleCallback}
-                          options={typeArr.map((typeString) => typeString.trim())}
-                          deactivateAndFocusCell={deactivateAndFocusCell}
-                          setEditable={setEditable}
-                          onSave={onSave}
+        <div className="kie-grid__item kie-grid__action" key="action-column">Action</div>
+
+        <div className={classNames('kie-grid__body', mergeCells && 'kie-grid--merged')}>
+          {(searchValue || searchSelections.length > 0) && filterRows(rows).length === 0 ? (
+            <Empty className="kie-grid__item--empty" onClear={onClearFilters} />
+          ) : (
+            // <InfiniteScroll
+            //   dataLength={filterRows(rows).slice(0, state.page * 5).length}
+            //   next={fetchMoreRows}
+            //   hasMore={filterRows(rows).slice(0, state.page * 5).length < rows.length} // filteredRows
+            //   loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
+            //   scrollableTarget="sce-sim-grid__main"
+            // >
+              <div>
+                {
+                  computeCellMerges(filterRows(rows).slice(((page - 1) * perPage), page * perPage)).map((row: any) => (
+                    <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
+                      {row.map((cell: any, index: number) => {
+                        // get the type of the column to pass on to the input for formatting / validation
+                        let type = 'string';
+                        let columnGroup = '';
+                        let columnName = '';
+                        if (index === 0) {
+                          // row index
+                          type = 'number';
+                        } else if (index === 1) {
+                          // description
+                          type = 'string';
+                        } else if (index > 1) {
+                          columnGroup = columnNames[index].group;
+                          columnName = columnNames[index].name;
+                          type = (definitions && definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
+                        }
+                        const cellIndex = index;
+                        const value = cell && cell.value ? cell.value : '';
+                        const path = cell && cell.path ? cell.path : '';
+                        // const cellId = `cell ${cellIndex}`;
+                        const inputId = `row ${Number.parseInt(row[0].value, 10) - 1} column ${cellIndex}`;
+                        let component;
+                        const typeArr = type.split(',');
+                        if (typeArr.length > 1) {
+                          // Multiple options, render Select
+                          component = (
+                            <Select
+                              isReadOnly={inputId !== state.editableCell}
+                              cellId={inputId}
+                              rowId={row[0].value}
+                              originalValue={value}
+                              onSelectToggleCallback={onSelectToggleCallback}
+                              options={typeArr.map((typeString) => typeString.trim())}
+                              deactivateAndFocusCell={deactivateAndFocusCell}
+                              setEditable={setEditable}
+                              onSave={onSave}
+                            />
+                          );
+                        } else {
+                          component = (
+                            <Input
+                              isReadOnly={inputId !== state.editableCell}
+                              cellId={inputId}
+                              rowId={row[0].value}
+                              originalValue={value}
+                              path={path}
+                              type={type}
+                              deactivateAndFocusCell={deactivateAndFocusCell}
+                              setEditable={setEditable}
+                              onSave={onSave}
+                            />
+                          );
+                        }
+                        const mergeRowsStyle = {
+                          gridRow: `span ${cell.coverCells || 1}`
+                        };
+                        return (
+                          <div 
+                            className={classNames('kie-grid__item', cell.master && 'kie-grid__item--merge-master', cell.follower && 'kie-grid__item--merge-away')} 
+                            style={mergeCells ? mergeRowsStyle : {}}
+                            key={inputId} 
+                            onClick={onCellClick} 
+                            onDoubleClick={onCellDoubleClick}
+                          >
+                            {cellIndex === 0 ? value : component}
+                          </div>
+                        );
+                      })}
+                      <div 
+                        className="kie-grid__item"
+                      >
+                        <Action 
+                          rowIndex={Number.parseInt(row[0].value) - 1}
+                          onInsertRowAbove={onInsertRowAbove}
+                          onInsertRowBelow={onInsertRowBelow}
                         />
-                      );
-                    } else {
-                      component = (
-                        <Input
-                          isReadOnly={inputId !== editableCell}
-                          id={inputId}
-                          originalValue={value}
-                          path={path}
-                          type={type}
-                          deactivateAndFocusCell={deactivateAndFocusCell}
-                          setEditable={setEditable}
-                          onSave={onSave}
-                        />
-                      );
-                    }
-                    return (
-                      <div className="kie-grid__item" key={inputId} onClick={onCellClick} onDoubleClick={onCellDoubleClick}>
-                        {cellIndex === 0 ? value : component}
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
-          </InfiniteScroll>
+                    </div>
+                  ))
+                  }
+              </div>
+            //</InfiniteScroll>
+          )}
         </div>
       </div>
+      {rows.length > 20 && <Pagination
+        className="pf-u-pt-md"
+        itemCount={filterRows(rows).length}/* required: Total number of items. */
+        variant={'bottom'}/* optional: Position where pagination is rendered. */
+        isCompact={false}/* optional: Flag indicating if pagination is compact */
+        perPage={perPage}/* optional: Number of items per page. */
+        page={page}/* optional: Current page number. */
+        onSetPage={(_evt, value) => fetchPage(value, perPage)}
+        onPerPageSelect={(_evt, value) => fetchPage(1, value)}
+        perPageOptions={[
+          {
+            title: '10',
+            value: 10
+          },
+          {
+            title: '20',
+            value: 20
+          },
+          {
+            title: '50',
+            value: 50
+          }
+        ]}
+      />}
     </>
   );
-}, (prevProps, nextProps) => {
-  if (prevProps.lastForcedUpdate !== nextProps.lastForcedUpdate) {
-    // console.log('forced Editor update');
-    return false;
-  }
-  if (prevProps.filteredRows.length !== nextProps.filteredRows.length ||
-    JSON.stringify(prevProps.filteredRows) !== JSON.stringify(nextProps.filteredRows)) {
-    // filteredRows have changed, re-render
-    return false;
-  }
-  return true;
-});
+};
 
 // @ts-ignore
 Editor.whyDidYouRender = {

@@ -7,6 +7,13 @@ export const getDmnFilePath = (data: Scesim): string => {
   return dmnFilePath;
 };
 
+export const getDmnName = (data: Scesim): string => {
+  const {
+    dmnName,
+  } = data.value.simulation.simulationDescriptor;
+  return dmnName;
+};
+
 export const getColumnNames = (data: Scesim) => {
   const columns: any[] = [];
   const {
@@ -16,9 +23,11 @@ export const getColumnNames = (data: Scesim) => {
     (col: FactMapping) => {
       const name = col.expressionAlias || '';
       const group = col.factAlias || '';
+      const { type } = col.expressionIdentifier;
       columns.push({
         name,
         group,
+        type
       });
     },
   );

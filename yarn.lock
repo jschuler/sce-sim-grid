@@ -993,35 +993,35 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^13.0.0"
 
-"@patternfly/patternfly@^2.33.5":
-  version "2.38.1"
-  resolved "https://registry.yarnpkg.com/@patternfly/patternfly/-/patternfly-2.38.1.tgz#f21e904dc0952564b9411c235856b9c12fa4bfe9"
-  integrity sha512-dK3ou6BI3b1ECGh2RJTyS1nIHicedhgQPTEZ0sVZBF11JYuyS75cIx286j1noHjz/NrygHc2VP6JKAY+CsdOmg==
+"@patternfly/patternfly@^2.45.4":
+  version "2.45.4"
+  resolved "https://registry.yarnpkg.com/@patternfly/patternfly/-/patternfly-2.45.4.tgz#48ab8b64fcbef58a57d0da6fce40a429bc8403e8"
+  integrity sha512-9Pf8FYbuEA+cWKQ6u5wXjRQ/h80tVUf0tXzlWypVkAAztKj+nDja+Iwvd5RmclWdbfx8U9MwkrdjMEc2f+krHA==
 
-"@patternfly/react-core@3.117.5":
-  version "3.117.5"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-core/-/react-core-3.117.5.tgz#f42c3b4604ee41157fe31353d33b64131dd1757a"
-  integrity sha512-8/OW6ggwcqOGQ/585TOXNqideUBxRIQ0s1xSThcasEFRDpFH/NklQVAcsLjpKjIO/N2MHoECqYdqxKY3YD2dpg==
+"@patternfly/react-core@3.124.1":
+  version "3.124.1"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-core/-/react-core-3.124.1.tgz#26cc7021126f1336840a312f42c9af6a7b1b529a"
+  integrity sha512-jKCTyyT3FmAiOMkm/Nt3zHoAyIlrLBKLWOFi+GuC+4PAVyQetK42+Hp8JyrSBPi4q+pfjGjQUngmpkhooGETlg==
   dependencies:
-    "@patternfly/react-icons" "^3.14.14"
-    "@patternfly/react-styles" "^3.6.1"
-    "@patternfly/react-tokens" "^2.7.1"
+    "@patternfly/react-icons" "^3.14.23"
+    "@patternfly/react-styles" "^3.6.11"
+    "@patternfly/react-tokens" "^2.7.10"
     emotion "^9.2.9"
     exenv "^1.2.2"
     focus-trap-react "^4.0.1"
     tippy.js "3.4.1"
 
-"@patternfly/react-icons@^3.14.14":
-  version "3.14.14"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-icons/-/react-icons-3.14.14.tgz#fb03c93a4a012516f318682246012fb4c87e5c0a"
-  integrity sha512-yLfHWAE/IAxM8X4jAyMeoVxQ2XEZ+O6Yb1etPkc8KUJ0ZW6NpIh7ba5YYhuc1DMGLJIlAC8NF4D+3/Ny4JwXcQ==
+"@patternfly/react-icons@^3.14.23", "@patternfly/react-icons@^3.14.25":
+  version "3.14.25"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-icons/-/react-icons-3.14.25.tgz#2d7c41d71006bf78f59d3137d66fed0c2deaab2d"
+  integrity sha512-XOjWWvrlZg2Rpkg3x1UncacdUX9HMHv0V+xY44qYu6F+UE4Z6/zsN2zMOMA9q3YxSfDaZ6h3yBHhMQLheBT+Rw==
   dependencies:
     "@fortawesome/free-brands-svg-icons" "^5.8.1"
 
-"@patternfly/react-styles@^3.6.1":
-  version "3.6.1"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-styles/-/react-styles-3.6.1.tgz#9860a82f9740fceb2498a43d32c20d5896e05863"
-  integrity sha512-EvDGxb/KGFKG1JwLvzKrnC059u+mJRjFgvP/kX5ul9a7KvT9/PzPOIkMF8xxODu01BXIjgaOKJO17qqYLLUIcg==
+"@patternfly/react-styles@^3.6.11":
+  version "3.6.11"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-styles/-/react-styles-3.6.11.tgz#43fee9c24469a5e7fca824740c077033f7e532a8"
+  integrity sha512-iJsj+DPKUi5KAbSR7uQ76iJEDfw/254Vbt+zXm686NTgTR9cloVBUx3ww8ni+CPjk0A9kyaf64FfOXrgoIicAg==
   dependencies:
     "@babel/helper-plugin-utils" "^7.0.0-beta.48"
     camel-case "^3.0.0"
@@ -1037,10 +1037,10 @@
     resolve-from "^4.0.0"
     typescript "3.4.5"
 
-"@patternfly/react-tokens@^2.7.1":
-  version "2.7.1"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-tokens/-/react-tokens-2.7.1.tgz#eb08ad8c621fc1aa0559e9a516bd7476e58de626"
-  integrity sha512-QqKqCG2WuvNYBeo0J5FyFHWscKbm8iswXVMdMynLX2isfebopRgoZM2kydOmohpYjCiUqvkFpMDVGikBVbYtsA==
+"@patternfly/react-tokens@^2.7.10":
+  version "2.7.10"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-tokens/-/react-tokens-2.7.10.tgz#5e990e862b2311329066e8d005cdac6cd5e19af3"
+  integrity sha512-7p7L0CwSHVKnN2vu/zNTL0NN6K+tBPfS1Vw1fnynglWomBW2Uqb5lKlkORuySOCa3Zy/WMNmTI9feFrVpCIV+w==
 
 "@types/babel__core@^7.1.0":
   version "7.1.3"
@@ -6208,10 +6208,12 @@ react-dom@16.11.0:
     prop-types "^15.6.2"
     scheduler "^0.17.0"
 
-react-infinite-scroll-component@^4.5.3:
-  version "4.5.3"
-  resolved "https://registry.yarnpkg.com/react-infinite-scroll-component/-/react-infinite-scroll-component-4.5.3.tgz#008c2ec358628b490117ffc4aa6ce6982b26f8be"
-  integrity sha512-8O0PIeYZx0xFVS1ChLlLl/1obn64vylzXeheLsm+t0qUibmet7U6kDaKFg6jVRQJwDikWBTcyqEFFsxrbFCO5w==
+react-infinite-scroll-component@^5.0.4:
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/react-infinite-scroll-component/-/react-infinite-scroll-component-5.0.4.tgz#45ca72c75bfe1ad5cf46d032247a8e0af65593ca"
+  integrity sha512-wl6MXreH57z6X6uILpRbvt2iaETZDX4HdnHaPy0vp9fVQ01ALM+zvFrG2xk2nsxynXxob2IEFan9eI1CDV2V0A==
+  dependencies:
+    throttle-debounce "^2.1.0"
 
 react-is@^16.8.1, react-is@^16.8.4, react-is@^16.8.6:
   version "16.11.0"
@@ -7178,6 +7180,11 @@ throat@^4.0.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/throat/-/throat-4.1.0.tgz#89037cbc92c56ab18926e6ba4cbb200e15672a6a"
   integrity sha1-iQN8vJLFarGJJua6TLsgDhVnKmo=
+
+throttle-debounce@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/throttle-debounce/-/throttle-debounce-2.1.0.tgz#257e648f0a56bd9e54fe0f132c4ab8611df4e1d5"
+  integrity sha512-AOvyNahXQuU7NN+VVvOOX+uW6FPaWdAOdRP5HfwYxAfCzXTFKRMoIMk+n+po318+ktcChx+F1Dd91G3YHeMKyg==
 
 through2@^2.0.0, through2@^2.0.1:
   version "2.0.5"

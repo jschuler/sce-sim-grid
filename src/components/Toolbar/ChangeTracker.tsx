@@ -6,12 +6,15 @@ import {
 import { RedoIcon, UndoIcon } from '@patternfly/react-icons';
 import * as React from 'react';
 import { focusCell } from '../utils';
+import './ChangeTracker.css';
 
-const ChangeTracker = React.memo<{
+const ChangeTracker: React.FC<{ 
   undoRedo: any,
   onUndo: any,
-  onRedo: any,
-}>(({ undoRedo, onUndo, onRedo }) => {
+  onRedo: any
+}> = ({ 
+  undoRedo, onUndo, onRedo
+}) => {
   // console.log('render ChangeTracker');
 
   const [stateFromProps, setStateFromProps] = React.useState({
@@ -37,8 +40,13 @@ const ChangeTracker = React.memo<{
   /**
    * When a cell id is clicked in the change-tracker, it scrolls and focuses the corresponding element in the grid
    */
-  const focusElement = (id: string) => {
-    focusCell(id, 250, true);
+  const focusElement = (id: string, parentId?: string) => {
+    // checking for offsetHeight is a trick to see if the element is visible
+    if (document.getElementById(id) && document.getElementById(id)!.offsetHeight) {
+      focusCell(id, 250, true);
+    } else if (parentId && document.getElementById(parentId) && document.getElementById(parentId)!.offsetHeight) {
+      focusCell(parentId, 250, true);
+    }
   };
 
   /**
@@ -58,12 +66,18 @@ const ChangeTracker = React.memo<{
     if (stateFromProps.undoRedo.undoList.length) {
       return (
         <Expandable toggleText={getChangeText()} className="kie-changes pf-u-mx-sm">
-          <div className="pf-c-content">
+          <div className="change-tracker pf-c-content">
             <dl>
               {stateFromProps.undoRedo.undoList.map((change: any, index: number) => (
                 <React.Fragment key={index}>
-                  <dt><Button variant="link" onClick={() => focusElement(change.id)} isInline={true}>{change.id}</Button></dt>
+                  <dt><Button variant="link" onClick={() => focusElement(change.id)} isInline={true}>#{change.rowId}</Button></dt>
                   <dd>{change.value}</dd>
+                  {change.withRows && change.withRows.map((row: any, subIndex: number) => (
+                    <React.Fragment key={`${index}_${subIndex}`}>
+                      <dt className="inline-dt">―<Button variant="link" onClick={() => focusElement(row.id, change.id)} isInline={true}>#{row.rowId}</Button></dt>
+                      <dd>{row.value}</dd>
+                      </React.Fragment>
+                  ))}
                 </React.Fragment>
               ))}
             </dl>
@@ -106,19 +120,7 @@ const ChangeTracker = React.memo<{
       </div>
     </ToolbarItem>
   );
-}, (prevProps, nextProps) => {
-  if (prevProps.undoRedo.undoList.length !== nextProps.undoRedo.undoList.length ||
-    JSON.stringify(prevProps.undoRedo.undoList) !== JSON.stringify(nextProps.undoRedo.undoList)) {
-    // last changed cell has changed, re-render
-    return false;
-  }
-  if (prevProps.undoRedo.redoList.length !== nextProps.undoRedo.redoList.length ||
-    JSON.stringify(prevProps.undoRedo.redoList) !== JSON.stringify(nextProps.undoRedo.redoList)) {
-    // last changed cell has changed, re-render
-    return false;
-  }
-  return true;
-});
+};
 
 // @ts-ignore
 ChangeTracker.whyDidYouRender = {

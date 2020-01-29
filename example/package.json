@@ -15,16 +15,18 @@
     "@types/node": "12.11.6",
     "@types/react": "16.9.9",
     "@types/react-dom": "16.9.2",
+    "babel-preset-react-app": "^9.1.0",
+    "customize-cra": "^0.9.1",
     "react": "16.11.0",
+    "react-app-rewired": "^2.1.5",
     "react-dom": "16.11.0",
     "react-scripts": "3.2.0",
-    "sce-sim-grid": "file:.yalc/sce-sim-grid",
-    "typescript": "3.7.0-dev.20191021"
+    "typescript": "3.7.3"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

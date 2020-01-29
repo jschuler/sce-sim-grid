@@ -1,3 +1,4 @@
+/* eslint-disable */
 var scesim_Module_Factory = function () {
   var scesim = {
     name: 'scesim',
