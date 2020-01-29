@@ -1,13 +1,13 @@
 import * as React from 'react';
-import InfiniteScroll from 'react-infinite-scroll-component';
+// import InfiniteScroll from 'react-infinite-scroll-component';
 import classNames from 'classnames';
 import { Input, Select } from '../Cell';
-import { Spinner } from '../Spinner';
+// import { Spinner } from '../Spinner';
 import { Action } from '../Cell';
 import { focusCell, setCaretPositionAtEnd, useKeyPress } from '../utils';
 import './Editor.css';
 import { Empty } from './Empty';
-import { Button } from '@patternfly/react-core';
+import { Pagination, Button } from '@patternfly/react-core';
 import { PficonSortCommonAscIcon, PficonSortCommonDescIcon, ArrowsAltVIcon } from '@patternfly/react-icons';
 
 const Editor: React.FC<{ 
@@ -26,7 +26,10 @@ const Editor: React.FC<{
   onClearFilters: any,
   computeCellMerges: any,
   onSort: any,
-  insertRowAt: any
+  insertRowAt: any,
+  page: number,
+  perPage: number,
+  fetchPage: any
 }> = ({ 
   columns: columnDefs,
   rows,
@@ -43,11 +46,12 @@ const Editor: React.FC<{
   onClearFilters,
   computeCellMerges,
   onSort,
-  insertRowAt
+  insertRowAt,
+  page,
+  perPage,
+  fetchPage
 }) => {
   // console.log('render Editor');
-
-  const rowsToFetch = 50;
 
   const [state, setState] = React.useState({
     editableCell: '',
@@ -55,7 +59,6 @@ const Editor: React.FC<{
     currentPage: 1,
     sortBy: 0,
     sortDirection: 'asc'
-    // fetchedRows: rows.slice(0, rowsToFetch) as any[]
   });
 
   const editorRef = React.useRef(null);
@@ -66,29 +69,6 @@ const Editor: React.FC<{
       setNumExpectColumns(columnDefs.numExpect);
     }, 1);
   }, [columnDefs]);
-
-  // React.useEffect(() => {
-  //   // render depends on updated value of fetchedRows
-  //   if (JSON.stringify(columnDefsState) !== JSON.stringify(columnDefs)) {
-  //     setColumnDefsState(columnDefs);
-  //   }
-  //   if (lastForcedUpdateState !== lastForcedUpdate || JSON.stringify(fetchedRows) !== JSON.stringify(rows.slice(0, rowsToFetch))) { // filteredRows
-  //     setFetchedRows(rows.slice(0, rowsToFetch)); //filteredRows
-  //   }
-  //   if (JSON.stringify(definitionsState) !== JSON.stringify(definitions)) {
-  //     setDefinitionsState(definitions);
-  //   }
-  //   if (JSON.stringify(columnNamesState) !== JSON.stringify(columnNames)) {
-  //     setColumnNamesState(columnNames);
-  //   }
-  // }, [columnDefs, rows, definitions, columnNames, lastForcedUpdate]); //filteredRows
-
-  // React.useEffect(() => {
-  //   setState(prevState => ({
-  //     ...prevState,
-  //     fetchedRows: computeCellMerges(filterRows(rows).slice(0, rowsToFetch))
-  //   }));
-  // }, [rows, searchSelections, searchValue]); //filteredRows
 
   const setNumGivenColumns = (num: number) => {
     document
@@ -371,28 +351,40 @@ const Editor: React.FC<{
     insertRowAt(rowIndex + 1);
   }
 
-  // rowData
-  // const fetchMoreRows = (page?: number) => {
-  //   if (page) {
-  //     setState(prevState => ({
-  //       ...prevState,
-  //       fetchedRows: [...prevState.fetchedRows, ...rows.slice(page * rowsToFetch, page * rowsToFetch + rowsToFetch)] // filteredRows
-  //     }));
-  //   } else {
-  //     setState(prevState => ({
-  //       ...prevState,
-  //       fetchedRows: [...prevState.fetchedRows, ...rows.slice(state.currentPage * rowsToFetch, state.currentPage * rowsToFetch + rowsToFetch)], // filteredRows
-  //       currentPage: prevState.currentPage + 1
-  //     }));
-  //   }
+  // const fetchMoreRows = () => {
+  //   setState(prevState => ({
+  //     ...prevState,
+  //     page: prevState.page + 1
+  //   }));
   // };
 
-  // console.log(fetchedRows);
-  // console.log(columnNamesState);
-
   let columnIndex = 1;
-  return !rows ? null : ( // state.fetchedRows
+  return !rows ? null : (
     <>
+      {rows.length > 20 && <Pagination
+        className="pf-u-pb-md"
+        itemCount={filterRows(rows).length}/* required: Total number of items. */
+        variant={'top'}/* optional: Position where pagination is rendered. */
+        isCompact={false}/* optional: Flag indicating if pagination is compact */
+        perPage={perPage}/* optional: Number of items per page. */
+        page={page}/* optional: Current page number. */
+        onSetPage={(_evt, value) => fetchPage(value, perPage)}
+        onPerPageSelect={(_evt, value) => fetchPage(1, value)}
+        perPageOptions={[
+          {
+            title: '10',
+            value: 10
+          },
+          {
+            title: '20',
+            value: 20
+          },
+          {
+            title: '50',
+            value: 50
+          }
+        ]}
+      />}
       <div id="kie-grid" className="kie-grid" ref={editorRef}>
         {columnDefs.other.map((other: { name: string }, index: number) => {
           if (index === 0) {
@@ -490,99 +482,125 @@ const Editor: React.FC<{
             <Empty className="kie-grid__item--empty" onClear={onClearFilters} />
           ) : (
             // <InfiniteScroll
-            //   dataLength={state.fetchedRows.length}
+            //   dataLength={filterRows(rows).slice(0, state.page * 5).length}
             //   next={fetchMoreRows}
-            //   hasMore={state.fetchedRows.length < rows.length} // filteredRows
+            //   hasMore={filterRows(rows).slice(0, state.page * 5).length < rows.length} // filteredRows
             //   loader={<Spinner className="kie-grid__item kie-grid__item--loading pf-u-pt-sm" size="md" />}
             //   scrollableTarget="sce-sim-grid__main"
             // >
               <div>
-                {computeCellMerges(filterRows(rows)).map((row: any) => (
-                  <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
-                    {row.map((cell: any, index: number) => {
-                      // get the type of the column to pass on to the input for formatting / validation
-                      let type = 'string';
-                      let columnGroup = '';
-                      let columnName = '';
-                      if (index === 0) {
-                        // row index
-                        type = 'number';
-                      } else if (index === 1) {
-                        // description
-                        type = 'string';
-                      } else if (index > 1) {
-                        columnGroup = columnNames[index].group;
-                        columnName = columnNames[index].name;
-                        type = (definitions && definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
-                      }
-                      const cellIndex = index;
-                      const value = cell && cell.value ? cell.value : '';
-                      const path = cell && cell.path ? cell.path : '';
-                      // const cellId = `cell ${cellIndex}`;
-                      const inputId = `row ${Number.parseInt(row[0].value, 10) - 1} column ${cellIndex}`;
-                      let component;
-                      const typeArr = type.split(',');
-                      if (typeArr.length > 1) {
-                        // Multiple options, render Select
-                        component = (
-                          <Select
-                            isReadOnly={inputId !== state.editableCell}
-                            cellId={inputId}
-                            rowId={row[0].value}
-                            originalValue={value}
-                            onSelectToggleCallback={onSelectToggleCallback}
-                            options={typeArr.map((typeString) => typeString.trim())}
-                            deactivateAndFocusCell={deactivateAndFocusCell}
-                            setEditable={setEditable}
-                            onSave={onSave}
-                          />
+                {
+                  computeCellMerges(filterRows(rows).slice(((page - 1) * perPage), page * perPage)).map((row: any) => (
+                    <div className="kie-grid__rule" style={{}} key={`row ${row[0].value}`}>
+                      {row.map((cell: any, index: number) => {
+                        // get the type of the column to pass on to the input for formatting / validation
+                        let type = 'string';
+                        let columnGroup = '';
+                        let columnName = '';
+                        if (index === 0) {
+                          // row index
+                          type = 'number';
+                        } else if (index === 1) {
+                          // description
+                          type = 'string';
+                        } else if (index > 1) {
+                          columnGroup = columnNames[index].group;
+                          columnName = columnNames[index].name;
+                          type = (definitions && definitions.map[columnNames[index].group] && definitions.map[columnGroup][columnName]) || 'string';
+                        }
+                        const cellIndex = index;
+                        const value = cell && cell.value ? cell.value : '';
+                        const path = cell && cell.path ? cell.path : '';
+                        // const cellId = `cell ${cellIndex}`;
+                        const inputId = `row ${Number.parseInt(row[0].value, 10) - 1} column ${cellIndex}`;
+                        let component;
+                        const typeArr = type.split(',');
+                        if (typeArr.length > 1) {
+                          // Multiple options, render Select
+                          component = (
+                            <Select
+                              isReadOnly={inputId !== state.editableCell}
+                              cellId={inputId}
+                              rowId={row[0].value}
+                              originalValue={value}
+                              onSelectToggleCallback={onSelectToggleCallback}
+                              options={typeArr.map((typeString) => typeString.trim())}
+                              deactivateAndFocusCell={deactivateAndFocusCell}
+                              setEditable={setEditable}
+                              onSave={onSave}
+                            />
+                          );
+                        } else {
+                          component = (
+                            <Input
+                              isReadOnly={inputId !== state.editableCell}
+                              cellId={inputId}
+                              rowId={row[0].value}
+                              originalValue={value}
+                              path={path}
+                              type={type}
+                              deactivateAndFocusCell={deactivateAndFocusCell}
+                              setEditable={setEditable}
+                              onSave={onSave}
+                            />
+                          );
+                        }
+                        const mergeRowsStyle = {
+                          gridRow: `span ${cell.coverCells || 1}`
+                        };
+                        return (
+                          <div 
+                            className={classNames('kie-grid__item', cell.master && 'kie-grid__item--merge-master', cell.follower && 'kie-grid__item--merge-away')} 
+                            style={mergeCells ? mergeRowsStyle : {}}
+                            key={inputId} 
+                            onClick={onCellClick} 
+                            onDoubleClick={onCellDoubleClick}
+                          >
+                            {cellIndex === 0 ? value : component}
+                          </div>
                         );
-                      } else {
-                        component = (
-                          <Input
-                            isReadOnly={inputId !== state.editableCell}
-                            cellId={inputId}
-                            rowId={row[0].value}
-                            originalValue={value}
-                            path={path}
-                            type={type}
-                            deactivateAndFocusCell={deactivateAndFocusCell}
-                            setEditable={setEditable}
-                            onSave={onSave}
-                          />
-                        );
-                      }
-                      const mergeRowsStyle = {
-                        gridRow: `span ${cell.coverCells || 1}`
-                      };
-                      return (
-                        <div 
-                          className={classNames('kie-grid__item', cell.master && 'kie-grid__item--merge-master', cell.follower && 'kie-grid__item--merge-away')} 
-                          style={mergeCells ? mergeRowsStyle : {}}
-                          key={inputId} 
-                          onClick={onCellClick} 
-                          onDoubleClick={onCellDoubleClick}
-                        >
-                          {cellIndex === 0 ? value : component}
-                        </div>
-                      );
-                    })}
-                    <div 
-                      className="kie-grid__item"
-                    >
-                      <Action 
-                        rowIndex={Number.parseInt(row[0].value) - 1}
-                        onInsertRowAbove={onInsertRowAbove}
-                        onInsertRowBelow={onInsertRowBelow}
-                      />
+                      })}
+                      <div 
+                        className="kie-grid__item"
+                      >
+                        <Action 
+                          rowIndex={Number.parseInt(row[0].value) - 1}
+                          onInsertRowAbove={onInsertRowAbove}
+                          onInsertRowBelow={onInsertRowBelow}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                  }
               </div>
-            // </InfiniteScroll>
+            //</InfiniteScroll>
           )}
         </div>
       </div>
+      {rows.length > 20 && <Pagination
+        className="pf-u-pt-md"
+        itemCount={filterRows(rows).length}/* required: Total number of items. */
+        variant={'bottom'}/* optional: Position where pagination is rendered. */
+        isCompact={false}/* optional: Flag indicating if pagination is compact */
+        perPage={perPage}/* optional: Number of items per page. */
+        page={page}/* optional: Current page number. */
+        onSetPage={(_evt, value) => fetchPage(value, perPage)}
+        onPerPageSelect={(_evt, value) => fetchPage(1, value)}
+        perPageOptions={[
+          {
+            title: '10',
+            value: 10
+          },
+          {
+            title: '20',
+            value: 20
+          },
+          {
+            title: '50',
+            value: 50
+          }
+        ]}
+      />}
     </>
   );
 };

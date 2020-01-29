@@ -10,7 +10,6 @@ import { ChangeTracker } from './ChangeTracker';
 import './EditorToolbar.css';
 import { HelpModal } from './HelpModal';
 import { Search } from './Search';
-import { SortBy } from './SortBy';
 
 const EditorToolbar: React.FC<{ 
   data: any,

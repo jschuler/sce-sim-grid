@@ -149,7 +149,9 @@ const EditorContainer: React.FC<{
     searchValue: '',
     searchSelections: [] as any[],
     sortColumn: 0,
-    sortDirection: 'asc'
+    sortDirection: 'asc',
+    page: 1,
+    perPage: 20
   });
 
   const clearFilters = () => {
@@ -238,7 +240,6 @@ const EditorContainer: React.FC<{
   }
 
   const insertRowAt = (rowIndex: number) => {
-    debugger;
     const insert = (arr: any[], index: number, newItem: any[]) => [
       ...arr.slice(0, index),
       newItem,
@@ -400,7 +401,8 @@ const EditorContainer: React.FC<{
     setState(prevState => ({
       ...prevState,
       searchValue: value,
-      searchSelections: selected
+      searchSelections: selected,
+      page: 1
     }));
   }
 
@@ -451,11 +453,27 @@ const EditorContainer: React.FC<{
     // non-deep rows clone on sorting so we don't mutate the original array
     return [...rows].sort((a, b) => {
       if (state.sortDirection === 'asc') {
+        if (isNaN(a[state.sortColumn].value) === false && isNaN(b[state.sortColumn].value) === false) {
+          // numbers comparison
+          return (+a[state.sortColumn].value > +b[state.sortColumn].value) ? 1 : -1;
+        }
         return (a[state.sortColumn].value > b[state.sortColumn].value) ? 1 : -1;
       } else {
+        if (isNaN(a[state.sortColumn].value) === false && isNaN(b[state.sortColumn].value) === false) {
+          // numbers comparison
+          return (+a[state.sortColumn].value < +b[state.sortColumn].value) ? 1 : -1;
+        }
         return (a[state.sortColumn].value < b[state.sortColumn].value) ? 1 : -1;
       }
     });
+  }
+
+  const fetchPage = (page: number, perPage: number) => {
+    setState(prevState => ({
+      ...prevState,
+      page,
+      perPage
+    }));
   }
 
   return (
@@ -523,6 +541,9 @@ const EditorContainer: React.FC<{
               onClearFilters={clearFilters}
               onSort={onSort}
               insertRowAt={insertRowAt}
+              page={state.page}
+              perPage={state.perPage}
+              fetchPage={fetchPage}
             />
           </section>
         </main>

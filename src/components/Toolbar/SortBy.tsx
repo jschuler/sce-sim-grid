@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Select, SelectOption, SelectGroup, SelectVariant } from '@patternfly/react-core';
+import { Select, SelectOption, SelectVariant } from '@patternfly/react-core';
 
 const SortBy: React.FC<{ 
   rows: any[],
