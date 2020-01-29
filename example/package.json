@@ -21,12 +21,10 @@
     "react-app-rewired": "^2.1.5",
     "react-dom": "16.11.0",
     "react-scripts": "3.2.0",
-    "sce-sim-grid": "file:.yalc/sce-sim-grid",
     "typescript": "3.7.3"
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "start:yalc": "yalc update && yarn start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
