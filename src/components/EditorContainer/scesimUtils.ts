@@ -1,4 +1,4 @@
-import { FactMapping, Scesim } from '../../types/SceSim';
+import { FactMapping, Scesim, Scenario, FactMappingValue, FactMappingValueTYPENAME, ImportsTYPENAME, RawValueTYPENAME, Clazz } from '../../types/SceSim';
 
 export const getDmnFilePath = (data: Scesim): string => {
   const {
@@ -104,6 +104,79 @@ export const getColumns = (data: Scesim, byGroup: boolean = false) => {
     numGiven,
     numExpect,
   };
+};
+
+// insert into array at index
+const insert = (arr: any, index: number, item: any) => arr[index] = item;
+
+export const setRows = (data: Scesim, rows: any) => {
+  // construct the path so we can save back to the same location in the json file
+  const dataPathRoot: string = 'value.simulation.scenarios.scenario';
+  // scenarios.scenario are the rows
+  const { scenarios } = data.value.simulation;
+
+  let scenariosFromRows: Scenario[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    let scenario: Scenario = {
+      TYPE_NAME: 'scesim.ScenarioType',
+      factMappingValues: {
+        TYPE_NAME: 'scesim.FactMappingValuesType',
+        factMappingValue: []
+      }
+    }
+
+    const factMappingValueSample: FactMappingValue = {
+      TYPE_NAME: FactMappingValueTYPENAME.ScesimFactMappingValueType,
+      factIdentifier: {
+        TYPE_NAME: ImportsTYPENAME.ScesimFactIdentifierType
+      },
+      expressionIdentifier: {
+        TYPE_NAME: ImportsTYPENAME.ScesimExpressionIdentifierType
+      },
+      rawValue: {
+        TYPE_NAME: RawValueTYPENAME.ScesimRawValueType,
+        clazz: Clazz.String,
+        value: ''
+      }
+    };
+
+    // insert empty factMappingValues first so we can array insertion at specific indices later
+    for (let j = 0; j < rows[i].length; j++) {
+      scenario.factMappingValues.factMappingValue.push(factMappingValueSample)
+    }
+
+    for (let j = 0; j < rows[i].length; j++) {
+      // pathNums contains the insertion index into the scenario array
+      const pathNums = rows[i][j].path.match(/(\d+)/g);
+      // go through all columns for the row and construct factMappingValue
+      const factMappingValue: FactMappingValue = {
+        TYPE_NAME: FactMappingValueTYPENAME.ScesimFactMappingValueType,
+        factIdentifier: {
+          TYPE_NAME: ImportsTYPENAME.ScesimFactIdentifierType
+        },
+        expressionIdentifier: {
+          TYPE_NAME: ImportsTYPENAME.ScesimExpressionIdentifierType
+        },
+        rawValue: {
+          TYPE_NAME: RawValueTYPENAME.ScesimRawValueType,
+          clazz: Clazz.String,
+          value: rows[i][j].value
+        }
+      }
+      if (!pathNums) {
+        // new row
+        // TODO: need to handle the insertion point, for now just push
+        scenario.factMappingValues.factMappingValue.push(factMappingValue);
+      } else {
+        insert(scenario.factMappingValues.factMappingValue, parseInt(pathNums[1]), factMappingValue);
+      }
+    }
+    scenariosFromRows.push(scenario);
+  }
+
+  scenarios.scenario = scenariosFromRows;
+  
+  return data;
 };
 
 export const getRows = (data: Scesim, columns?: any) => {
