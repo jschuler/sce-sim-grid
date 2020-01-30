@@ -110,7 +110,7 @@ const App: React.FC = () => {
             </Select>
           </div> */}
           <div className={classNames('editor-container', state.isTransitionDone && 'show')}>
-            <EditorContainer data={state.data} model={state.model} showSidePanel={true} readOnly={false} />
+            <EditorContainer data={state.data} model={state.model} showSidePanel={true} readOnly={false} pagingVariant="pagination" />
           </div>
         </>
       )}

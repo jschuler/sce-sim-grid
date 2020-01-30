@@ -24,8 +24,9 @@ const EditorToolbar: React.FC<{
   mergeCells: boolean,
   onMergeCellsToggle: any,
   lastFiltersClear: string,
+  onSave: any
 }> = ({ 
-  data, rows, filterRows, setSearchState, columnNames, undoRedo, onUndo, onRedo, readOnly, mergeCells, onMergeCellsToggle, lastFiltersClear
+  data, rows, filterRows, setSearchState, columnNames, undoRedo, onUndo, onRedo, readOnly, mergeCells, onMergeCellsToggle, lastFiltersClear, onSave
 }) => {
   // console.log('render EditorToolbar');
 
@@ -70,6 +71,11 @@ const EditorToolbar: React.FC<{
   return (
     <>
       <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+        {!readOnly && <ToolbarGroup>
+          <ToolbarItem>
+            <Button onClick={onSave} isDisabled={undoRedo.undoList.length === 0}>Save</Button>
+          </ToolbarItem>
+        </ToolbarGroup>}
         <ToolbarGroup>
           <ToolbarItem>
             <Button variant="plain" onClick={mergeCellsToggle}>

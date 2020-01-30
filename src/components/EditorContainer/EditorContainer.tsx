@@ -7,8 +7,8 @@ import * as React from 'react';
 import { Editor } from '../Editor';
 import { DefinitionsDrawerPanel } from '../Sidebar';
 import { EditorToolbar } from '../Toolbar';
-import { getRowColumnFromId, getJsonFromSceSim, getJsonFromDmn, useKeyPress } from '../utils';
-import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getDmnName, getRows } from './scesimUtils';
+import { getRowColumnFromId, getJsonFromSceSim, getJsonFromDmn, useKeyPress, setSceSimFromJson } from '../utils';
+import { getColumnNames, getColumns, getDefinitions, getDmnFilePath, getDmnName, getRows, setRows } from './scesimUtils';
 
 const EditorContainer: React.FC<{ 
   /**
@@ -26,9 +26,13 @@ const EditorContainer: React.FC<{
   /**
    * True to make the editor read-only
    */
-  readOnly?: boolean
+  readOnly?: boolean,
+  /**
+   * Pagination technique to use when there are many rows of data
+   */
+  pagingVariant?: 'pagination' | 'infinite'
 }> = ({ 
-  data, model, showSidePanel = true, readOnly = false
+  data, model, showSidePanel = true, readOnly = false, pagingVariant = 'pagination'
 }) => {
   // console.log('render EditorContainer');
 
@@ -38,7 +42,7 @@ const EditorContainer: React.FC<{
    */
   const increaseRows = (rows: any) => {
     const enabled = false;
-    const numRowsToAdd = 2000;
+    const numRowsToAdd = 200;
     if (enabled) {
       for (let i = 0; i < numRowsToAdd; i++) {
         const clonedRow = JSON.parse(JSON.stringify(rows[0]));
@@ -469,12 +473,37 @@ const EditorContainer: React.FC<{
     });
   }
 
-  const fetchPage = (page: number, perPage: number) => {
+  const fetchPage = (page?: number, perPage?: number) => {
     setState(prevState => ({
       ...prevState,
-      page,
-      perPage
+      page: page || prevState.page + 1,
+      perPage: perPage || prevState.perPage
     }));
+  }
+
+  const saveEditor = () => {
+    // console.log(getJsonFromSceSim(data));
+    // console.log(state.allRows);
+    const updatedData = setRows(getJsonFromSceSim(data), state.allRows);
+    // console.log(updatedData);
+    const marshalled = setSceSimFromJson(updatedData);
+    console.log(marshalled);
+
+    copyToClipboard(marshalled);
+  };
+
+
+  const copyToClipboard = (text: string) => {
+    const dummy = document.createElement("textarea");
+    // to avoid breaking orgain page when copying more words
+    // cant copy when adding below this code
+    // dummy.style.display = 'none'
+    document.body.appendChild(dummy);
+    //Be careful if you use texarea. setAttribute('value', value), which works with "input" does not work with "textarea". – Eduard
+    dummy.value = text;
+    dummy.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummy);
   }
 
   return (
@@ -512,6 +541,7 @@ const EditorContainer: React.FC<{
               onRedo={onRedo}
               mergeCells={state.mergeCells}
               onMergeCellsToggle={onMergeCellsToggle}
+              onSave={saveEditor}
             />
           </div>
         </header>
@@ -531,11 +561,9 @@ const EditorContainer: React.FC<{
               filterRows={filterRows}
               searchValue={state.searchValue}
               searchSelections={state.searchSelections}
-              filteredRows={state.filteredRows}
               definitions={state.definitions}
               columnNames={state.columnNames}
               onSave={addToChanges}
-              lastForcedUpdate={state.lastForcedUpdateState}
               readOnly={readOnly}
               mergeCells={state.mergeCells}
               computeCellMerges={computeCellMerges}
@@ -545,6 +573,7 @@ const EditorContainer: React.FC<{
               page={state.page}
               perPage={state.perPage}
               fetchPage={fetchPage}
+              pagingVariant={pagingVariant}
             />
           </section>
         </main>
